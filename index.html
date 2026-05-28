@@ -23,30 +23,24 @@
     --accent-h:#f0b030;
     --accent-dim:rgba(232,160,32,.1);
     --accent-dim-h:rgba(232,160,32,.18);
-    --green:#4ade80;
-    --green-dim:rgba(74,222,128,.1);
-    --blue:#60a5fa;
-    --blue-dim:rgba(96,165,250,.1);
-    --purple:#a78bfa;
-    --purple-dim:rgba(167,139,250,.1);
-    --red:#f87171;
-    --red-dim:rgba(248,113,113,.1);
-    --radius:7px;
-    --radius-lg:10px;
-    --t:.15s ease;
+    --green:#4ade80;--green-dim:rgba(74,222,128,.1);
+    --blue:#60a5fa;--blue-dim:rgba(96,165,250,.1);
+    --purple:#a78bfa;--purple-dim:rgba(167,139,250,.1);
+    --pink:#f472b6;--pink-dim:rgba(244,114,182,.1);
+    --teal:#2dd4bf;--teal-dim:rgba(45,212,191,.1);
+    --orange:#fb923c;--orange-dim:rgba(251,146,60,.1);
+    --yellow:#fbbf24;--yellow-dim:rgba(251,191,36,.1);
+    --red:#f87171;--red-dim:rgba(248,113,113,.1);
+    --radius:7px;--radius-lg:10px;--t:.15s ease;
   }
   html,body{height:100%;font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
-  ::-webkit-scrollbar{width:5px}
-  ::-webkit-scrollbar-track{background:transparent}
-  ::-webkit-scrollbar-thumb{background:var(--border-2);border-radius:3px}
+  ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border-2);border-radius:3px}
   ::selection{background:var(--accent-dim);color:var(--accent)}
 
-  /* LAYOUT */
   .app{display:flex;height:100vh;overflow:hidden}
-  .sidebar{width:216px;min-width:216px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto}
+  .sidebar{width:220px;min-width:220px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto}
   .main{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg)}
 
-  /* SIDEBAR */
   .sb-logo{padding:20px 14px 14px;display:flex;align-items:center;gap:8px}
   .sb-logo-mark{width:22px;height:22px;background:var(--accent);border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#111;flex-shrink:0}
   .sb-logo-text{font-size:14px;font-weight:600;letter-spacing:-.3px;color:var(--text)}
@@ -55,7 +49,7 @@
   .sb-section{padding:0 8px 12px}
   .sb-label{font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--text-3);padding:8px 8px 4px}
 
-  .nav-item{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:var(--radius);cursor:pointer;color:var(--text-2);transition:background var(--t),color var(--t);font-size:13px;font-weight:450;user-select:none;position:relative}
+  .nav-item{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:var(--radius);cursor:pointer;color:var(--text-2);transition:background var(--t),color var(--t);font-size:13px;font-weight:450;user-select:none}
   .nav-item:hover{background:var(--surface-hover);color:var(--text)}
   .nav-item.active{background:var(--accent-dim);color:var(--accent)}
   .nav-item.active:hover{background:var(--accent-dim-h)}
@@ -64,82 +58,78 @@
   .nav-count{margin-left:auto;font-size:11px;font-weight:500;background:var(--surface-hover);padding:1px 5px;border-radius:9px;color:var(--text-3);min-width:18px;text-align:center}
   .nav-item.active .nav-count{background:var(--accent-dim-h);color:var(--accent)}
 
+  /* Category nav items use a color dot instead of icon */
+  .cat-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+  .nav-item.cat-active{background-color:var(--cat-dim);color:var(--cat-color)}
+  .nav-item.cat-active .nav-count{background:var(--cat-dim);color:var(--cat-color)}
+
   .sb-divider{height:1px;background:var(--border);margin:4px 8px 12px}
 
-  /* Telegram commands card */
   .sb-commands{margin:0 8px 16px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-lg);padding:12px;flex-shrink:0}
-  .sb-commands-title{font-size:11px;font-weight:600;color:var(--text-2);margin-bottom:8px;display:flex;align-items:center;gap:5px}
-  .sb-commands-title svg{opacity:.6}
+  .sb-commands-title{font-size:11px;font-weight:600;color:var(--text-2);margin-bottom:8px}
   .cmd-row{display:flex;align-items:baseline;gap:6px;margin-bottom:4px}
   .cmd-row:last-child{margin-bottom:0}
-  .cmd-chip{font-size:10.5px;font-weight:600;font-family:'Inter',monospace;color:var(--accent);background:var(--accent-dim);padding:1px 5px;border-radius:4px;white-space:nowrap}
+  .cmd-chip{font-size:10.5px;font-weight:600;color:var(--accent);background:var(--accent-dim);padding:1px 5px;border-radius:4px;white-space:nowrap}
   .cmd-desc{font-size:11px;color:var(--text-3);line-height:1.4}
 
   .sb-footer{margin-top:auto;padding:12px 8px;border-top:1px solid var(--border)}
   .sb-footer-text{font-size:11px;color:var(--text-3);line-height:1.6}
 
-  /* HEADER */
   .header{padding:18px 24px 0;border-bottom:1px solid var(--border);background:var(--bg)}
   .header-row{display:flex;align-items:center;gap:10px;margin-bottom:14px}
-  .page-title{font-size:20px;font-weight:700;letter-spacing:-.4px;color:var(--text)}
+  .page-title{font-size:20px;font-weight:700;letter-spacing:-.4px;color:var(--text);display:flex;align-items:center;gap:8px}
+  .page-title-dot{width:10px;height:10px;border-radius:50%;display:none}
   .header-actions{margin-left:auto;display:flex;gap:6px;align-items:center}
 
-  /* BUTTONS */
-  .btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:6px 12px;border-radius:var(--radius);border:none;cursor:pointer;font-size:12.5px;font-weight:500;font-family:inherit;transition:background var(--t),color var(--t),transform var(--t),box-shadow var(--t);white-space:nowrap}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:6px 12px;border-radius:var(--radius);border:none;cursor:pointer;font-size:12.5px;font-weight:500;font-family:inherit;transition:background var(--t),color var(--t),transform var(--t);white-space:nowrap}
   .btn:active{transform:scale(.97)}
-  .btn-primary{background:var(--accent);color:#111}
-  .btn-primary:hover{background:var(--accent-h)}
-  .btn-ghost{background:transparent;color:var(--text-2);border:1px solid var(--border-2)}
-  .btn-ghost:hover{background:var(--surface-hover);color:var(--text);border-color:var(--border-2)}
-  .btn-icon{padding:6px;border-radius:var(--radius);background:transparent;color:var(--text-3);border:none;cursor:pointer;font-family:inherit;transition:background var(--t),color var(--t);display:flex;align-items:center;justify-content:center}
-  .btn-icon:hover{background:var(--surface-hover);color:var(--text)}
-  .btn-icon:active{transform:scale(.95)}
+  .btn-primary{background:var(--accent);color:#111}.btn-primary:hover{background:var(--accent-h)}
+  .btn-ghost{background:transparent;color:var(--text-2);border:1px solid var(--border-2)}.btn-ghost:hover{background:var(--surface-hover);color:var(--text)}
 
-  /* SEARCH */
   .search-wrap{background:var(--surface);border:1px solid var(--border);border-bottom:none;border-radius:var(--radius-lg) var(--radius-lg) 0 0;padding:0}
   .search-inner{display:flex;align-items:center;gap:8px;padding:9px 14px}
   .search-inner svg{color:var(--text-3);flex-shrink:0}
   .search-inner input{flex:1;background:none;border:none;outline:none;color:var(--text);font-size:13px;font-family:inherit}
   .search-inner input::placeholder{color:var(--text-3)}
 
-  /* QUICK ADD */
-  .add-area{padding:14px 24px;border-bottom:1px solid var(--border);background:var(--bg)}
+  .add-area{padding:12px 24px;border-bottom:1px solid var(--border);background:var(--bg)}
   .add-row{display:flex;gap:6px;align-items:stretch}
-  .add-type{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:0 10px;color:var(--text-2);font-size:12.5px;font-weight:500;font-family:inherit;outline:none;cursor:pointer;transition:border-color var(--t)}
-  .add-type:focus{border-color:var(--accent);color:var(--text)}
+  .add-select{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:0 8px;color:var(--text-2);font-size:12px;font-weight:500;font-family:inherit;outline:none;cursor:pointer;transition:border-color var(--t);height:36px}
+  .add-select:focus{border-color:var(--accent);color:var(--text)}
   .add-input{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:9px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;transition:border-color var(--t),background var(--t)}
   .add-input:focus{border-color:var(--accent);background:var(--surface-hover)}
   .add-input::placeholder{color:var(--text-3)}
 
-  /* LIST */
   .list-area{flex:1;overflow-y:auto;padding:6px 24px 32px}
 
   .empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:60px 24px;text-align:center}
-  .empty-icon{width:44px;height:44px;background:var(--surface);border-radius:12px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border)}
+  .empty-icon{width:44px;height:44px;background:var(--surface);border-radius:12px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);font-size:18px;color:var(--text-3)}
   .empty-title{font-size:14px;font-weight:600;color:var(--text-2)}
-  .empty-hint{font-size:12.5px;color:var(--text-3);line-height:1.5;max-width:280px}
-  .empty-hint code{color:var(--accent);font-size:11.5px;background:var(--accent-dim);padding:1px 5px;border-radius:4px;font-family:'Inter',monospace}
+  .empty-hint{font-size:12.5px;color:var(--text-3);line-height:1.5;max-width:300px}
+  .empty-hint code{color:var(--accent);font-size:11.5px;background:var(--accent-dim);padding:1px 5px;border-radius:4px}
 
   .section-head{display:flex;align-items:center;gap:8px;padding:16px 0 8px;user-select:none}
   .section-head-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--text-3);white-space:nowrap}
   .section-head-line{flex:1;height:1px;background:var(--border)}
 
-  .item{display:flex;align-items:flex-start;gap:10px;padding:11px 12px;border-radius:var(--radius-lg);background:var(--surface);border:1px solid var(--border);margin-bottom:5px;transition:background var(--t),border-color var(--t),box-shadow var(--t);cursor:default;position:relative}
+  /* ITEM CARD with left category color bar */
+  .item{display:flex;align-items:flex-start;gap:0;border-radius:var(--radius-lg);background:var(--surface);border:1px solid var(--border);margin-bottom:5px;transition:background var(--t),border-color var(--t);cursor:default;overflow:hidden;position:relative}
   .item:hover{background:var(--surface-hover);border-color:var(--border-2)}
-  .item.done .item-text{text-decoration:line-through;color:var(--text-3)}
-  .item.done{opacity:.65}
-  .item.done:hover{opacity:.8}
+  .item.done{opacity:.6}
+  .item.done:hover{opacity:.75}
+  .item-bar{width:3px;min-width:3px;background:var(--item-cat-color,var(--border-2));flex-shrink:0;align-self:stretch}
+  .item-inner{display:flex;align-items:flex-start;gap:10px;padding:11px 12px;flex:1;min-width:0}
 
   .cb{width:16px;height:16px;min-width:16px;border:1.5px solid var(--border-2);border-radius:5px;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-top:1px;transition:background var(--t),border-color var(--t);flex-shrink:0}
   .cb:hover{border-color:var(--accent)}
   .item.done .cb{background:var(--green);border-color:var(--green)}
-  .cb-check{display:none}
-  .item.done .cb-check{display:block}
+  .cb-check{display:none}.item.done .cb-check{display:block}
 
   .item-body{flex:1;min-width:0}
   .item-text{font-size:13.5px;color:var(--text);line-height:1.5;word-break:break-word;font-weight:450}
+  .item.done .item-text{text-decoration:line-through;color:var(--text-3)}
   .item-sub{font-size:12px;color:var(--text-2);margin-top:3px;line-height:1.45}
-  .item-meta{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-top:6px}
+  .item-meta{display:flex;align-items:center;flex-wrap:wrap;gap:5px;margin-top:6px}
 
   .badge{display:inline-flex;align-items:center;font-size:11px;font-weight:500;padding:2px 7px;border-radius:5px;white-space:nowrap}
   .badge-task{background:var(--blue-dim);color:var(--blue)}
@@ -147,164 +137,164 @@
   .badge-note{background:var(--purple-dim);color:var(--purple)}
   .badge-project{background:var(--green-dim);color:var(--green)}
 
+  /* Category badge uses inline style for dynamic color */
+  .badge-cat{font-size:11px;font-weight:500;padding:2px 7px;border-radius:5px;white-space:nowrap}
+
   .item-date{font-size:11px;color:var(--text-3)}
   .item-src{font-size:11px;color:var(--text-3);display:flex;align-items:center;gap:3px}
+  .prio-high{display:inline-flex;align-items:center;gap:3px;font-size:11px;color:var(--red)}
+  .prio-dot{width:5px;height:5px;border-radius:50%;background:currentColor;display:inline-block}
 
-  .item-actions{display:flex;gap:2px;opacity:0;transition:opacity var(--t);margin-left:4px;flex-shrink:0}
+  .item-actions{display:flex;gap:2px;opacity:0;transition:opacity var(--t);margin-top:1px;flex-shrink:0}
   .item:hover .item-actions{opacity:1}
-  .del-btn{background:none;border:none;cursor:pointer;color:var(--text-3);padding:3px 5px;border-radius:5px;font-size:12px;line-height:1;transition:color var(--t),background var(--t);font-family:inherit}
+  .del-btn{background:none;border:none;cursor:pointer;color:var(--text-3);padding:3px 5px;border-radius:5px;font-size:12px;transition:color var(--t),background var(--t);font-family:inherit}
   .del-btn:hover{color:var(--red);background:var(--red-dim)}
-  .del-btn:active{transform:scale(.9)}
 
-  /* MODAL */
-  .backdrop{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:100;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);padding:16px}
+  .backdrop{position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;z-index:100;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);padding:16px}
   .backdrop.hidden{display:none}
-  .modal{background:var(--surface-modal);border:1px solid var(--border-2);border-radius:14px;padding:24px;width:460px;max-width:100%;box-shadow:0 24px 60px rgba(0,0,0,.5)}
+  .modal{background:var(--surface-modal);border:1px solid var(--border-2);border-radius:14px;padding:24px;width:480px;max-width:100%;box-shadow:0 24px 60px rgba(0,0,0,.5)}
   .modal-title{font-size:16px;font-weight:700;letter-spacing:-.3px;margin-bottom:18px}
   .field{margin-bottom:14px}
   .field label{display:block;font-size:12px;font-weight:500;color:var(--text-2);margin-bottom:5px}
   .field input,.field textarea,.field select{width:100%;background:var(--surface);border:1px solid var(--border-2);border-radius:var(--radius);padding:9px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;transition:border-color var(--t)}
   .field input:focus,.field textarea:focus,.field select:focus{border-color:var(--accent)}
   .field textarea{resize:vertical;min-height:72px}
-  .field-row{display:flex;gap:10px}
-  .field-row .field{flex:1}
+  .field-row{display:flex;gap:10px}.field-row .field{flex:1}
   .modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:18px}
 
-  /* TOAST */
-  .toast{position:fixed;bottom:20px;right:20px;background:var(--surface-modal);border:1px solid var(--border-2);border-radius:var(--radius-lg);padding:10px 16px;font-size:13px;color:var(--text);z-index:200;opacity:0;transform:translateY(6px);transition:.18s ease;pointer-events:none;box-shadow:0 8px 24px rgba(0,0,0,.4);max-width:300px}
+  .toast{position:fixed;bottom:20px;right:20px;background:var(--surface-modal);border:1px solid var(--border-2);border-radius:var(--radius-lg);padding:10px 16px;font-size:13px;color:var(--text);z-index:200;opacity:0;transform:translateY(6px);transition:.18s ease;pointer-events:none;box-shadow:0 8px 24px rgba(0,0,0,.4);max-width:320px}
   .toast.show{opacity:1;transform:translateY(0)}
-
-  /* PRIORITY DOT */
-  .prio-high{display:inline-flex;align-items:center;gap:3px;font-size:11px;color:var(--red)}
-  .prio-dot{width:5px;height:5px;border-radius:50%;background:currentColor;display:inline-block}
-
-  /* KEYBOARD SHORTCUT HINT */
-  .kbd{font-size:10px;color:var(--text-3);background:var(--surface);border:1px solid var(--border-2);border-radius:4px;padding:1px 5px;font-family:inherit}
+  .kbd{font-size:10px;color:var(--text-3);background:var(--surface);border:1px solid var(--border-2);border-radius:4px;padding:1px 5px}
 
   @media(max-width:640px){
     .sidebar{display:none}
-    .main .header-row{flex-wrap:wrap}
-    .btn span{display:none}
+    .add-row .add-select:first-child{display:none}
   }
 </style>
 </head>
 <body>
 <div class="app">
 
-  <!-- SIDEBAR -->
-  <aside class="sidebar">
-    <div class="sb-logo">
-      <div class="sb-logo-mark">C</div>
-      <div class="sb-logo-text">Claude <span>Notes</span></div>
-    </div>
-
-    <div class="sb-section">
-      <div class="sb-label">Views</div>
-      <div class="nav-item active" id="nav-all" onclick="setFilter('all')" role="button" tabindex="0">
-        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>
-        All Items <span class="nav-count" id="cnt-all">0</span>
-      </div>
-      <div class="nav-item" id="nav-active" onclick="setFilter('active')" role="button" tabindex="0">
-        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/></svg>
-        Active <span class="nav-count" id="cnt-active">0</span>
-      </div>
-      <div class="nav-item" id="nav-done" onclick="setFilter('done')" role="button" tabindex="0">
-        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8l3.5 3.5L13 4.5"/></svg>
-        Completed <span class="nav-count" id="cnt-done">0</span>
-      </div>
-    </div>
-
-    <div class="sb-divider"></div>
-
-    <div class="sb-section">
-      <div class="sb-label">Categories</div>
-      <div class="nav-item" id="nav-task" onclick="setFilter('task')" role="button" tabindex="0">
-        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="2"/><path d="M5 8l2.5 2.5L11 5"/></svg>
-        Tasks <span class="nav-count" id="cnt-task">0</span>
-      </div>
-      <div class="nav-item" id="nav-idea" onclick="setFilter('idea')" role="button" tabindex="0">
-        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2a4 4 0 0 1 2 7.46V11H6V9.46A4 4 0 0 1 8 2z"/><path d="M6 12h4M7 14h2"/></svg>
-        Ideas <span class="nav-count" id="cnt-idea">0</span>
-      </div>
-      <div class="nav-item" id="nav-note" onclick="setFilter('note')" role="button" tabindex="0">
-        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3h10v8l-3 3H3z"/><path d="M6 6h4M6 9h2"/></svg>
-        Notes <span class="nav-count" id="cnt-note">0</span>
-      </div>
-      <div class="nav-item" id="nav-project" onclick="setFilter('project')" role="button" tabindex="0">
-        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 13V6l4-3h4l4 3v7H2z"/><path d="M6 13V9h4v4"/></svg>
-        Projects <span class="nav-count" id="cnt-project">0</span>
-      </div>
-    </div>
-
-    <div class="sb-divider"></div>
-
-    <div class="sb-section">
-      <div class="sb-label">Telegram Commands</div>
-      <div class="sb-commands">
-        <div class="cmd-row"><span class="cmd-chip">todo:</span><span class="cmd-desc">Add a task</span></div>
-        <div class="cmd-row"><span class="cmd-chip">idea:</span><span class="cmd-desc">Capture an idea</span></div>
-        <div class="cmd-row"><span class="cmd-chip">note:</span><span class="cmd-desc">Save a note</span></div>
-        <div class="cmd-row"><span class="cmd-chip">project:</span><span class="cmd-desc">Start a project</span></div>
-      </div>
-    </div>
-
-    <div class="sb-footer">
-      <div class="sb-footer-text">
-        <span class="kbd">⌘N</span> new item &nbsp;·&nbsp; <span class="kbd">Esc</span> close
-      </div>
-    </div>
-  </aside>
-
-  <!-- MAIN -->
-  <div class="main">
-    <div class="header">
-      <div class="header-row">
-        <div class="page-title" id="page-title">All Items</div>
-        <div class="header-actions">
-          <button class="btn btn-ghost" onclick="importJSON()" title="Import JSON">
-            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 10v3h12v-3M8 2v8M5 7l3 3 3-3"/></svg>
-            <span>Import</span>
-          </button>
-          <button class="btn btn-ghost" onclick="exportJSON()" title="Export JSON">
-            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 10v3h12v-3M8 10V2M5 5l3-3 3 3"/></svg>
-            <span>Export</span>
-          </button>
-          <button class="btn btn-primary" onclick="openModal()">
-            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8 2v12M2 8h12"/></svg>
-            <span>New Item</span>
-          </button>
-        </div>
-      </div>
-      <div class="search-wrap">
-        <div class="search-inner">
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="7" cy="7" r="5"/><path d="M11 11l3 3"/></svg>
-          <input id="search" type="text" placeholder="Search items..." oninput="render()" autocomplete="off" spellcheck="false">
-        </div>
-      </div>
-    </div>
-
-    <div class="add-area">
-      <div class="add-row">
-        <select class="add-type" id="quick-type" aria-label="Item type">
-          <option value="task">Task</option>
-          <option value="idea">Idea</option>
-          <option value="note">Note</option>
-          <option value="project">Project</option>
-        </select>
-        <input class="add-input" id="quick-input" placeholder="Quick add — press Enter to save" onkeydown="quickAdd(event)" autocomplete="off" spellcheck="false" aria-label="Quick add item">
-        <button class="btn btn-primary" onclick="quickAdd({key:'Enter'})" aria-label="Add item">Add</button>
-      </div>
-    </div>
-
-    <div class="list-area" id="list" role="list"></div>
+<aside class="sidebar">
+  <div class="sb-logo">
+    <div class="sb-logo-mark">C</div>
+    <div class="sb-logo-text">Claude <span>Notes</span></div>
   </div>
+
+  <div class="sb-section">
+    <div class="sb-label">Views</div>
+    <div class="nav-item active" id="nav-all" onclick="setFilter('all','view')" role="button" tabindex="0">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>
+      All Items <span class="nav-count" id="cnt-all">0</span>
+    </div>
+    <div class="nav-item" id="nav-active" onclick="setFilter('active','view')" role="button" tabindex="0">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/></svg>
+      Active <span class="nav-count" id="cnt-active">0</span>
+    </div>
+    <div class="nav-item" id="nav-done" onclick="setFilter('done','view')" role="button" tabindex="0">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8l3.5 3.5L13 4.5"/></svg>
+      Completed <span class="nav-count" id="cnt-done">0</span>
+    </div>
+  </div>
+
+  <div class="sb-divider"></div>
+
+  <div class="sb-section">
+    <div class="sb-label">Life Areas</div>
+    <div id="cat-nav"></div>
+  </div>
+
+  <div class="sb-divider"></div>
+
+  <div class="sb-section">
+    <div class="sb-label">Types</div>
+    <div class="nav-item" id="nav-task" onclick="setFilter('task','type')" role="button" tabindex="0">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="2"/><path d="M5 8l2.5 2.5L11 5"/></svg>
+      Tasks <span class="nav-count" id="cnt-task">0</span>
+    </div>
+    <div class="nav-item" id="nav-idea" onclick="setFilter('idea','type')" role="button" tabindex="0">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2a4 4 0 0 1 2 7.46V11H6V9.46A4 4 0 0 1 8 2z"/><path d="M6 12h4M7 14h2"/></svg>
+      Ideas <span class="nav-count" id="cnt-idea">0</span>
+    </div>
+    <div class="nav-item" id="nav-note" onclick="setFilter('note','type')" role="button" tabindex="0">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3h10v8l-3 3H3z"/><path d="M6 6h4M6 9h2"/></svg>
+      Notes <span class="nav-count" id="cnt-note">0</span>
+    </div>
+    <div class="nav-item" id="nav-project" onclick="setFilter('project','type')" role="button" tabindex="0">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 13V6l4-3h4l4 3v7H2z"/><path d="M6 13V9h4v4"/></svg>
+      Projects <span class="nav-count" id="cnt-project">0</span>
+    </div>
+  </div>
+
+  <div class="sb-divider"></div>
+
+  <div class="sb-section">
+    <div class="sb-label">Telegram</div>
+    <div class="sb-commands">
+      <div class="cmd-row"><span class="cmd-chip">todo:</span><span class="cmd-desc">Add a task</span></div>
+      <div class="cmd-row"><span class="cmd-chip">idea:</span><span class="cmd-desc">Capture an idea</span></div>
+      <div class="cmd-row"><span class="cmd-chip">note:</span><span class="cmd-desc">Save a note</span></div>
+      <div class="cmd-row"><span class="cmd-chip">project:</span><span class="cmd-desc">Start a project</span></div>
+    </div>
+  </div>
+
+  <div class="sb-footer">
+    <div class="sb-footer-text"><span class="kbd">⌘N</span> new &nbsp;·&nbsp; <span class="kbd">⌘F</span> search &nbsp;·&nbsp; <span class="kbd">Esc</span> close</div>
+  </div>
+</aside>
+
+<div class="main">
+  <div class="header">
+    <div class="header-row">
+      <div class="page-title" id="page-title">
+        <div class="page-title-dot" id="page-title-dot"></div>
+        All Items
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-ghost" onclick="importJSON()">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 10v3h12v-3M8 2v8M5 7l3 3 3-3"/></svg>
+          <span>Import</span>
+        </button>
+        <button class="btn btn-ghost" onclick="exportJSON()">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 10v3h12v-3M8 10V2M5 5l3-3 3 3"/></svg>
+          <span>Export</span>
+        </button>
+        <button class="btn btn-primary" onclick="openModal()">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8 2v12M2 8h12"/></svg>
+          <span>New Item</span>
+        </button>
+      </div>
+    </div>
+    <div class="search-wrap">
+      <div class="search-inner">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="7" cy="7" r="5"/><path d="M11 11l3 3"/></svg>
+        <input id="search" type="text" placeholder="Search items..." oninput="render()" autocomplete="off" spellcheck="false">
+      </div>
+    </div>
+  </div>
+
+  <div class="add-area">
+    <div class="add-row">
+      <select class="add-select" id="quick-cat" aria-label="Category" style="max-width:110px"></select>
+      <select class="add-select" id="quick-type" aria-label="Type" style="max-width:90px">
+        <option value="task">Task</option>
+        <option value="idea">Idea</option>
+        <option value="note">Note</option>
+        <option value="project">Project</option>
+      </select>
+      <input class="add-input" id="quick-input" placeholder="Quick add — press Enter to save" onkeydown="quickAdd(event)" autocomplete="off" spellcheck="false">
+      <button class="btn btn-primary" onclick="quickAdd({key:'Enter'})">Add</button>
+    </div>
+  </div>
+
+  <div class="list-area" id="list" role="list"></div>
+</div>
 
 </div>
 
-<!-- MODAL -->
-<div class="backdrop hidden" id="modal" onclick="closeModalOutside(event)" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+<div class="backdrop hidden" id="modal" onclick="closeModalOutside(event)" role="dialog" aria-modal="true">
   <div class="modal">
-    <div class="modal-title" id="modal-title">New Item</div>
+    <div class="modal-title">New Item</div>
     <div class="field">
       <label for="m-title">Title</label>
       <input id="m-title" placeholder="What's on your mind?" autocomplete="off">
@@ -314,6 +304,10 @@
       <textarea id="m-notes" placeholder="Any extra context..."></textarea>
     </div>
     <div class="field-row">
+      <div class="field">
+        <label for="m-cat">Life Area</label>
+        <select id="m-cat"></select>
+      </div>
       <div class="field">
         <label for="m-type">Type</label>
         <select id="m-type">
@@ -342,43 +336,80 @@
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
-const KEY = 'claude_notes_v2';
+const KEY = 'claude_notes_v3';
+
+const CATS = {
+  work:     {label:'Work',         color:'#60a5fa', dim:'rgba(96,165,250,.12)'},
+  personal: {label:'Personal',     color:'#a78bfa', dim:'rgba(167,139,250,.12)'},
+  family:   {label:'Family',       color:'#4ade80', dim:'rgba(74,222,128,.12)'},
+  kids:     {label:'Kids',         color:'#f472b6', dim:'rgba(244,114,182,.12)'},
+  finance:  {label:'Finance',      color:'#fbbf24', dim:'rgba(251,191,36,.12)'},
+  lifestyle:{label:'Lifestyle',    color:'#fb923c', dim:'rgba(251,146,60,.12)'},
+  health:   {label:'Health',       color:'#2dd4bf', dim:'rgba(45,212,191,.12)'},
+  musubi:   {label:'Musubi Strong',color:'#f87171', dim:'rgba(248,113,113,.12)'},
+  general:  {label:'General',      color:'#7e7e8c', dim:'rgba(126,126,140,.12)'},
+};
+
+const TYPE_LABEL = {task:'Task',idea:'Idea',note:'Note',project:'Project'};
+const SRC_LABEL  = {telegram:'via Telegram',browser:'added manually'};
 
 function load(){try{return JSON.parse(localStorage.getItem(KEY))||[];}catch{return [];}}
 function save(d){localStorage.setItem(KEY,JSON.stringify(d));}
 
-let filter='all';
+let filter='all', filterMode='view';
 
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,5);}
 
-function addItem(text,type='task',notes='',source='browser',priority='normal'){
+function buildCatOptions(selId){
+  const sel=document.getElementById(selId);
+  if(!sel)return;
+  sel.innerHTML=Object.entries(CATS).map(([k,v])=>`<option value="${k}">${v.label}</option>`).join('');
+}
+
+function buildCatNav(){
+  const el=document.getElementById('cat-nav');
+  el.innerHTML=Object.entries(CATS).map(([k,v])=>`
+    <div class="nav-item" id="nav-cat-${k}" onclick="setFilter('${k}','cat')" role="button" tabindex="0"
+         style="--cat-color:${v.color};--cat-dim:${v.dim}">
+      <span class="cat-dot" style="background:${v.color}"></span>
+      ${v.label} <span class="nav-count" id="cnt-cat-${k}">0</span>
+    </div>`).join('');
+}
+
+function addItem(text, type='task', notes='', source='browser', priority='normal', category='general'){
   if(!text.trim())return;
   const items=load();
-  items.unshift({id:uid(),text:text.trim(),notes:notes.trim(),type,priority,source,done:false,createdAt:new Date().toISOString()});
+  items.unshift({id:uid(),text:text.trim(),notes:notes.trim(),type,priority,source,category,done:false,createdAt:new Date().toISOString()});
   save(items);render();updateCounts();
   toast('Added: '+text.slice(0,48));
 }
 
 function toggleDone(id){
-  const items=load();
-  const i=items.findIndex(x=>x.id===id);
-  if(i<0)return;
-  items[i].done=!items[i].done;
-  items[i].updatedAt=new Date().toISOString();
+  const items=load();const i=items.findIndex(x=>x.id===id);if(i<0)return;
+  items[i].done=!items[i].done;items[i].updatedAt=new Date().toISOString();
   save(items);render();updateCounts();
 }
 
-function del(id){
-  save(load().filter(x=>x.id!==id));
-  render();updateCounts();toast('Deleted');
-}
+function del(id){save(load().filter(x=>x.id!==id));render();updateCounts();toast('Deleted');}
 
-function setFilter(f){
-  filter=f;
-  document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('active'));
-  document.getElementById('nav-'+f)?.classList.add('active');
-  const titles={all:'All Items',active:'Active Items',done:'Completed',task:'Tasks',idea:'Ideas',note:'Notes',project:'Projects'};
-  document.getElementById('page-title').textContent=titles[f]||'All Items';
+function setFilter(f, mode){
+  filter=f; filterMode=mode;
+  document.querySelectorAll('.nav-item').forEach(e=>{e.classList.remove('active');e.classList.remove('cat-active');});
+  const el=document.getElementById('nav-'+(mode==='cat'?'cat-':'')+f);
+  if(el){
+    if(mode==='cat'){el.classList.add('cat-active');}else{el.classList.add('active');}
+  }
+  const cat=CATS[f];
+  const dot=document.getElementById('page-title-dot');
+  if(mode==='cat'&&cat){
+    dot.style.display='block';dot.style.background=cat.color;
+    document.getElementById('page-title').childNodes[cat?0:0];
+    document.getElementById('page-title').lastChild.textContent=' '+cat.label;
+  } else {
+    dot.style.display='none';
+    const titles={all:'All Items',active:'Active Items',done:'Completed',task:'Tasks',idea:'Ideas',note:'Notes',project:'Projects'};
+    document.getElementById('page-title').lastChild.textContent=titles[f]||'All Items';
+  }
   render();
 }
 
@@ -386,7 +417,14 @@ function getFiltered(){
   const q=(document.getElementById('search')?.value||'').toLowerCase();
   return load().filter(item=>{
     const mq=!q||item.text.toLowerCase().includes(q)||(item.notes||'').toLowerCase().includes(q);
-    const mf=filter==='all'?true:filter==='active'?!item.done:filter==='done'?item.done:item.type===filter;
+    let mf;
+    if(filterMode==='view'){
+      mf=filter==='all'?true:filter==='active'?!item.done:filter==='done'?item.done:true;
+    } else if(filterMode==='type'){
+      mf=item.type===filter&&!item.done?true:item.type===filter;
+    } else {
+      mf=(item.category||'general')===filter;
+    }
     return mq&&mf;
   });
 }
@@ -400,50 +438,41 @@ function ageStr(iso){
   return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
 }
 
-const TYPE_LABEL={task:'Task',idea:'Idea',note:'Note',project:'Project'};
-const SRC_LABEL={telegram:'via Telegram',browser:'added manually'};
-
 function itemHTML(item){
-  const badge=`<span class="badge badge-${item.type}">${TYPE_LABEL[item.type]||item.type}</span>`;
+  const cat=CATS[item.category||'general']||CATS.general;
+  const typeBadge=`<span class="badge badge-${item.type}">${TYPE_LABEL[item.type]||item.type}</span>`;
+  const catBadge=`<span class="badge-cat" style="background:${cat.dim};color:${cat.color}">${cat.label}</span>`;
   const prio=item.priority==='high'?`<span class="prio-high"><span class="prio-dot"></span>High</span>`:'';
-  const src=`<span class="item-src">${item.source==='telegram'?'✈':'·'} ${SRC_LABEL[item.source]||item.source}</span>`;
+  const src=`<span class="item-src">${item.source==='telegram'?'↗':'·'} ${SRC_LABEL[item.source]||item.source}</span>`;
   const notes=item.notes?`<div class="item-sub">${esc(item.notes)}</div>`:'';
-  return`<div class="item${item.done?' done':''}" id="item-${item.id}" role="listitem">
-    <div class="cb" onclick="toggleDone('${item.id}')" role="checkbox" aria-checked="${item.done}" tabindex="0" onkeydown="if(event.key===' '||event.key==='Enter'){toggleDone('${item.id}');event.preventDefault()}">
-      <svg class="cb-check" width="9" height="9" viewBox="0 0 10 10" fill="none" stroke="#111" stroke-width="2.2"><path d="M1.5 5l2.8 2.8 4.2-5"/></svg>
-    </div>
-    <div class="item-body">
-      <div class="item-text">${esc(item.text)}</div>
-      ${notes}
-      <div class="item-meta">${badge}${prio}<span class="item-date">${ageStr(item.createdAt)}</span>${src}</div>
-    </div>
-    <div class="item-actions">
-      <button class="del-btn" onclick="del('${item.id}')" title="Delete" aria-label="Delete item">
-        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10"/></svg>
-      </button>
+  return`<div class="item${item.done?' done':''}" id="item-${item.id}" role="listitem" style="--item-cat-color:${cat.color}">
+    <div class="item-bar"></div>
+    <div class="item-inner">
+      <div class="cb" onclick="toggleDone('${item.id}')" role="checkbox" aria-checked="${item.done}" tabindex="0" onkeydown="if(event.key===' '||event.key==='Enter'){toggleDone('${item.id}');event.preventDefault()}">
+        <svg class="cb-check" width="9" height="9" viewBox="0 0 10 10" fill="none" stroke="#111" stroke-width="2.2"><path d="M1.5 5l2.8 2.8 4.2-5"/></svg>
+      </div>
+      <div class="item-body">
+        <div class="item-text">${esc(item.text)}</div>
+        ${notes}
+        <div class="item-meta">${catBadge}${typeBadge}${prio}<span class="item-date">${ageStr(item.createdAt)}</span>${src}</div>
+      </div>
+      <div class="item-actions">
+        <button class="del-btn" onclick="del('${item.id}')" title="Delete" aria-label="Delete item">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10"/></svg>
+        </button>
+      </div>
     </div>
   </div>`;
 }
-
-const EMPTY_CONFIG={
-  all:{icon:'◈',title:'Nothing here yet',hint:'Quick-add above, press ⌘N, or send <code>todo: your task</code> via Telegram'},
-  active:{icon:'○',title:'All caught up!',hint:'No active items. Add something new.'},
-  done:{icon:'✓',title:'Nothing completed yet',hint:'Check off items to see them here.'},
-  task:{icon:'□',title:'No tasks yet',hint:'Send <code>todo: your task</code> via Telegram or use the quick-add bar above.'},
-  idea:{icon:'◈',title:'No ideas captured',hint:'Send <code>idea: your idea</code> via Telegram whenever inspiration strikes.'},
-  note:{icon:'◇',title:'No notes yet',hint:'Send <code>note: your note</code> via Telegram or add one above.'},
-  project:{icon:'▷',title:'No projects yet',hint:'Send <code>project: project name</code> via Telegram or use the quick-add bar.'}
-};
 
 function render(){
   const all=getFiltered();
   const el=document.getElementById('list');
   if(!all.length){
-    const cfg=EMPTY_CONFIG[filter]||EMPTY_CONFIG.all;
     el.innerHTML=`<div class="empty-state">
-      <div class="empty-icon" aria-hidden="true" style="font-size:18px;color:var(--text-3)">${cfg.icon}</div>
-      <div class="empty-title">${cfg.title}</div>
-      <div class="empty-hint">${cfg.hint}</div>
+      <div class="empty-icon">◈</div>
+      <div class="empty-title">Nothing here yet</div>
+      <div class="empty-hint">Quick-add above, press ⌘N, or send <code>todo: your task</code> via Telegram</div>
     </div>`;
     return;
   }
@@ -467,15 +496,19 @@ function updateCounts(){
     task:items.filter(x=>x.type==='task').length,idea:items.filter(x=>x.type==='idea').length,
     note:items.filter(x=>x.type==='note').length,project:items.filter(x=>x.type==='project').length};
   Object.entries(c).forEach(([k,v])=>{const e=document.getElementById('cnt-'+k);if(e)e.textContent=v;});
+  Object.keys(CATS).forEach(k=>{
+    const e=document.getElementById('cnt-cat-'+k);
+    if(e)e.textContent=items.filter(x=>(x.category||'general')===k).length;
+  });
 }
 
 function quickAdd(e){
   if(e.key!=='Enter')return;
   const inp=document.getElementById('quick-input');
+  const text=inp.value.trim();if(!text)return;
   const type=document.getElementById('quick-type').value;
-  const text=inp.value.trim();
-  if(!text)return;
-  addItem(text,type);
+  const cat=document.getElementById('quick-cat').value;
+  addItem(text,type,'','browser','normal',cat);
   inp.value='';
 }
 
@@ -486,9 +519,9 @@ function openModal(){
 function closeModal(){document.getElementById('modal').classList.add('hidden');}
 function closeModalOutside(e){if(e.target.id==='modal')closeModal();}
 function addFromModal(){
-  const t=document.getElementById('m-title').value.trim();
-  if(!t)return;
-  addItem(t,document.getElementById('m-type').value,document.getElementById('m-notes').value,'browser',document.getElementById('m-priority').value);
+  const t=document.getElementById('m-title').value.trim();if(!t)return;
+  addItem(t,document.getElementById('m-type').value,document.getElementById('m-notes').value,'browser',
+    document.getElementById('m-priority').value,document.getElementById('m-cat').value);
   document.getElementById('m-title').value='';
   document.getElementById('m-notes').value='';
   closeModal();
@@ -531,11 +564,23 @@ let _toastTimer;
 function toast(msg){
   const el=document.getElementById('toast');
   el.textContent=msg;el.classList.add('show');
-  clearTimeout(_toastTimer);
-  _toastTimer=setTimeout(()=>el.classList.remove('show'),2800);
+  clearTimeout(_toastTimer);_toastTimer=setTimeout(()=>el.classList.remove('show'),2800);
 }
 
-// URL import: ?add=base64encodedJSON
+/* Migrate old items from v2 key (no category field) */
+(function migrate(){
+  const OLD='claude_notes_v2';
+  try{
+    const old=JSON.parse(localStorage.getItem(OLD));
+    if(Array.isArray(old)&&old.length){
+      const cur=load();const ids=new Set(cur.map(x=>x.id));
+      const fresh=old.filter(x=>!ids.has(x.id)).map(x=>({...x,category:x.category||'general'}));
+      if(fresh.length){save([...fresh,...cur]);localStorage.removeItem(OLD);}
+    }
+  }catch{}
+})();
+
+/* URL import: ?add=base64encodedJSON */
 (function checkURLImport(){
   const p=new URLSearchParams(location.search);
   if(!p.has('add'))return;
@@ -543,7 +588,7 @@ function toast(msg){
     const d=JSON.parse(atob(p.get('add')));
     if(Array.isArray(d)){
       const existing=load();const ids=new Set(existing.map(x=>x.id));
-      const fresh=d.filter(x=>!ids.has(x.id));
+      const fresh=d.filter(x=>!ids.has(x.id)).map(x=>({...x,category:x.category||'general'}));
       save([...fresh,...existing]);
       if(fresh.length)toast(`Added ${fresh.length} item${fresh.length!==1?'s':''} from Telegram`);
     }
@@ -551,8 +596,20 @@ function toast(msg){
   history.replaceState({},'',location.pathname);
 })();
 
+/* Init */
+buildCatOptions('quick-cat');
+buildCatOptions('m-cat');
+buildCatNav();
 render();
 updateCounts();
+
+/* Fix page title structure for the dot */
+(function(){
+  const pt=document.getElementById('page-title');
+  const dot=document.getElementById('page-title-dot');
+  const text=document.createTextNode('All Items');
+  pt.innerHTML='';pt.appendChild(dot);pt.appendChild(text);
+})();
 </script>
 </body>
 </html>
