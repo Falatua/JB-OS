@@ -166,9 +166,59 @@
   .toast.show{opacity:1;transform:translateY(0)}
   .kbd{font-size:10px;color:var(--text-3);background:var(--surface);border:1px solid var(--border-2);border-radius:4px;padding:1px 5px}
 
+  /* ===== Item Detail (Notion-style) ===== */
+  .detail-modal{background:var(--surface-modal);border:1px solid var(--border-2);border-radius:16px;width:660px;max-width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 24px 70px rgba(0,0,0,.6)}
+  .detail-header{display:flex;align-items:flex-start;gap:8px;padding:18px 22px 0}
+  .detail-type-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;flex:1}
+  .detail-close{background:none;border:none;color:var(--text-3);font-size:16px;cursor:pointer;padding:4px 8px;border-radius:6px;transition:background var(--t),color var(--t);line-height:1;flex-shrink:0}
+  .detail-close:hover{background:var(--surface-hover);color:var(--text)}
+  .detail-title{width:100%;background:none;border:none;outline:none;color:var(--text);font-size:23px;font-weight:700;letter-spacing:-.5px;padding:12px 22px 4px;font-family:inherit;line-height:1.3}
+  .detail-title::placeholder{color:var(--text-3)}
+  .detail-title.done-title{text-decoration:line-through;color:var(--text-3)}
+
+  .detail-props{padding:4px 22px 8px;display:flex;flex-direction:column;gap:1px}
+  .prop-row{display:flex;align-items:center;gap:10px;padding:5px 0;font-size:13px}
+  .prop-label{display:flex;align-items:center;gap:7px;width:118px;min-width:118px;color:var(--text-2);font-size:12.5px}
+  .prop-row select{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:6px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none;cursor:pointer;transition:border-color var(--t)}
+  .prop-row select:focus{border-color:var(--accent)}
+
+  .detail-section{padding:13px 22px;border-top:1px solid var(--border)}
+  .detail-section-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--text-3);margin-bottom:9px}
+  .detail-desc{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;color:var(--text);font-size:13.5px;line-height:1.6;font-family:inherit;outline:none;resize:vertical;min-height:88px;transition:border-color var(--t)}
+  .detail-desc:focus{border-color:var(--accent)}
+
+  .link-row{display:flex;gap:6px;margin-bottom:6px;align-items:center}
+  .link-row input{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:7px 10px;color:var(--text);font-size:12.5px;font-family:inherit;outline:none;transition:border-color var(--t)}
+  .link-row input:focus{border-color:var(--accent)}
+  .link-row .link-label{width:34%}
+  .link-row .link-url{flex:1}
+  .row-del{background:none;border:none;color:var(--text-3);cursor:pointer;padding:5px 8px;border-radius:5px;font-size:14px;flex-shrink:0;font-family:inherit}
+  .row-del:hover{color:var(--red);background:var(--red-dim)}
+
+  .detail-add-btn{display:inline-flex;align-items:center;gap:6px;background:none;border:1px dashed var(--border-2);color:var(--text-2);border-radius:var(--radius);padding:7px 12px;font-size:12.5px;font-family:inherit;cursor:pointer;transition:border-color var(--t),color var(--t);margin-top:2px}
+  .detail-add-btn:hover{border-color:var(--accent);color:var(--accent)}
+
+  .attach-grid{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:9px}
+  .attach-card{position:relative;width:100px;border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;background:var(--surface)}
+  .attach-card img{width:100px;height:74px;object-fit:cover;display:block;cursor:pointer}
+  .attach-doc{width:100px;height:74px;display:flex;align-items:center;justify-content:center;font-size:26px;cursor:pointer;text-decoration:none}
+  .attach-name{font-size:10px;color:var(--text-2);padding:4px 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .attach-del{position:absolute;top:4px;right:4px;background:rgba(0,0,0,.72);border:none;color:#fff;width:18px;height:18px;border-radius:50%;cursor:pointer;font-size:11px;line-height:1;display:flex;align-items:center;justify-content:center;padding:0}
+  .attach-del:hover{background:var(--red)}
+
+  .detail-meta{padding:11px 22px;border-top:1px solid var(--border);font-size:11px;color:var(--text-3);display:flex;flex-direction:column;gap:3px}
+  .detail-actions{display:flex;gap:8px;align-items:center;padding:14px 22px 20px;border-top:1px solid var(--border)}
+
+  /* Card affordances */
+  .item-body{cursor:pointer}
+  .item-indicators{display:inline-flex;align-items:center;gap:7px;margin-left:1px}
+  .item-ind{display:inline-flex;align-items:center;gap:3px;font-size:11px;color:var(--text-3)}
+
   @media(max-width:640px){
     .sidebar{display:none}
     .add-row .add-select:first-child{display:none}
+    .detail-title{font-size:20px}
+    .prop-label{width:104px;min-width:104px}
   }
 </style>
 </head>
@@ -351,6 +401,77 @@
   </div>
 </div>
 
+<!-- ===== Item Detail (Notion-style) ===== -->
+<div class="backdrop hidden" id="detail" onclick="closeDetailOutside(event)" role="dialog" aria-modal="true">
+  <div class="detail-modal" onclick="event.stopPropagation()">
+    <div class="detail-header">
+      <div class="detail-type-row" id="d-badges"></div>
+      <button class="detail-close" onclick="closeDetail()" aria-label="Close">✕</button>
+    </div>
+    <input id="d-title" class="detail-title" placeholder="Untitled" autocomplete="off">
+
+    <div class="detail-props">
+      <div class="prop-row">
+        <span class="prop-label">◷ Status</span>
+        <select id="d-status">
+          <option value="active">Active</option>
+          <option value="done">Done / Archived</option>
+        </select>
+      </div>
+      <div class="prop-row">
+        <span class="prop-label">◆ Life Area</span>
+        <select id="d-cat"></select>
+      </div>
+      <div class="prop-row">
+        <span class="prop-label">▣ Type</span>
+        <select id="d-type">
+          <option value="task">Task</option>
+          <option value="idea">Idea</option>
+          <option value="note">Note</option>
+          <option value="project">Project</option>
+        </select>
+      </div>
+      <div class="prop-row">
+        <span class="prop-label">⚑ Priority</span>
+        <select id="d-priority">
+          <option value="high">High</option>
+          <option value="normal">Normal</option>
+          <option value="low">Low</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="detail-section">
+      <div class="detail-section-title">Description</div>
+      <textarea id="d-description" class="detail-desc" placeholder="Add more detail, context, sub-tasks, links inline…"></textarea>
+    </div>
+
+    <div class="detail-section">
+      <div class="detail-section-title">Links</div>
+      <div id="d-links"></div>
+      <button class="detail-add-btn" onclick="addLinkRow()">+ Add link</button>
+    </div>
+
+    <div class="detail-section">
+      <div class="detail-section-title">Attachments</div>
+      <div class="attach-grid" id="d-attachments"></div>
+      <label class="detail-add-btn">
+        + Attach image or document
+        <input type="file" id="d-file" multiple accept="image/*,.pdf,.doc,.docx,.txt,.md,.csv,.xls,.xlsx,.ppt,.pptx,.zip" style="display:none" onchange="handleFileAttach(event)">
+      </label>
+    </div>
+
+    <div class="detail-meta" id="d-meta"></div>
+
+    <div class="detail-actions">
+      <button class="btn btn-ghost" style="color:var(--red)" onclick="deleteFromDetail()">Delete</button>
+      <div style="flex:1"></div>
+      <button class="btn btn-ghost" onclick="closeDetail()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveDetail()">Save changes</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
@@ -400,7 +521,9 @@ function buildCatNav(){
 function addItem(text, type='task', notes='', source='browser', priority='normal', category='general'){
   if(!text.trim())return;
   const items=load();
-  items.unshift({id:uid(),text:text.trim(),notes:notes.trim(),type,priority,source,category,done:false,createdAt:new Date().toISOString()});
+  const now=new Date().toISOString();
+  items.unshift({id:uid(),text:text.trim(),notes:notes.trim(),type,priority,source,category,done:false,
+    description:'',links:[],attachments:[],createdAt:now,updatedAt:now});
   save(items);render();updateCounts();
   toast('Added: '+text.slice(0,48));
 }
@@ -491,8 +614,15 @@ function itemHTML(item, isArchiveView){
   const catBadge=`<span class="badge-cat" style="background:${cat.dim};color:${cat.color}">${cat.label}</span>`;
   const prio=item.priority==='high'?`<span class="prio-high"><span class="prio-dot"></span>High</span>`:'';
   const src=`<span class="item-src">${item.source==='telegram'?'↗':'·'} ${SRC_LABEL[item.source]||item.source}</span>`;
-  const notes=item.notes?`<div class="item-sub">${esc(item.notes)}</div>`:'';
+  const sub=item.description?item.description:item.notes;
+  const notes=sub?`<div class="item-sub">${esc(sub)}</div>`:'';
   const archivedDate=item.archivedAt?`<span class="item-date">done ${ageStr(item.archivedAt)}</span>`:'';
+  // Detail indicators
+  const indParts=[];
+  if(item.description)indParts.push(`<span class="item-ind" title="Has description"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 4h10M3 8h10M3 12h6"/></svg></span>`);
+  if(item.links&&item.links.length)indParts.push(`<span class="item-ind" title="${item.links.length} link(s)"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6.5 9.5l3-3M7 4.5l1-1a2.5 2.5 0 0 1 3.5 3.5l-1 1M9 11.5l-1 1A2.5 2.5 0 0 1 4.5 9l1-1"/></svg>${item.links.length}</span>`);
+  if(item.attachments&&item.attachments.length)indParts.push(`<span class="item-ind" title="${item.attachments.length} attachment(s)"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M11 6.5l-4 4a1.5 1.5 0 0 0 2 2l4-4a3 3 0 0 0-4-4l-4 4a4.5 4.5 0 0 0 6 6l3-3"/></svg>${item.attachments.length}</span>`);
+  const indicators=indParts.length?`<span class="item-indicators">${indParts.join('')}</span>`:'';
   const actions=isArchiveView
     ?`<button class="del-btn restore-btn" onclick="restore('${item.id}')" title="Restore to active" aria-label="Restore item" style="color:var(--green)">
         <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l3.5-3.5M3 8l3.5 3.5M3 8h9a2 2 0 0 1 0 4H9"/></svg>
@@ -515,10 +645,10 @@ function itemHTML(item, isArchiveView){
     <div class="item-bar"></div>
     <div class="item-inner">
       ${checkEl}
-      <div class="item-body">
+      <div class="item-body" onclick="openDetail('${item.id}')" title="Click to open & edit details">
         <div class="item-text" style="${isArchiveView?'text-decoration:line-through;color:var(--text-3)':''}">${esc(item.text)}</div>
         ${notes}
-        <div class="item-meta">${catBadge}${typeBadge}${prio}${isArchiveView?archivedDate:`<span class="item-date">${ageStr(item.createdAt)}</span>`}${src}</div>
+        <div class="item-meta">${catBadge}${typeBadge}${prio}${indicators}${isArchiveView?archivedDate:`<span class="item-date">${ageStr(item.createdAt)}</span>`}${src}</div>
       </div>
       <div class="item-actions">${actions}</div>
     </div>
@@ -602,8 +732,124 @@ function addFromModal(){
   closeModal();
 }
 
+/* ===== Item Detail (Notion-style) ===== */
+let detailId=null, _dAttach=[];
+
+function openDetail(id){
+  const it=load().find(x=>x.id===id);if(!it)return;
+  detailId=id;
+  _dAttach=(it.attachments||[]).map(a=>({...a}));
+  document.getElementById('d-title').value=it.text||'';
+  document.getElementById('d-description').value=it.description||it.notes||'';
+  document.getElementById('d-status').value=it.archived?'done':'active';
+  document.getElementById('d-cat').value=it.category||'general';
+  document.getElementById('d-type').value=it.type||'task';
+  document.getElementById('d-priority').value=it.priority||'normal';
+  renderDetailLinks(it.links||[]);
+  renderDetailAttach();
+  renderDetailBadges();
+  const created=it.createdAt?new Date(it.createdAt).toLocaleString():'—';
+  const updated=it.updatedAt?new Date(it.updatedAt).toLocaleString():created;
+  document.getElementById('d-meta').innerHTML=
+    `<span>Created ${esc(created)}</span><span>Last edited ${esc(updated)}</span><span>Source: ${esc(SRC_LABEL[it.source]||it.source||'manual')}</span>`;
+  ['d-cat','d-type','d-priority','d-status'].forEach(sid=>{document.getElementById(sid).onchange=renderDetailBadges;});
+  document.getElementById('detail').classList.remove('hidden');
+  setTimeout(()=>document.getElementById('d-title').focus(),50);
+}
+
+function renderDetailBadges(){
+  const cat=CATS[document.getElementById('d-cat').value]||CATS.general;
+  const type=document.getElementById('d-type').value;
+  const prio=document.getElementById('d-priority').value;
+  const status=document.getElementById('d-status').value;
+  const parts=[`<span class="badge-cat" style="background:${cat.dim};color:${cat.color}">${cat.label}</span>`,
+    `<span class="badge badge-${type}">${TYPE_LABEL[type]||type}</span>`];
+  if(prio==='high')parts.push(`<span class="prio-high"><span class="prio-dot"></span>High</span>`);
+  if(status==='done')parts.push(`<span class="badge" style="background:var(--green-dim);color:var(--green)">Done</span>`);
+  document.getElementById('d-badges').innerHTML=parts.join('');
+  document.getElementById('d-title').classList.toggle('done-title', status==='done');
+}
+
+function linkRowHTML(label,url){
+  return `<div class="link-row">
+    <input class="link-label" placeholder="Label" value="${esc(label)}">
+    <input class="link-url" placeholder="https://…" value="${esc(url)}">
+    <button class="row-del" onclick="this.parentElement.remove()" title="Remove" aria-label="Remove link">✕</button>
+  </div>`;
+}
+function renderDetailLinks(links){
+  document.getElementById('d-links').innerHTML=(links||[]).map(l=>linkRowHTML(l.label||'',l.url||'')).join('');
+}
+function addLinkRow(){document.getElementById('d-links').insertAdjacentHTML('beforeend',linkRowHTML('',''));}
+function collectLinks(){
+  return [...document.querySelectorAll('#d-links .link-row')].map(r=>({
+    label:r.querySelector('.link-label').value.trim(),
+    url:r.querySelector('.link-url').value.trim()
+  })).filter(l=>l.url||l.label);
+}
+
+function renderDetailAttach(){
+  const wrap=document.getElementById('d-attachments');
+  wrap.innerHTML=_dAttach.map((a,i)=>{
+    const isImg=(a.type||'').startsWith('image/');
+    const inner=isImg
+      ?`<img src="${a.dataUrl}" alt="${esc(a.name)}" onclick="window.open('${a.dataUrl}','_blank')">`
+      :`<a class="attach-doc" href="${a.dataUrl}" download="${esc(a.name)}" title="Download ${esc(a.name)}">⬇</a>`;
+    return `<div class="attach-card">
+      <button class="attach-del" onclick="removeAttach(${i})" title="Remove" aria-label="Remove attachment">✕</button>
+      ${inner}
+      <div class="attach-name" title="${esc(a.name)}">${esc(a.name)}</div>
+    </div>`;
+  }).join('');
+}
+function removeAttach(i){_dAttach.splice(i,1);renderDetailAttach();}
+
+function handleFileAttach(e){
+  const files=[...e.target.files];let pending=files.length;
+  if(!pending)return;
+  files.forEach(f=>{
+    if(f.size>3*1024*1024){toast(`"${f.name}" over 3MB — skipped (browser storage limit)`);if(!--pending)e.target.value='';return;}
+    const r=new FileReader();
+    r.onload=ev=>{_dAttach.push({name:f.name,type:f.type||'application/octet-stream',size:f.size,dataUrl:ev.target.result});renderDetailAttach();if(!--pending)e.target.value='';};
+    r.onerror=()=>{toast('Failed to read '+f.name);if(!--pending)e.target.value='';};
+    r.readAsDataURL(f);
+  });
+}
+
+function saveDetail(){
+  if(!detailId)return;
+  const items=load();const i=items.findIndex(x=>x.id===detailId);if(i<0)return;
+  const it=items[i];
+  it.text=document.getElementById('d-title').value.trim()||it.text;
+  it.description=document.getElementById('d-description').value.trim();
+  it.category=document.getElementById('d-cat').value;
+  it.type=document.getElementById('d-type').value;
+  it.priority=document.getElementById('d-priority').value;
+  const status=document.getElementById('d-status').value;
+  if(status==='done'){if(!it.archived){it.archived=true;it.done=true;it.archivedAt=new Date().toISOString();}}
+  else{it.archived=false;it.done=false;delete it.archivedAt;}
+  it.links=collectLinks();
+  it.attachments=_dAttach;
+  it.updatedAt=new Date().toISOString();
+  try{save(items);}
+  catch(err){toast('Storage full — remove a large attachment and retry');return;}
+  render();updateCounts();closeDetail();
+  toast('Saved');
+}
+
+function deleteFromDetail(){
+  if(!detailId)return;
+  if(!confirm('Delete this item permanently?'))return;
+  save(load().filter(x=>x.id!==detailId));
+  render();updateCounts();closeDetail();
+  toast('Deleted');
+}
+
+function closeDetail(){document.getElementById('detail').classList.add('hidden');detailId=null;_dAttach=[];}
+function closeDetailOutside(e){if(e.target.id==='detail')closeDetail();}
+
 document.addEventListener('keydown',e=>{
-  if(e.key==='Escape')closeModal();
+  if(e.key==='Escape'){closeModal();closeDetail();}
   if((e.metaKey||e.ctrlKey)&&e.key==='n'){e.preventDefault();openModal();}
   if((e.metaKey||e.ctrlKey)&&e.key==='f'){e.preventDefault();document.getElementById('search').focus();}
 });
@@ -714,6 +960,7 @@ function toast(msg){
 /* Init */
 buildCatOptions('quick-cat');
 buildCatOptions('m-cat');
+buildCatOptions('d-cat');
 buildCatNav();
 render();
 updateCounts();
