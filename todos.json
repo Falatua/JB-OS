@@ -1,5 +1,21 @@
 [
   {
+    "id": "idea-daily-todo",
+    "text": "Build a daily to-do / daily task system for JB OS",
+    "type": "idea",
+    "notes": "Think through a recurring \"daily tasks\" feature — model it on the Musubi daily designer Claude built",
+    "description": "Goal: bring a daily-rhythm layer into JB OS. Claude already built a Musubi daily activity system (the musubi-designer that auto-generates ~15 Instagram-ready concepts every morning on a schedule). Apply that same 'daily generated batch + scheduled trigger' pattern to a personal daily to-do system. Things to think through: (1) a 'Today' view that surfaces what matters each day; (2) recurring/daily tasks that auto-regenerate; (3) carry-over of unfinished items to the next day; (4) a morning trigger that assembles the day's agenda; (5) how Musubi daily activities feed in as their own daily track. Come back to this — it's a someday/maybe idea, not urgent.",
+    "links": [],
+    "attachments": [],
+    "priority": "normal",
+    "category": "tech",
+    "source": "chat",
+    "done": false,
+    "archived": false,
+    "createdAt": "2026-05-29T10:42:00Z",
+    "updatedAt": "2026-05-29T10:42:00Z"
+  },
+  {
     "id": "tg-012",
     "text": "Look into Obsidian for Claude Code and other AIs",
     "type": "note",
