@@ -1,1 +1,123 @@
-[]
+[
+  {
+    "id": "tg-003",
+    "text": "Donate to John Brock's cancer GoFundMe",
+    "type": "task",
+    "notes": "Personal charitable giving — check GoFundMe link",
+    "priority": "normal",
+    "category": "personal",
+    "source": "telegram",
+    "done": false,
+    "createdAt": "2026-05-28T02:01:29Z"
+  },
+  {
+    "id": "tg-001",
+    "text": "Pay hospital birth bill",
+    "type": "task",
+    "notes": "Due at the beginning of next month (June 2026)",
+    "priority": "high",
+    "category": "finance",
+    "source": "telegram",
+    "done": false,
+    "createdAt": "2026-05-28T01:51:32Z"
+  },
+  {
+    "id": "tg-002",
+    "text": "Look into investment opportunities (capital gains tax)",
+    "type": "task",
+    "notes": "Research capital gains tax implications",
+    "priority": "normal",
+    "category": "finance",
+    "source": "telegram",
+    "done": false,
+    "createdAt": "2026-05-28T01:51:32Z"
+  },
+  {
+    "id": "tg-004",
+    "text": "Order the Anythor grip and accessories",
+    "type": "task",
+    "notes": "Order grip and consider any accessories",
+    "priority": "normal",
+    "category": "shopping",
+    "source": "telegram",
+    "done": false,
+    "createdAt": "2026-05-29T19:11:00Z"
+  },
+  {
+    "id": "tg-005",
+    "text": "Set up a VPS server",
+    "type": "task",
+    "notes": "",
+    "priority": "normal",
+    "category": "tech",
+    "source": "telegram",
+    "done": false,
+    "createdAt": "2026-05-29T19:11:00Z"
+  },
+  {
+    "id": "tg-006",
+    "text": "Build out the to-do list web app and connect to GitHub Pages + GitHub repo",
+    "type": "task",
+    "notes": "Deployed as JB's OS — https://falatua.github.io/jbs-os/",
+    "priority": "normal",
+    "category": "tech",
+    "source": "telegram",
+    "done": true,
+    "createdAt": "2026-05-29T19:11:00Z"
+  },
+  {
+    "id": "tg-007",
+    "text": "Look into Claude Connections features and skills for work computer",
+    "type": "task",
+    "notes": "Explore Claude Connections integrations relevant to work",
+    "priority": "normal",
+    "category": "work",
+    "source": "telegram",
+    "done": false,
+    "createdAt": "2026-05-29T19:11:00Z"
+  },
+  {
+    "id": "tg-008",
+    "text": "Replace batteries in Mackenzie's key fob",
+    "type": "task",
+    "notes": "",
+    "priority": "normal",
+    "category": "errands",
+    "source": "telegram",
+    "done": false,
+    "createdAt": "2026-05-29T19:11:00Z"
+  },
+  {
+    "id": "tg-009",
+    "text": "Find Mackenzie's electric pumps",
+    "type": "task",
+    "notes": "",
+    "priority": "normal",
+    "category": "errands",
+    "source": "telegram",
+    "done": false,
+    "createdAt": "2026-05-29T19:11:00Z"
+  },
+  {
+    "id": "tg-010",
+    "text": "Request LARQ water filters — sooner than usual",
+    "type": "task",
+    "notes": "JB wants to request filters quicker if possible",
+    "priority": "high",
+    "category": "shopping",
+    "source": "telegram",
+    "done": false,
+    "createdAt": "2026-05-29T19:17:00Z"
+  },
+  {
+    "id": "tg-011",
+    "text": "Download ROMs from Karen's old phone (wipe phone first)",
+    "type": "task",
+    "notes": "Make sure phone is wiped before/after transferring ROMs",
+    "priority": "normal",
+    "category": "tech",
+    "source": "telegram",
+    "done": false,
+    "createdAt": "2026-05-29T19:17:00Z"
+  }
+]
