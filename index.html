@@ -901,15 +901,15 @@ const CATS = {
   finance:  {label:'Finance',      color:'#fbbf24', dim:'rgba(251,191,36,.12)'},
   tech:     {label:'Tech',         color:'#38bdf8', dim:'rgba(56,189,248,.12)'},
   shopping: {label:'Shopping',     color:'#fb923c', dim:'rgba(251,146,60,.12)'},
-  errands:  {label:'Errands',      color:'#f472b6', dim:'rgba(244,114,182,.12)'},
-  lifestyle:{label:'Lifestyle',    color:'#fb923c', dim:'rgba(251,146,60,.12)'},
+  errands:  {label:'Errands',      color:'#fb7185', dim:'rgba(251,113,133,.12)'},
+  lifestyle:{label:'Lifestyle',    color:'#a3e635', dim:'rgba(163,230,53,.12)'},
   health:   {label:'Health',       color:'#2dd4bf', dim:'rgba(45,212,191,.12)'},
   musubi:   {label:'Musubi Strong',color:'#f87171', dim:'rgba(248,113,113,.12)'},
   general:  {label:'General',      color:'#7e7e8c', dim:'rgba(126,126,140,.12)'},
 };
 
 const TYPE_LABEL = {task:'Task',idea:'Idea',note:'Note',project:'Project'};
-const SRC_LABEL  = {telegram:'via Telegram',browser:'added manually'};
+const SRC_LABEL  = {telegram:'via Telegram',browser:'added manually',chat:'via chat'};
 
 function load(){try{return JSON.parse(localStorage.getItem(KEY))||[];}catch{return [];}}
 function save(d){localStorage.setItem(KEY,JSON.stringify(d));}
@@ -949,6 +949,7 @@ function toggleDone(id){
   items[i].done=true;
   items[i].archived=true;
   items[i].archivedAt=new Date().toISOString();
+  items[i].userEdited=true; // lock this item's state so the server seed won't revert it
   save(items);render();updateCounts();
   toast('Done — moved to Archive');
 }
@@ -956,6 +957,7 @@ function toggleDone(id){
 function restore(id){
   const items=load();const i=items.findIndex(x=>x.id===id);if(i<0)return;
   items[i].done=false;items[i].archived=false;delete items[i].archivedAt;
+  items[i].userEdited=true; // lock so a server done-state doesn't re-archive it on reload
   save(items);render();updateCounts();
   toast('Restored to active list');
 }
@@ -1360,7 +1362,7 @@ function guessEmoji(text,category){
     [/idea|brainstorm|concept/,'💡']
   ];
   for(let i=0;i<map.length;i++){if(map[i][0].test(s))return map[i][1];}
-  const c={work:'💼',personal:'🌿',family:'👨‍👩‍👧',kids:'🧒',finance:'💰',tech:'💻',shopping:'🛒',errands:'✅',lifestyle:'✨',health:'🩺',musubi:'🌺',general:'📌'};
+  const c={work:'💼',personal:'🌿',family:'👨‍👩‍👧',kids:'🧒',finance:'💰',tech:'💻',shopping:'🛒',errands:'🧾',lifestyle:'✨',health:'🩺',musubi:'🌺',general:'📌'};
   return c[category]||'📌';
 }
 
@@ -1437,7 +1439,7 @@ function toast(msg){
             if(srv[k]!==undefined && srv[k]!==next[k]){next=(next===loc?{...loc}:next);next[k]=srv[k];changed=true;}
           });
         }
-        if(srv.done&&!next.archived){next=(next===loc?{...loc}:next);next.done=true;next.archived=true;next.archivedAt=next.archivedAt||new Date().toISOString();changed=true;}
+        if(srv.done&&!next.archived&&!loc.userEdited){next=(next===loc?{...loc}:next);next.done=true;next.archived=true;next.archivedAt=next.archivedAt||new Date().toISOString();changed=true;}
         return next;
       })];
       if(changed)save(merged);
@@ -1505,7 +1507,7 @@ function toggleRoutine(scope,id){
   const i=arr.indexOf(id);
   if(i>=0)arr.splice(i,1); else arr.push(id);
   store.log[pkey]=arr; rSave(scope,store); render(); updateCounts();
-  if(i<0){const s=routineStreak(scope,id);toast(s>1?`Done — ${s} ${scope==='daily'?'day':'month'} streak 🔥`:'Done');}
+  if(i<0){const s=scope==='daily'?routineStreak('daily',id):0;toast(s>1?`Done — ${s} day streak 🔥`:'Done');}
 }
 function addRoutineItem(scope){
   const inp=document.getElementById('quick-input'), text=inp.value.trim(); if(!text)return;
@@ -1888,6 +1890,9 @@ function journalEntryHTML(e,idx){
 /* Composer */
 let _jEditId=null,_jBlocks=[],_jMood=null;
 function newJournalEntry(){
+  // one entry per day: if today's entry already exists (e.g. a mood logged from the dashboard), edit it instead of creating a duplicate
+  const todayE=jEntries().find(e=>e.date===dateKey(new Date()));
+  if(todayE){openJournal(todayE.id);return;}
   _lastFocus=document.activeElement;_jEditId=null;_jBlocks=[];_jMood=null;
   document.getElementById('j-date').value=dateKey(new Date());
   document.getElementById('j-delete').style.display='none';
@@ -2007,6 +2012,7 @@ function closePromptsOutside(e){if(e.target.id==='prompts-modal')closePrompts();
 /* ===== Today dashboard ===== */
 function timeGreeting(){const h=new Date().getHours();return h<12?'Good morning':h<18?'Good afternoon':'Good evening';}
 function moodVal(id){return ({great:5,good:4,okay:3,low:2,rough:1})[id]||null;}
+function localDay(iso){if(!iso)return '';const d=new Date(iso);return isNaN(d.getTime())?'':dateKey(d);}
 function moodColorByVal(v){const m=JMOODS.find(x=>moodVal(x.id)===v);return m?m.color:'var(--accent)';}
 
 function svgRing(pct,color,size,sw){
@@ -2026,7 +2032,7 @@ function svgDonut(segs,centerText){
 }
 function svgMoodLine(series){
   const W=320,H=74,pad=9,n=series.length;
-  const x=i=>pad+i*(W-2*pad)/(n-1),y=v=>H-pad-(v-1)/4*(H-2*pad);
+  const x=i=>n<=1?W/2:pad+i*(W-2*pad)/(n-1),y=v=>H-pad-(v-1)/4*(H-2*pad);
   const pts=[];series.forEach((v,i)=>{if(v!=null)pts.push([x(i),y(v),v]);});
   if(!pts.length)return '<div class="dempty" style="padding:24px 2px">No moods logged yet</div>';
   const poly=pts.map(p=>p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ');
@@ -2062,7 +2068,7 @@ function journalInsights(){
   Object.entries(wc).filter(x=>x[1]>=3).sort((a,b)=>b[1]-a[1]).forEach(([w,c])=>{if(chips.length<9&&!seenL.has(w)){seenL.add(w);chips.push({w,c});}});
   // mood read
   const mvals=[],byWd={},valByDate={};
-  recent.forEach(e=>{if(e.mood){const v=moodVal(e.mood);if(v){mvals.push(v);valByDate[e.date]=v;const wd=new Date(e.date+'T00:00:00').getDay();(byWd[wd]=byWd[wd]||[]).push(v);}}});
+  recent.forEach(e=>{if(!e.mood)return;const v=moodVal(e.mood);if(!v)return;mvals.push(v);if(!e.date)return;const dt=new Date(e.date+'T00:00:00');if(isNaN(dt.getTime()))return;valByDate[e.date]=v;const wd=dt.getDay();(byWd[wd]=byWd[wd]||[]).push(v);});
   let moodRead='';
   if(mvals.length>=3){
     const avg=mvals.reduce((a,b)=>a+b,0)/mvals.length;
@@ -2087,14 +2093,14 @@ function renderDashboard(){
   // tasks
   const overdue=active.filter(i=>i.dueDate&&i.dueDate<todayK);
   const dueToday=active.filter(i=>i.dueDate===todayK);
-  const doneToday=archived.filter(i=>(i.archivedAt||'').slice(0,10)===todayK).length;
+  const doneToday=archived.filter(i=>localDay(i.archivedAt)===todayK).length;
   // daily habits
   const daily=loadDaily(),dDone=new Set(daily.log[todayK]||[]);
   const dTotal=daily.templates.length,dDoneN=daily.templates.filter(t=>dDone.has(t.id)).length;
   const habitPct=dTotal?Math.round(dDoneN/dTotal*100):0;
   let maxStreak=0;daily.templates.forEach(t=>{const s=routineStreak('daily',t.id);if(s>maxStreak)maxStreak=s;});
   // mood
-  const entries=jEntries(),todayMood=(entries.find(e=>e.date===todayK)||{}).mood||null;
+  const entries=jEntries(),todayMood=((entries.find(e=>e.date===todayK&&e.mood)||entries.find(e=>e.date===todayK))||{}).mood||null;
   const wk=[];for(let i=0;i<7;i++){const d=new Date();d.setDate(d.getDate()-i);const e=entries.find(x=>x.date===dateKey(d));if(e&&e.mood){const v=moodVal(e.mood);if(v)wk.push(v);}}
   const weekAvg=wk.length?(wk.reduce((a,b)=>a+b,0)/wk.length):null;
   const moodSeries=[];for(let i=29;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const e=entries.find(x=>x.date===dateKey(d));moodSeries.push(e&&e.mood?moodVal(e.mood):null);}
@@ -2155,7 +2161,7 @@ function renderDashboard(){
     +(active.length?'<div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap"><div style="flex-shrink:0">'+svgDonut(segs,active.length)+'</div><div class="dlegend" style="flex:1;min-width:120px">'+legend+'</div></div>':'<div class="dempty">No open tasks</div>')+'</div>';
 
   // completed last 14 days bars
-  const comp=[];for(let i=13;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const k=dateKey(d);comp.push(archived.filter(x=>(x.archivedAt||'').slice(0,10)===k).length);}
+  const comp=[];for(let i=13;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const k=dateKey(d);comp.push(archived.filter(x=>localDay(x.archivedAt)===k).length);}
   const cMax=Math.max(1,...comp),cTotal=comp.reduce((a,b)=>a+b,0);
   const bars=comp.map((v,i)=>'<div class="dbar'+(v===0?' empty':'')+'" style="height:'+(v/cMax*100)+'%" title="'+v+' completed"></div>').join('');
   const compCard='<div class="dcard"><div class="dcard-label">Completed · last 14 days</div><div class="dbars">'+bars+'</div><div class="dchart-cap">'+cTotal+' task'+(cTotal===1?'':'s')+' completed in 2 weeks</div></div>';
