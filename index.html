@@ -518,6 +518,102 @@
     .header-actions .btn-ghost span{display:none}
     .header-actions .btn-ghost{padding:6px 9px}
   }
+
+  /* ===== Musubi Strong module ===== */
+  #mz{--mz-red:#C8443A;--mz-gold:#E5B23A;--mz-teal:#1E4D5C;--mz-teal2:#2E8090;--mz-cream:#F2EAD8;font-size:13.5px;}
+  #mz .mz-hero{display:flex;align-items:center;gap:12px;padding:14px 16px;border:1px solid var(--border);border-radius:var(--radius);background:linear-gradient(180deg,rgba(200,68,58,.10),transparent);margin-bottom:16px;}
+  #mz .mz-badge{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;background:var(--mz-red);color:#fff;padding:3px 9px;border-radius:3px;}
+  #mz .mz-hero h2{font-size:15px;font-weight:650;color:var(--mz-cream);letter-spacing:.02em;}
+  #mz .mz-hero .mz-src{margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em;}
+  #mz .mz-tabs{display:flex;gap:2px;flex-wrap:wrap;margin-bottom:18px;border-bottom:1px solid var(--border);}
+  #mz .mz-tab{font-family:var(--mono);font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--text-2);padding:8px 11px;cursor:pointer;border:none;background:none;border-bottom:2px solid transparent;transition:var(--t);}
+  #mz .mz-tab:hover{color:var(--mz-cream);}
+  #mz .mz-tab.active{color:var(--mz-gold);border-bottom-color:var(--mz-gold);}
+  #mz .mz-sec{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--mz-red);margin:0 0 10px;padding-bottom:6px;border-bottom:1px solid var(--border);}
+  #mz .mz-sec.mt{margin-top:24px;}
+  #mz .mz-grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:8px;}
+  @media(max-width:720px){#mz .mz-grid2{grid-template-columns:1fr;}}
+  #mz .mz-block{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);}
+  #mz .mz-block-h{display:flex;align-items:center;gap:9px;padding:9px 12px;border-bottom:1px solid var(--border);}
+  #mz .mz-block-h .ic{font-size:15px;}
+  #mz .mz-block-h .ti{font-size:12.5px;font-weight:600;color:var(--mz-cream);letter-spacing:.03em;text-transform:uppercase;}
+  #mz .mz-pill{margin-left:auto;font-family:var(--mono);font-size:9.5px;background:var(--mz-teal);color:var(--mz-cream);padding:2px 7px;border-radius:3px;letter-spacing:.05em;}
+  #mz .mz-pill.gold{background:#5a4010;color:var(--mz-gold);}
+  #mz .mz-pill.red{background:var(--mz-red);color:#fff;}
+  #mz .mz-task{display:flex;align-items:flex-start;gap:9px;padding:6px 12px;cursor:pointer;border-top:1px solid rgba(255,255,255,.03);}
+  #mz .mz-task:first-of-type{border-top:none;}
+  #mz .mz-ck{width:15px;height:15px;border:1px solid var(--border-2);border-radius:4px;flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;transition:var(--t);}
+  #mz .mz-task.done .mz-ck{background:var(--mz-teal2);border-color:var(--mz-teal2);}
+  #mz .mz-task.done .mz-ck::after{content:'✓';color:#fff;font-size:10px;}
+  #mz .mz-num{font-family:var(--mono);font-size:11px;color:var(--mz-gold);min-width:26px;flex-shrink:0;}
+  #mz .mz-tt{font-size:12px;color:var(--text);}
+  #mz .mz-task.done .mz-tt{color:var(--text-3);text-decoration:line-through;}
+  #mz table.mz-tb{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:8px;}
+  #mz table.mz-tb th{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-3);text-align:left;padding:6px 9px;border-bottom:1px solid var(--border);}
+  #mz table.mz-tb td{padding:8px 9px;border-bottom:1px solid rgba(255,255,255,.04);vertical-align:top;color:var(--text-2);}
+  #mz table.mz-tb tr:last-child td{border-bottom:none;}
+  #mz .mz-tb .lbl{font-weight:600;color:var(--mz-cream);white-space:nowrap;}
+  #mz .mz-tb .nx{font-family:var(--mono);color:var(--mz-gold);white-space:nowrap;}
+  #mz .mz-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--border);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:8px;}
+  #mz .mz-stat{background:var(--surface);padding:14px 15px;}
+  #mz .mz-stat .v{font-size:25px;font-weight:700;color:var(--mz-cream);line-height:1;}
+  #mz .mz-stat .v span{color:var(--mz-gold);font-size:15px;}
+  #mz .mz-stat .l{font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-3);margin-top:5px;}
+  #mz .mz-stat .n{font-size:11px;color:var(--text-2);margin-top:3px;}
+  #mz .mz-callout{border-left:3px solid var(--mz-gold);background:rgba(229,178,58,.06);padding:10px 13px;border-radius:0 var(--radius) var(--radius) 0;margin:8px 0 16px;}
+  #mz .mz-callout.red{border-left-color:var(--mz-red);background:rgba(200,68,58,.06);}
+  #mz .mz-callout.teal{border-left-color:var(--mz-teal2);background:rgba(30,77,92,.12);}
+  #mz .mz-callout h4{font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--mz-gold);margin-bottom:3px;}
+  #mz .mz-callout.red h4{color:var(--mz-red);}#mz .mz-callout.teal h4{color:#4aafcc;}
+  #mz .mz-callout p{font-size:12px;color:var(--text-2);}
+  #mz .mz-week{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:8px;}
+  #mz .mz-day{flex:1;min-width:88px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+  #mz .mz-day.today{border-color:var(--mz-gold);box-shadow:0 0 0 1px var(--mz-gold) inset;}
+  #mz .mz-day .dn{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;text-align:center;padding:6px 4px;background:var(--bg);color:var(--text-3);border-bottom:1px solid var(--border);}
+  #mz .mz-day.today .dn{color:var(--mz-gold);}
+  #mz .mz-slots{padding:7px 6px;display:flex;flex-direction:column;gap:4px;}
+  #mz .mz-slot{font-family:var(--mono);font-size:9.5px;padding:3px 6px;border-radius:3px;text-align:center;}
+  #mz .mz-slot.reel{background:rgba(200,68,58,.15);color:#e98379;}
+  #mz .mz-slot.story{background:rgba(30,77,92,.25);color:#4aafcc;}
+  #mz .mz-slot.carousel{background:rgba(229,178,58,.12);color:var(--mz-gold);}
+  #mz .mz-slot.rest{background:var(--surface-hover);color:var(--text-3);}
+  #mz .mz-ideas{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-bottom:8px;}
+  #mz .mz-idea{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:13px;}
+  #mz .mz-idea .ty{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;padding:2px 6px;border-radius:3px;display:inline-block;margin-bottom:7px;}
+  #mz .mz-idea .ty.reel{background:rgba(200,68,58,.15);color:#e98379;}
+  #mz .mz-idea .ty.carousel{background:rgba(229,178,58,.12);color:var(--mz-gold);}
+  #mz .mz-idea .ty.story{background:rgba(30,77,92,.25);color:#4aafcc;}
+  #mz .mz-idea h4{font-size:14px;font-weight:650;color:var(--mz-cream);text-transform:uppercase;letter-spacing:.02em;margin-bottom:4px;}
+  #mz .mz-idea p{font-size:11.5px;color:var(--text-2);}
+  #mz .mz-idea .hook{margin-top:7px;font-size:11.5px;color:var(--text);border-left:2px solid var(--mz-gold);padding-left:8px;font-style:italic;}
+  #mz .mz-signals{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:8px;}
+  @media(max-width:680px){#mz .mz-signals{grid-template-columns:1fr;}}
+  #mz .mz-sig{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:13px;}
+  #mz .mz-sig .rk{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px;}
+  #mz .mz-sig .nm{font-size:16px;font-weight:700;color:var(--mz-cream);text-transform:uppercase;letter-spacing:.02em;margin-bottom:6px;}
+  #mz .mz-sig .barw{background:var(--border);height:3px;border-radius:2px;margin-bottom:8px;}
+  #mz .mz-sig .bar{height:3px;border-radius:2px;}
+  #mz .mz-sig p{font-size:11.5px;color:var(--text-2);}
+  #mz .mz-pipe{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+  @media(max-width:720px){#mz .mz-pipe{grid-template-columns:1fr;}}
+  #mz .mz-col{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);min-height:70px;}
+  #mz .mz-col-h{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:9px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:7px;color:var(--mz-cream);}
+  #mz .mz-col-h .ct{margin-left:auto;color:var(--text-3);}
+  #mz .mz-card{padding:9px 11px;border-bottom:1px solid rgba(255,255,255,.04);}
+  #mz .mz-card:last-child{border-bottom:none;}
+  #mz .mz-card .ct-row{display:flex;align-items:flex-start;gap:7px;}
+  #mz .mz-card .cty{font-family:var(--mono);font-size:9px;text-transform:uppercase;padding:1px 5px;border-radius:3px;flex-shrink:0;margin-top:1px;}
+  #mz .mz-card .cty.reel{background:rgba(200,68,58,.15);color:#e98379;}#mz .mz-card .cty.carousel{background:rgba(229,178,58,.12);color:var(--mz-gold);}#mz .mz-card .cty.story{background:rgba(30,77,92,.25);color:#4aafcc;}
+  #mz .mz-card .ctitle{font-size:12px;color:var(--mz-cream);font-weight:550;flex:1;}
+  #mz .mz-card .cmove{display:flex;gap:6px;margin-top:7px;}
+  #mz .mz-card .cmove button{font-family:var(--mono);font-size:11px;color:var(--text-2);background:var(--surface-hover);border:1px solid var(--border);border-radius:4px;padding:1px 8px;cursor:pointer;transition:var(--t);}
+  #mz .mz-card .cmove button:hover{color:var(--mz-cream);border-color:var(--border-2);}
+  #mz .mz-addrow{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px;align-items:center;}
+  #mz .mz-addrow input,#mz .mz-addrow select{background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;padding:6px 9px;font-family:inherit;}
+  #mz .mz-addrow input{flex:1;min-width:130px;}
+  #mz .mz-addrow button{background:var(--mz-red);color:#fff;border:none;border-radius:6px;padding:7px 13px;font-size:12px;font-weight:600;cursor:pointer;}
+  #mz .mz-empty{padding:14px;color:var(--text-3);font-size:11.5px;text-align:center;}
+  #mz .mz-done-chip{font-family:var(--mono);font-size:10px;color:var(--mz-teal2);}
 </style>
 </head>
 <body>
@@ -554,6 +650,10 @@
     <div class="nav-item" id="nav-view-journal" onclick="setView('journal')" role="button" tabindex="0">
       <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3.5 2.5H10a1.5 1.5 0 0 1 1.5 1.5v9.5H5A1.5 1.5 0 0 1 3.5 12z"/><path d="M11.5 4H13v9.5M5.5 5.5h3.5M5.5 8h2.5"/></svg>
       Journal <span class="nav-count" id="cnt-journal">0</span>
+    </div>
+    <div class="nav-item" id="nav-view-musubi" onclick="setView('musubi')" role="button" tabindex="0">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5.5 2.5L8 4l2.5-1.5L13 4.5l-1.5 2v6a.5.5 0 0 1-.5.5h-6a.5.5 0 0 1-.5-.5v-6L3 4.5z"/></svg>
+      Musubi
     </div>
   </div>
 
@@ -1560,7 +1660,7 @@ function closeRoutine(){document.getElementById('routine-modal').classList.add('
 function closeRoutineOutside(e){if(e.target.id==='routine-modal')closeRoutine();}
 
 /* ===== View switching ===== */
-function syncWorkspaceNav(v){['dashboard','list','daily','monthly','calendar','journal'].forEach(k=>{const e=document.getElementById('nav-view-'+k);if(e)e.classList.toggle('active',k===v);});}
+function syncWorkspaceNav(v){['dashboard','list','daily','monthly','calendar','journal','musubi'].forEach(k=>{const e=document.getElementById('nav-view-'+k);if(e)e.classList.toggle('active',k===v);});}
 function applyViewChrome(v){
   const sw=document.getElementById('search-wrap'), aa=document.getElementById('add-area'), qt=document.getElementById('quick-type'), qi=document.getElementById('quick-input');
   if(v==='list'){sw.style.display='';aa.style.display='';qt.style.display='';qi.placeholder='Quick add — press Enter to save';}
@@ -1569,8 +1669,9 @@ function applyViewChrome(v){
   else if(v==='calendar'){sw.style.display='none';aa.style.display='none';}
   else if(v==='journal'){sw.style.display='none';aa.style.display='none';}
   else if(v==='dashboard'){sw.style.display='none';aa.style.display='none';}
-  // Task action buttons (Import/Export/New Item) only apply to the list views; hide in the journal's calm space
-  const ha=document.querySelector('.header-actions');if(ha)ha.style.display=(v==='journal')?'none':'';
+  else if(v==='musubi'){sw.style.display='none';aa.style.display='none';}
+  // Task action buttons (Import/Export/New Item) only apply to the list views; hide elsewhere
+  const ha=document.querySelector('.header-actions');if(ha)ha.style.display=(v==='journal'||v==='musubi')?'none':'';
 }
 function setView(v){
   if(v==='list'){view='list';applyViewChrome('list');setFilter(filter,filterMode);updateCounts();return;}
@@ -1594,6 +1695,7 @@ function renderView(){
   else if(view==='calendar')renderCalendar();
   else if(view==='journal')renderJournal();
   else if(view==='dashboard')renderDashboard();
+  else if(view==='musubi')renderMusubi();
 }
 
 /* ===== Routine rendering ===== */
@@ -2231,6 +2333,145 @@ updateCounts();
   const text=document.createTextNode('All Items');
   pt.innerHTML='';pt.appendChild(dot);pt.appendChild(text);
 })();
+
+/* ===== Musubi Strong (IG Growth System) ===== */
+const MZKEY='jbos_musubi_v1';
+let mzTab='daily';
+const MZ_SEED=[
+  {id:'p1',type:'reel',title:'Lahaina Then + Now',stage:'idea'},
+  {id:'p2',type:'carousel',title:'5% Goes Where',stage:'idea'},
+  {id:'p3',type:'reel',title:'South Bay PI Faces',stage:'idea'},
+  {id:'p4',type:'carousel',title:'The Banyan Tree Tee',stage:'idea'},
+  {id:'p5',type:'story',title:'This or That — PI Edition',stage:'idea'},
+  {id:'p6',type:'reel',title:'How the Tee Gets Made',stage:'idea'}
+];
+const MZ_CHECK={
+  morning:{icon:'🌅',title:'Morning Block',pill:'6–9 AM PT',cls:'',tasks:[
+    ['m1','30','Leave 30 meaningful comments (4+ words) on posts in your niche'],
+    ['m2','15','Like 15 posts from target accounts (PI community, SoCal streetwear, Lahaina pages)'],
+    ['m3','2–3','Post 2–3 Stories — BTS, poll, or cultural moment. No product push yet'],
+    ['m4','100%','Reply to every comment and DM from the last 24h before posting anything new']
+  ]},
+  midday:{icon:'☀️',title:'Midday Post Window',pill:'9 AM–12 PM PT',cls:'gold',tasks:[
+    ['d1','1','Post your main content for the day (Reel or carousel — see Schedule)'],
+    ['d2','30m','Stay active 30 min after posting — reply to every comment immediately'],
+    ['d3','10','Comment on 10 more posts during the lunch scroll window']
+  ]},
+  evening:{icon:'🌆',title:'Evening Block',pill:'7–9 PM PT',cls:'red',tasks:[
+    ['e1','2–3','Post 2–3 more Stories — interactive (poll, question box, slider)'],
+    ['e2','5','Follow 5 new niche-relevant accounts (PI, South Bay, Hawaiʻi, streetwear)'],
+    ['e3','10','Comment on 10 evening posts — engagement peaks for West Coast'],
+    ['e4','1','Check Insights: note which format drove the most sends today']
+  ]},
+  audit:{icon:'📊',title:'End of Day Audit',pill:'5 min',cls:'',tasks:[
+    ['a1','—','Log today’s reach, saves, and sends (use the Performance tab)'],
+    ['a2','—','Note any comment that sparked a real conversation — early community'],
+    ['a3','—','Confirm tomorrow’s content is ready before you close the app']
+  ]}
+};
+function mzLoad(){
+  let s;try{s=JSON.parse(localStorage.getItem(MZKEY))||{}}catch(e){s={}}
+  if(!s.checklist)s.checklist={};
+  if(!Array.isArray(s.pipeline))s.pipeline=MZ_SEED.map(x=>({...x}));
+  if(!Array.isArray(s.perf))s.perf=[];
+  const cut=dateKey(new Date(Date.now()-31*864e5));
+  Object.keys(s.checklist).forEach(k=>{if(k<cut)delete s.checklist[k];});
+  return s;
+}
+function mzSave(s){localStorage.setItem(MZKEY,JSON.stringify(s));}
+function mzPanelDaily(){
+  const s=mzLoad(),k=dateKey(new Date()),st=s.checklist[k]||{};
+  let total=0,done=0;Object.values(MZ_CHECK).forEach(b=>b.tasks.forEach(t=>{total++;if(st[t[0]])done++;}));
+  const blocks=Object.values(MZ_CHECK).map(b=>`<div class="mz-block"><div class="mz-block-h"><span class="ic">${b.icon}</span><span class="ti">${b.title}</span><span class="mz-pill ${b.cls}">${b.pill}</span></div>${b.tasks.map(t=>`<div class="mz-task ${st[t[0]]?'done':''}" onclick="mzToggle(this,'${t[0]}')"><div class="mz-ck"></div><div class="mz-num">${t[1]}</div><div class="mz-tt">${t[2]}</div></div>`).join('')}</div>`).join('');
+  const weekly=[
+    ['3–4×/wk','Post a Reel','Reels get ~22% more reach than any other format. Primary discovery surface.'],
+    ['2–3×/wk','Post a Carousel','Carousels drive far more engagement per impression. Best format for saves.'],
+    ['4–7×/day','Story frames','Keeps you top of followers’ feeds. ≥2 frames daily must be interactive.'],
+    ['50+/wk','Comments on others','Highest-ROI outreach. 4+ words. “Fire 🔥” does zero.'],
+    ['1×/wk','Review Insights','Look at sends, saves, reach. Double down on the format with the most sends.'],
+    ['1×/wk','DM a real person','Not a pitch. Thank someone who shared or left a real comment.']
+  ];
+  return `<div class="mz-sec" style="display:flex;align-items:center;gap:10px">Daily Non-Negotiables — Do These Every Day <span id="mz-done" class="mz-done-chip" style="margin-left:auto">${done}/${total} today</span></div>
+    <div class="mz-grid2">${blocks}</div>
+    <div class="mz-sec mt">Weekly Non-Negotiables</div>
+    <table class="mz-tb"><thead><tr><th>Frequency</th><th>Action</th><th>Why</th></tr></thead><tbody>${weekly.map(r=>`<tr><td class="nx">${r[0]}</td><td class="lbl">${r[1]}</td><td>${r[2]}</td></tr>`).join('')}</tbody></table>
+    <div class="mz-callout"><h4>The 50-Comment Rule</h4><p>50 real comments per week to niche accounts is not optional. At a 10–15% profile-visit-to-follow rate, that’s 5–7 new followers minimum, just from showing up. Every week.</p></div>`;
+}
+function mzToggle(el,id){const s=mzLoad(),k=dateKey(new Date());if(!s.checklist[k])s.checklist[k]={};s.checklist[k][id]=!s.checklist[k][id];mzSave(s);el.classList.toggle('done',!!s.checklist[k][id]);const c=document.getElementById('mz-done');if(c){const st=s.checklist[k];let total=0,done=0;Object.values(MZ_CHECK).forEach(b=>b.tasks.forEach(t=>{total++;if(st[t[0]])done++;}));c.textContent=done+'/'+total+' today';}}
+function mzPanelNumbers(){
+  const stats=[['3–5','x','Feed posts/week','Sweet spot per Buffer 9.6M-post study'],['4','x','Reels/week','4+/wk ≈ more views vs 1/week'],['4–5','x','Story frames/day','Daily Stories lift views'],['50','+','Comments/week','30/day = strongest organic lever'],['+9','%','Follower growth lift','Daily posting vs 2–3×/week'],['60','min','Post+engage window','First hour drives most of your reach']];
+  const metrics=[['Weekly','Follower growth','50–100 new'],['Per Reel','Organic reach','500+ views'],['Overall','Engagement rate','3–6% target'],['Per week','Profile visits','200+'],['Stories','Story view rate','15–20% of followers'],['Reel','Completion rate','50%+ (under 30s)'],['Monthly','Link-in-bio clicks','40+ clicks']];
+  const dont=[['Follow / Unfollow','Flagged as spam, damages trust','Comment first. Let follows be earned.'],['“Like if you agree” bait','Meta-confirmed: suppresses reach','Ask a real question tied to your content.'],['Reposting others’ content','10+ reposts/30 days = off Explore','Original only. Add real commentary if you share.'],['More than 1 feed post/day','Posts compete; reach drops','One feed post/day max. Use Stories for more.'],['30-hashtag stuffing','Triggers spam filters','5–10 targeted tags. Caption keywords matter more.'],['Going dark 7+ days','~15% reach drop after a 7-day gap','Can’t post a Reel? Post a Story. Never go dark.']];
+  return `<div class="mz-sec">Minimum Volume Targets — Build to These</div>
+    <div class="mz-stats">${stats.map(s=>`<div class="mz-stat"><div class="v">${s[0]}<span>${s[1]}</span></div><div class="l">${s[2]}</div><div class="n">${s[3]}</div></div>`).join('')}</div>
+    <div class="mz-sec mt">Key Metrics to Hit by Month 3</div>
+    <table class="mz-tb"><thead><tr><th>Period</th><th>Metric</th><th>Target</th></tr></thead><tbody>${metrics.map(m=>`<tr><td class="nx">${m[0]}</td><td class="lbl">${m[1]}</td><td class="nx">${m[2]}</td></tr>`).join('')}</tbody></table>
+    <div class="mz-sec mt">What NOT to Do — Platform-Confirmed Penalties</div>
+    <table class="mz-tb"><thead><tr><th>Action</th><th>Penalty</th><th>Do Instead</th></tr></thead><tbody>${dont.map(d=>`<tr><td class="lbl">${d[0]}</td><td style="color:var(--mz-red)">${d[1]}</td><td>${d[2]}</td></tr>`).join('')}</tbody></table>`;
+}
+function mzPanelSchedule(){
+  const days=[['Mon',[['carousel','Carousel — 9AM'],['story','Story ×3 AM'],['story','Story ×2 PM']]],['Tue',[['reel','Reel — 9AM'],['story','Story ×3 AM'],['story','Story ×2 PM']]],['Wed',[['reel','Reel — 11AM'],['story','Story ×3 AM'],['story','Story ×2 PM']]],['Thu',[['carousel','Carousel — 11AM'],['reel','Reel — 7PM'],['story','Story ×3 AM']]],['Fri',[['reel','Reel — 9AM'],['story','Story ×3 AM'],['story','Story ×2 PM']]],['Sat',[['carousel','Carousel (opt)'],['story','Story ×4 — BTS']]],['Sun',[['story','Story ×3 — Community'],['rest','Batch next week']]]];
+  const idxMap={1:0,2:1,3:2,4:3,5:4,6:5,0:6},todayIdx=idxMap[new Date().getDay()];
+  const slots=[['Reels (discovery)','9–11 AM','Morning scroll. First-hour engagement decides the push to non-followers.'],['Carousels (engagement)','9 AM–12 PM','Lunch window — people swipe when they have 2+ minutes.'],['Stories (retention)','6–9 AM + 7–9 PM','Morning commute + evening couch. Two windows doubles visibility.'],['Commenting','7–9 AM + 12–1 PM + 7–9 PM','Comment when your audience is actively scrolling.']];
+  return `<div class="mz-sec">Weekly Posting Calendar (Pacific Time)</div>
+    <div class="mz-week">${days.map((d,i)=>`<div class="mz-day ${i===todayIdx?'today':''}"><div class="dn">${d[0]}${i===todayIdx?' • today':''}</div><div class="mz-slots">${d[1].map(s=>`<div class="mz-slot ${s[0]}">${s[1]}</div>`).join('')}</div></div>`).join('')}</div>
+    <div class="mz-callout teal"><h4>Tuesday + Thursday are your highest-priority days</h4><p>Sprout, Buffer, and SocialInsider agree Tue–Thu are peak engagement windows for West-Coast apparel/streetwear. If you only hit 2 strong posts a week, make them Tue and Thu, 9–11 AM PT.</p></div>
+    <div class="mz-sec mt">Time Slots by Post Type (PT)</div>
+    <table class="mz-tb"><thead><tr><th>Format</th><th>Best Window</th><th>Why</th></tr></thead><tbody>${slots.map(s=>`<tr><td class="lbl">${s[0]}</td><td class="nx">${s[1]}</td><td>${s[2]}</td></tr>`).join('')}</tbody></table>`;
+}
+function mzPanelContent(){
+  const ideas=[['reel','Reel — Culture','Lahaina Then + Now','30s before/after of the Banyan Court area. No narration — let the images carry it. End on the tee + the donation line.','People DM this to Hawaiʻi connections immediately.'],['carousel','Carousel — Story','5% Goes Where','Slide-by-slide of how the Maui Strong donation works: the number, the foundation, what it funds, where to buy.','High-save content. People bookmark charity receipts.'],['reel','Reel — Community','South Bay PI Faces','Ask 3–5 PI people in Redondo/Torrance/Gardena: “What does aloha mean on the mainland?” 45s. Most shareable on this list.','This gets sent. Every time.'],['carousel','Carousel — Brand','The Banyan Tree Tee','10 slides: the tee, the Lahaina banyan history, what the fire took, why you made this piece, where to get it.','Cultural context earns product posts their place.'],['story','Story — Interactive','This or That — PI Edition','Polls: Maui or Oahu. Spam musubi or loco moco. High engagement, signals a strong audience relationship.','Run 3/week. Two minutes to make.'],['reel','Reel — Product','How the Tee Gets Made','BTS of print, fold, QC, packaging. No voiceover — brand soundtrack (Rebel Souljahz, Maoli). 30s.','Process builds trust faster than product shots.']];
+  const caption=[['Line 1 — Hook','One sentence. Stops the scroll. Specific.','“The banyan tree in Lahaina was 150 years old.”'],['Lines 2–5 — Body','The story / cultural context / the why. No gym hype, no tourist language.','“It survived every storm. It became the gathering place. When the fire came, it held.”'],['Last line — CTA','Ask something specific, or state the mission as fact.','“5% of this tee goes to the Maui Strong Fund. Link in bio.”'],['Hashtags','5–10 only. Location + niche + branded. In caption.','#LahainaLivesOn #MusubiStrong #PacificIslander #SouthBayLA #808']];
+  return `<div class="mz-callout gold"><h4>The #1 Metric is Sends per Reach</h4><p>DM shares are weighted far higher than likes. Every piece needs to answer one question: “Would someone send this to a person they care about?” If no, rethink it.</p></div>
+    <div class="mz-sec">High-Sends Content — What Gets Shared via DM</div>
+    <div class="mz-ideas">${ideas.map(i=>`<div class="mz-idea"><span class="ty ${i[0]}">${i[1]}</span><h4>${i[2]}</h4><p>${i[3]}</p><div class="hook">${i[4]}</div></div>`).join('')}</div>
+    <div class="mz-sec mt">Caption Structure That Earns Saves + Sends</div>
+    <table class="mz-tb"><thead><tr><th>Part</th><th>What to Write</th><th>Example</th></tr></thead><tbody>${caption.map(c=>`<tr><td class="lbl">${c[0]}</td><td>${c[1]}</td><td style="color:var(--mz-cream)">${c[2]}</td></tr>`).join('')}</tbody></table>
+    <div class="mz-callout red"><h4>Never Do These in Captions</h4><p>“Aloha vibes!” · “Rise and grind” · “For the real ones” · “Double tap if you agree” · “Island time” · “Mahalo!” with an exclamation. Off-brand, and the engagement-bait ones now hurt reach.</p></div>`;
+}
+function mzPanelAlgo(){
+  const sig=[['#1 Strongest','Sends per Reach','How often people DM your post to a friend. Weighted well above likes. The primary lever for reaching new audiences.','var(--mz-gold)','100%'],['#2 Strong','Watch Time','For Reels: how long people watch and whether they rewatch. A 45s video finished by 70% beats a 15s at 40%. Hook in 1.7s.','var(--mz-red)','65%'],['#3 Meaningful','Saves','Educational carousels and cultural reference guides earn saves. Bookmarks signal durable value.','var(--mz-teal2)','45%']];
+  const phases=[['Minute 0–30','Shown to a small non-follower test group; engagement rate measured.','Reply to every comment immediately. Be online. Don’t post and vanish.'],['Hour 1–3','Strong performance → wider audience. Sends and saves matter most.','Keep engaging. Add the post to your Stories to drive more views.'],['Day 1–3','Continued strength unlocks Explore. Sends are the key lever.','If a post is performing, don’t post another feed post that day. Let it breathe.'],['Trial Reels','Shows a Reel to non-followers first; promotes to followers only if it performs.','Use Trial Reels to test hooks without risking your main feed.']];
+  const targets=[['PI Community','@fittedhi, @aloha.army, @in4mation, @house.of.mana','Cultural specificity. React to their actual work, not compliments.'],['Lahaina / Maui Recovery','Maui fire recovery + Maui Strong Fund pages','Genuine. Show up with substance, not marketing.'],['South Bay / SoCal PI','Gardena / Carson / Torrance PI pages, South Bay lifestyle','Local-first. Mention specific places when relevant.'],['Reference Brand','@barbellbrigade','Study their engagement. Be visible in that community’s comments.'],['Island Reggae','Rebel Souljahz, Maoli, Common Kings, The Green pages','PI music fans and PI apparel fans are the same person.']];
+  return `<div class="mz-sec">The 3 Ranking Signals — per Adam Mosseri</div>
+    <div class="mz-signals">${sig.map(s=>`<div class="mz-sig"><div class="rk" style="color:${s[3]}">${s[0]} Signal</div><div class="nm">${s[1]}</div><div class="barw"><div class="bar" style="background:${s[3]};width:${s[4]}"></div></div><p>${s[2]}</p></div>`).join('')}</div>
+    <div class="mz-callout teal"><h4>Why the first 30–60 minutes after posting are everything</h4><p>Instagram shows your post to a small test group first. Engagement unlocks a wider group, then broader still. Engage hard the minute you post.</p></div>
+    <div class="mz-sec mt">The Audition System — How New Content Gets Distributed</div>
+    <table class="mz-tb"><thead><tr><th>Phase</th><th>What Happens</th><th>Your Job</th></tr></thead><tbody>${phases.map(p=>`<tr><td class="lbl">${p[0]}</td><td>${p[1]}</td><td style="color:var(--mz-cream)">${p[2]}</td></tr>`).join('')}</tbody></table>
+    <div class="mz-sec mt">Target Accounts — Comment on These Weekly</div>
+    <table class="mz-tb"><thead><tr><th>Category</th><th>Who</th><th>What to Say</th></tr></thead><tbody>${targets.map(t=>`<tr><td class="lbl">${t[0]}</td><td>${t[1]}</td><td>${t[2]}</td></tr>`).join('')}</tbody></table>
+    <div style="font-family:var(--mono);font-size:10px;color:var(--text-3);margin-top:18px;padding-top:12px;border-top:1px solid var(--border)">Data: Sprout 2025 · Buffer 9.6M-post study · SocialInsider 35M · Later 6M · Mosseri Q1 2025–26 · Dash Social 1.2M</div>`;
+}
+function mzPanelPipeline(){
+  const s=mzLoad(),cols=[['idea','Ideas'],['progress','In Progress'],['posted','Posted']];
+  const card=it=>{const left=it.stage!=='idea'?`<button onclick="mzMove('${it.id}',-1)" title="Back">←</button>`:'';const right=it.stage!=='posted'?`<button onclick="mzMove('${it.id}',1)" title="Forward">→</button>`:'';return `<div class="mz-card"><div class="ct-row"><span class="cty ${it.type}">${it.type}</span><span class="ctitle">${esc(it.title)}</span></div><div class="cmove">${left}${right}<button onclick="mzDel('${it.id}')" title="Remove">✕</button></div></div>`;};
+  const colHTML=cols.map(c=>{const items=s.pipeline.filter(p=>p.stage===c[0]);return `<div class="mz-col"><div class="mz-col-h">${c[1]}<span class="ct">${items.length}</span></div>${items.length?items.map(card).join(''):'<div class="mz-empty">Empty</div>'}</div>`;}).join('');
+  return `<div class="mz-sec">Content Pipeline — Move Ideas to Posted</div>
+    <div class="mz-addrow"><input id="mz-pi" placeholder="New content idea…" onkeydown="if(event.key==='Enter')mzAdd()"><select id="mz-pt"><option value="reel">Reel</option><option value="carousel">Carousel</option><option value="story">Story</option></select><button onclick="mzAdd()">Add idea</button></div>
+    <div class="mz-pipe">${colHTML}</div>`;
+}
+function mzAdd(){const inp=document.getElementById('mz-pi'),ty=document.getElementById('mz-pt'),v=inp.value.trim();if(!v)return;const s=mzLoad();s.pipeline.unshift({id:'p'+Date.now(),type:ty.value,title:v,stage:'idea'});mzSave(s);renderMusubi();}
+function mzMove(id,dir){const s=mzLoad(),order=['idea','progress','posted'],it=s.pipeline.find(p=>p.id===id);if(!it)return;const i=order.indexOf(it.stage)+dir;if(i<0||i>2)return;it.stage=order[i];mzSave(s);renderMusubi();}
+function mzDel(id){const s=mzLoad();s.pipeline=s.pipeline.filter(p=>p.id!==id);mzSave(s);renderMusubi();}
+function mzPanelPerf(){
+  const s=mzLoad(),rows=s.perf.slice().sort((a,b)=>b.date<a.date?-1:1).slice(0,12);
+  const tgt=[['Reel reach','500+ views'],['Engagement rate','3–6%'],['Profile visits','200+/wk'],['Story view rate','15–20%']];
+  return `<div class="mz-sec">Performance Log — Track Real Numbers vs Targets</div>
+    <div class="mz-addrow"><input type="date" id="mz-fd" value="${dateKey(new Date())}" style="flex:0 0 auto"><select id="mz-ff"><option value="Reel">Reel</option><option value="Carousel">Carousel</option><option value="Story">Story</option></select><input type="number" id="mz-fr" placeholder="Reach" style="max-width:88px"><input type="number" id="mz-fs" placeholder="Saves" style="max-width:88px"><input type="number" id="mz-fn" placeholder="Sends" style="max-width:88px"><button onclick="mzPerfAdd()">Log post</button></div>
+    ${rows.length?`<table class="mz-tb"><thead><tr><th>Date</th><th>Format</th><th>Reach</th><th>Saves</th><th>Sends</th><th></th></tr></thead><tbody>${rows.map(r=>`<tr><td class="nx">${r.date}</td><td class="lbl">${esc(r.format)}</td><td>${r.reach||'—'}</td><td>${r.saves||'—'}</td><td style="color:var(--mz-gold)">${r.sends||'—'}</td><td><button onclick="mzPerfDel('${r.id}')" style="background:none;border:none;color:var(--text-3);cursor:pointer">✕</button></td></tr>`).join('')}</tbody></table>`:'<div class="mz-empty">No posts logged yet. After each post, log reach, saves, and sends — sends are the #1 signal.</div>'}
+    <div class="mz-sec mt">Month-3 Targets (reference)</div>
+    <table class="mz-tb"><tbody>${tgt.map(t=>`<tr><td class="lbl">${t[0]}</td><td class="nx">${t[1]}</td></tr>`).join('')}</tbody></table>`;
+}
+function mzPerfAdd(){const g=id=>document.getElementById(id).value;const e={id:'f'+Date.now(),date:g('mz-fd')||dateKey(new Date()),format:g('mz-ff'),reach:+g('mz-fr')||0,saves:+g('mz-fs')||0,sends:+g('mz-fn')||0};if(!e.reach&&!e.saves&&!e.sends)return;const s=mzLoad();s.perf.push(e);mzSave(s);renderMusubi();}
+function mzPerfDel(id){const s=mzLoad();s.perf=s.perf.filter(p=>p.id!==id);mzSave(s);renderMusubi();}
+function renderMusubi(){
+  setTitle('Musubi Strong');
+  const tabs=[['daily','Daily'],['pipeline','Pipeline'],['perf','Performance'],['numbers','Numbers'],['schedule','Schedule'],['content','Content'],['algo','Algorithm']];
+  const builders={daily:mzPanelDaily,pipeline:mzPanelPipeline,perf:mzPanelPerf,numbers:mzPanelNumbers,schedule:mzPanelSchedule,content:mzPanelContent,algo:mzPanelAlgo};
+  const panel=builders[mzTab]||mzPanelDaily;
+  document.getElementById('list').innerHTML=`<div id="mz"><div class="mz-hero"><span class="mz-badge">Musubi Strong</span><h2>IG Growth System</h2><span class="mz-src">Research-backed · 2025–26</span></div><div class="mz-tabs">${tabs.map(t=>`<button class="mz-tab ${mzTab===t[0]?'active':''}" onclick="mzSubTab('${t[0]}')">${t[1]}</button>`).join('')}</div><div class="mz-panel">${panel()}</div></div>`;
+}
+function mzSubTab(t){mzTab=t;renderMusubi();}
 </script>
 </body>
 </html>
