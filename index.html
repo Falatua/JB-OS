@@ -2587,6 +2587,37 @@ function installApp(){
   _deferredPrompt.userChoice.finally(function(){_deferredPrompt=null;showInstallBtn(false);});
 }
 
+/* ===== Live freshness check =====
+   Reload to the newest deploy the moment the app is opened or refocused — so the
+   installed app / open tab never sits on a stale version. Uses a cheap HEAD request
+   (no body) and compares the deploy's ETag/Last-Modified; only reloads when it
+   actually changed AND nothing would be lost (no open dialog, no in-progress typing). */
+(function(){
+  let baseTag=null, _busy=false;
+  function ver(){
+    return fetch('./index.html',{method:'HEAD',cache:'no-store'})
+      .then(function(r){return r.headers.get('etag')||r.headers.get('last-modified')||null;});
+  }
+  function safeToReload(){
+    if(document.querySelectorAll('.backdrop:not(.hidden)').length)return false; // a modal is open
+    var qi=document.getElementById('quick-input'); if(qi&&qi.value.trim())return false; // mid quick-add
+    var ae=document.activeElement;
+    if(ae&&/^(INPUT|TEXTAREA)$/.test(ae.tagName)&&(ae.value||'').trim())return false; // mid edit
+    return true;
+  }
+  function check(){
+    if(_busy||baseTag===null||document.hidden||navigator.onLine===false)return;
+    _busy=true;
+    ver().then(function(t){ if(t&&t!==baseTag&&safeToReload())location.reload(); })
+         .catch(function(){}).finally(function(){_busy=false;});
+  }
+  ver().then(function(t){baseTag=t;}).catch(function(){});
+  document.addEventListener('visibilitychange',function(){if(!document.hidden)check();});
+  window.addEventListener('focus',check);
+  window.addEventListener('online',check);
+  setInterval(check,3*60*1000);
+})();
+
 /* Fix page title structure for the dot */
 (function(){
   const pt=document.getElementById('page-title');
