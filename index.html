@@ -2466,8 +2466,8 @@ function mzPerfAdd(){const g=id=>document.getElementById(id).value;const e={id:'
 function mzPerfDel(id){const s=mzLoad();s.perf=s.perf.filter(p=>p.id!==id);mzSave(s);renderMusubi();}
 function renderMusubi(){
   setTitle('Musubi Strong');
-  const tabs=[['daily','Daily'],['pipeline','Pipeline'],['perf','Performance'],['numbers','Numbers'],['schedule','Schedule'],['content','Content'],['algo','Algorithm']];
-  const builders={daily:mzPanelDaily,pipeline:mzPanelPipeline,perf:mzPanelPerf,numbers:mzPanelNumbers,schedule:mzPanelSchedule,content:mzPanelContent,algo:mzPanelAlgo};
+  const tabs=[['daily','Daily'],['perf','Performance'],['numbers','Numbers'],['schedule','Schedule'],['content','Content'],['algo','Algorithm']];
+  const builders={daily:mzPanelDaily,perf:mzPanelPerf,numbers:mzPanelNumbers,schedule:mzPanelSchedule,content:mzPanelContent,algo:mzPanelAlgo};
   const panel=builders[mzTab]||mzPanelDaily;
   document.getElementById('list').innerHTML=`<div id="mz"><div class="mz-hero"><span class="mz-badge">Musubi Strong</span><h2>IG Growth System</h2><span class="mz-src">Research-backed · 2025–26</span></div><div class="mz-tabs">${tabs.map(t=>`<button class="mz-tab ${mzTab===t[0]?'active':''}" onclick="mzSubTab('${t[0]}')">${t[1]}</button>`).join('')}</div><div class="mz-panel">${panel()}</div></div>`;
 }
