@@ -92,7 +92,7 @@
   .sb-footer{margin-top:auto;padding:12px 8px;border-top:1px solid var(--border)}
   .sb-footer-text{font-size:11px;color:var(--text-3);line-height:1.6}
 
-  .header{padding:18px 24px 0;border-bottom:1px solid var(--border);background:var(--bg)}
+  .header{padding:calc(18px + env(safe-area-inset-top,0px)) 24px 0;border-bottom:1px solid var(--border);background:var(--bg)}
   .header-row{display:flex;align-items:center;gap:10px;margin-bottom:14px}
   .page-title{font-size:20px;font-weight:700;letter-spacing:-.4px;color:var(--text);display:flex;align-items:center;gap:8px}
   .page-title-dot{width:10px;height:10px;border-radius:50%;display:none}
@@ -520,7 +520,7 @@
 
   @media(max-width:640px){
     .nav-hamburger{display:inline-flex}
-    .sidebar{position:fixed;left:0;top:0;bottom:0;z-index:300;transform:translateX(-100%);transition:transform .22s ease;box-shadow:0 0 40px rgba(0,0,0,.55)}
+    .sidebar{position:fixed;left:0;top:0;bottom:0;z-index:300;transform:translateX(-100%);transition:transform .22s ease;box-shadow:0 0 40px rgba(0,0,0,.55);padding-top:env(safe-area-inset-top,0px);overscroll-behavior:contain}
     .app.nav-open .sidebar{transform:translateX(0)}
     .app.nav-open .nav-backdrop{display:block}
     .add-row .add-select:first-child{display:none}
