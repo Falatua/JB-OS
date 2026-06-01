@@ -1,5 +1,19 @@
 [
   {
+    "id": "tg-023-musubi-archie-gear",
+    "text": "Order Archie Musubi gear for photo shoots",
+    "type": "task",
+    "emoji": "🛍️",
+    "notes": "Order Archie Musubi Strong gear/apparel to have on hand for possible photo shoots and similar content.",
+    "description": "Order Archie Musubi gear so there's product/apparel ready for possible photo shoots and other content needs (lifestyle shots, model shoots, etc.). Ties into the Musubi direction of using more models and region-realistic content. Figure out what pieces/sizes to order and how many.",
+    "priority": "normal",
+    "category": "work",
+    "source": "chat",
+    "done": false,
+    "archived": false,
+    "createdAt": "2026-06-01T00:00:00Z"
+  },
+  {
     "id": "tg-019-musubi-auntie-tee",
     "text": "Musubi: \"auntie's favorite t-shirt\" concept",
     "type": "idea",
