@@ -641,6 +641,12 @@
   .dprog-body{flex:1;min-width:0}
   .dprog-text{font-size:13.5px;color:var(--text);line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .dprog-next{font-size:11.5px;color:var(--text-3);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  /* ===== Undo toast + sort control ===== */
+  .toast.has-action{display:flex;align-items:center;gap:14px;pointer-events:auto}
+  .toast-action{background:none;border:none;color:var(--accent);font-weight:600;font-size:13px;font-family:inherit;cursor:pointer;padding:2px 4px;border-radius:4px;flex-shrink:0}
+  .toast-action:hover{text-decoration:underline}
+  .sort-select{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:3px 8px;color:var(--text-2);font-size:11px;font-weight:500;font-family:inherit;outline:none;cursor:pointer;transition:border-color var(--t),color var(--t)}
+  .sort-select:hover{color:var(--text);border-color:var(--border-2)}
 </style>
 </head>
 <body>
@@ -699,6 +705,20 @@
     <div class="nav-item" id="nav-archive" onclick="setFilter('archive','view')" role="button" tabindex="0">
       <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 5h12v1.5H2zM3 6.5h10l-.8 7H3.8z"/><path d="M6 10h4"/></svg>
       Archive <span class="nav-count" id="cnt-archive">0</span>
+    </div>
+  </div>
+
+  <div class="sb-divider"></div>
+
+  <div class="sb-section">
+    <div class="sb-label">Due</div>
+    <div class="nav-item" id="nav-overdue" onclick="setFilter('overdue','due')" role="button" tabindex="0">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="var(--red)" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3.5M8 11h.01"/></svg>
+      <span style="color:var(--red)">Overdue</span> <span class="nav-count" id="cnt-due-overdue">0</span>
+    </div>
+    <div class="nav-item" id="nav-soon" onclick="setFilter('soon','due')" role="button" tabindex="0">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 1.5"/></svg>
+      Due soon <span class="nav-count" id="cnt-due-soon">0</span>
     </div>
   </div>
 
@@ -1049,7 +1069,7 @@ const SRC_LABEL  = {telegram:'via Telegram',browser:'added manually',chat:'via c
 function load(){try{return JSON.parse(localStorage.getItem(KEY))||[];}catch{return [];}}
 function save(d){localStorage.setItem(KEY,JSON.stringify(d));}
 
-let filter='all', filterMode='view', _booting=true, view='dashboard';
+let filter='all', filterMode='view', _booting=true, view='dashboard', sortBy='priority';
 
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,5);}
 
@@ -1080,13 +1100,14 @@ function addItem(text, type='task', notes='', source='browser', priority='normal
 }
 
 function toggleDone(id){
+  const prev=load(); // independent snapshot for undo
   const items=load();const i=items.findIndex(x=>x.id===id);if(i<0)return;
   items[i].done=true;
   items[i].archived=true;
   items[i].archivedAt=new Date().toISOString();
   items[i].userEdited=true; // lock this item's state so the server seed won't revert it
   save(items);render();updateCounts();
-  toast('Done — moved to Archive');
+  toast('Done — moved to Archive','Undo',()=>{save(prev);render();updateCounts();toast('Restored to active list');});
 }
 
 function restore(id){
@@ -1097,7 +1118,7 @@ function restore(id){
   toast('Restored to active list');
 }
 
-function del(id){save(load().filter(x=>x.id!==id));render();updateCounts();toast('Deleted');}
+function del(id){const prev=load();save(load().filter(x=>x.id!==id));render();updateCounts();toast('Deleted','Undo',()=>{save(prev);render();updateCounts();toast('Restored');});}
 
 function setFilter(f, mode){
   filter=f; filterMode=mode; view='list';
@@ -1117,6 +1138,11 @@ function setFilter(f, mode){
     const prioTitles={high:'High Priority',normal:'Normal Priority',low:'Low Priority'};
     dot.style.display='block';dot.style.background=prioColors[f]||'var(--text-3)';
     document.getElementById('page-title').lastChild.textContent=' '+prioTitles[f];
+  } else if(mode==='due'){
+    const dueColors={overdue:'var(--red)',soon:'var(--accent)'};
+    const dueTitles={overdue:'Overdue',soon:'Due Soon'};
+    dot.style.display='block';dot.style.background=dueColors[f]||'var(--text-3)';
+    document.getElementById('page-title').lastChild.textContent=' '+(dueTitles[f]||'Due');
   } else {
     dot.style.display='none';
     const titles={all:'All Items',active:'Active Items',archive:'Archive',task:'Tasks',idea:'Ideas',note:'Notes',project:'Projects'};
@@ -1134,6 +1160,28 @@ const PRIO_ORDER={high:0,normal:1,low:2};
 function sortByPriority(arr){
   return arr.slice().sort((a,b)=>(PRIO_ORDER[a.priority]??1)-(PRIO_ORDER[b.priority]??1));
 }
+// List sort: respects the sort dropdown (default = priority)
+function applySort(items){
+  const arr=items.slice();
+  switch(sortBy){
+    case 'due':
+      return arr.sort((a,b)=>{
+        if(a.dueDate&&b.dueDate)return a.dueDate.localeCompare(b.dueDate)||(PRIO_ORDER[a.priority]??1)-(PRIO_ORDER[b.priority]??1);
+        if(a.dueDate)return -1; if(b.dueDate)return 1;
+        return (PRIO_ORDER[a.priority]??1)-(PRIO_ORDER[b.priority]??1);
+      });
+    case 'newest': return arr.sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||''));
+    case 'oldest': return arr.sort((a,b)=>(a.createdAt||'').localeCompare(b.createdAt||''));
+    case 'az':     return arr.sort((a,b)=>(a.text||'').localeCompare(b.text||''));
+    default:       return sortByPriority(arr);
+  }
+}
+function setSort(v){sortBy=v;render();}
+function sortControlHTML(){
+  const opts=[['priority','Priority'],['due','Due date'],['newest','Newest'],['oldest','Oldest'],['az','A–Z']];
+  return '<select class="sort-select" aria-label="Sort items by" onchange="setSort(this.value)" onclick="event.stopPropagation()">'
+    +opts.map(o=>'<option value="'+o[0]+'"'+(sortBy===o[0]?' selected':'')+'>Sort: '+o[1]+'</option>').join('')+'</select>';
+}
 
 function getFiltered(){
   const q=(document.getElementById('search')?.value||'').toLowerCase();
@@ -1150,12 +1198,18 @@ function getFiltered(){
       mf=!isArchived&&item.type===filter;
     } else if(filterMode==='prio'){
       mf=!isArchived&&(item.priority||'normal')===filter;
+    } else if(filterMode==='due'){
+      const today=dateKey(new Date());
+      if(isArchived||!item.dueDate){mf=false;}
+      else if(filter==='overdue'){mf=item.dueDate<today;}
+      else if(filter==='soon'){mf=item.dueDate>=today&&((new Date(item.dueDate+'T00:00:00')-new Date(today+'T00:00:00'))/86400000)<=2;}
+      else mf=false;
     } else {
       mf=!isArchived&&(item.category||'general')===filter;
     }
     return mq&&mf;
   });
-  return sortByPriority(items);
+  return applySort(items);
 }
 
 function ageStr(iso){
@@ -1262,10 +1316,10 @@ function render(){
   }
   let html='';
   if(isArchiveView){
-    html+=`<div class="section-head"><span class="section-head-label">Archived · ${all.length}</span><div class="section-head-line"></div></div>`;
+    html+=`<div class="section-head"><span class="section-head-label">Archived · ${all.length}</span><div class="section-head-line"></div>${sortControlHTML()}</div>`;
     html+=all.map((i,idx)=>itemHTML(i,true,idx)).join('');
   } else {
-    html+=`<div class="section-head"><span class="section-head-label">Active · ${all.length}</span><div class="section-head-line"></div></div>`;
+    html+=`<div class="section-head"><span class="section-head-label">Active · ${all.length}</span><div class="section-head-line"></div>${sortControlHTML()}</div>`;
     html+=all.map((i,idx)=>itemHTML(i,false,idx)).join('');
   }
   el.innerHTML=html;
@@ -1293,6 +1347,11 @@ function updateCounts(){
     const e=document.getElementById('cnt-prio-'+p);
     if(e)e.textContent=active.filter(x=>(x.priority||'normal')===p).length;
   });
+  const todayK=dateKey(new Date());
+  const eo=document.getElementById('cnt-due-overdue');
+  if(eo)eo.textContent=active.filter(x=>x.dueDate&&x.dueDate<todayK).length;
+  const es=document.getElementById('cnt-due-soon');
+  if(es)es.textContent=active.filter(x=>x.dueDate&&x.dueDate>=todayK&&((new Date(x.dueDate+'T00:00:00')-new Date(todayK+'T00:00:00'))/86400000)<=2).length;
   try{
     const de=document.getElementById('cnt-daily'); if(de)de.textContent=loadDaily().templates.length;
     const me=document.getElementById('cnt-monthly'); if(me)me.textContent=loadMonthly().templates.length;
@@ -1577,10 +1636,18 @@ function guessEmoji(text,category){
 }
 
 let _toastTimer;
-function toast(msg){
+function toast(msg,actionLabel,actionFn){
   const el=document.getElementById('toast');
-  el.textContent=msg;el.classList.add('show');
-  clearTimeout(_toastTimer);_toastTimer=setTimeout(()=>el.classList.remove('show'),2800);
+  el.innerHTML='';
+  const span=document.createElement('span');span.textContent=msg;el.appendChild(span);
+  if(actionLabel&&actionFn){
+    const b=document.createElement('button');
+    b.className='toast-action';b.textContent=actionLabel;
+    b.onclick=()=>{clearTimeout(_toastTimer);el.classList.remove('show');actionFn();};
+    el.appendChild(b);el.classList.add('has-action');
+  } else { el.classList.remove('has-action'); }
+  el.classList.add('show');
+  clearTimeout(_toastTimer);_toastTimer=setTimeout(()=>el.classList.remove('show'),actionLabel?5500:2800);
 }
 
 /* Migrate old items: v2 key (no category) + mark done items as archived */
@@ -1786,7 +1853,7 @@ function applyViewChrome(v){
 function setView(v){
   if(v==='list'){view='list';applyViewChrome('list');setFilter(filter,filterMode);updateCounts();return;}
   view=v; syncWorkspaceNav(v); applyViewChrome(v);
-  ['nav-all','nav-active','nav-archive','nav-task','nav-idea','nav-note','nav-project'].forEach(id=>{const e=document.getElementById(id);if(e)e.classList.remove('active');});
+  ['nav-all','nav-active','nav-archive','nav-task','nav-idea','nav-note','nav-project','nav-overdue','nav-soon'].forEach(id=>{const e=document.getElementById(id);if(e)e.classList.remove('active');});
   document.querySelectorAll('[id^="nav-prio-"]').forEach(e=>e.classList.remove('active'));
   document.querySelectorAll('[id^="nav-cat-"]').forEach(e=>e.classList.remove('active','cat-active'));
   render(); updateCounts();
