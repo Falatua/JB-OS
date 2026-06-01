@@ -179,10 +179,10 @@
   },
   {
     "id": "tg-014",
-    "text": "Find Ancer Lab platforms with mobile login (use Whisper Flow for reports without IT)",
+    "text": "Find AnswerLab platforms with mobile login (use Whisper Flow for reports without IT)",
     "type": "task",
     "emoji": "🎙️",
-    "notes": "See which Ancer Lab platforms allow mobile login, so reports and end-of-day updates can be written with Whisper Flow voice dictation without needing IT support.",
+    "notes": "See which AnswerLab platforms allow mobile login, so reports and end-of-day updates can be written with Whisper Flow voice dictation without needing IT support.",
     "priority": "normal",
     "category": "work",
     "source": "telegram",

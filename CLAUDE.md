@@ -84,7 +84,7 @@ Optional fields: `dueDate` ("YYYY-MM-DD"), `links` ([]), `attachments` ([]), `up
 | Category | Use for |
 |----------|---------|
 | `musubi` | Anything for the **Musubi Strong** brand (product, content, IG, store, designs, shoots) |
-| `work` | JB's day job (**Ancer Lab**) and other non-Musubi work |
+| `work` | JB's day job (**AnswerLab**) and other non-Musubi work |
 | `tech` | Coding, AI tools, devices, emulation/ROMs, the JB OS app, Roman TD, servers |
 | `finance` | Bills, taxes, investing, rent, payments |
 | `family` | Mackenzie (partner), JB's dad, extended family |
@@ -134,11 +134,11 @@ Never push malformed JSON — it breaks the whole list render.
 
 - **Location:** Westside Oʻahu, Hawai‘i. Local/island voice matters for Musubi.
 - **Partner:** Mackenzie ("Kenzie").
-- **Kids:** Archie (baby — appears in baby-gear and Musubi photo-shoot items).
+- **Kids:** Gigi (daughter).
 - **Business:** **Musubi Strong** — a local Hawai‘i apparel brand. Shopify store + Instagram
   growth + original designs. Has its own tab and `musubi` category. Content directions on file:
   use more real models, region-realistic mockups, "auntie's favorite tee", Throwback Thursdays.
-- **Day job:** **Ancer Lab** (writes reports / end-of-day updates).
+- **Day job:** **AnswerLab** (writes reports / end-of-day updates).
 - **Side dev:** **Roman TD** (a tower-defense game he ships) and **JB OS** itself.
 - **Fitness:** hypertrophy / weight training; follows Mike Israetel / RP.
 - **Tech stack & interests:** Claude Code, GitHub Pages, VPS, Obsidian, AI agents (Manus),
