@@ -63,6 +63,22 @@ habit, a monthly recurring item, a journaling prompt, or a dated calendar event.
 Optional fields: `dueDate` ("YYYY-MM-DD"), `links` ([]), `attachments` ([]), `updatedAt`,
 `archivedAt`. Keep `description` to the things that aren't obvious from the title; don't pad.
 
+**Progress steps** — any item (task/idea/note/project) can carry an optional ordered
+`steps` array for phasic, multi-stage things (e.g. "emailed → waiting → shipped → received"):
+
+```json
+"steps": [
+  { "text": "Emailed LARQ to start the request", "done": true },
+  { "text": "Waiting on their reply", "done": false }
+]
+```
+
+The app shows a progress bar + `done/total` + the next pending step on the list card, and an
+**In progress** card on the dashboard (items with steps that aren't fully complete). `steps`
+syncs like other fields (server updates apply unless JB locked the item in-app). The item's own
+`done`/archive is **separate** from steps — finishing all steps does NOT auto-archive it; JB
+checks the item off himself. Add `steps` when JB describes a process with phases; otherwise omit it.
+
 ### ID rules
 - Chat-sourced: `c-<short-slug>` (e.g. `c-coins-cash`, `c-heber-designs`).
 - **Always verify the `id` is unique** against the current file before writing.
