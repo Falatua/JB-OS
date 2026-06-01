@@ -1409,6 +1409,11 @@ let _lastFocus=null;
 function restoreFocus(){if(_lastFocus&&_lastFocus.focus){try{_lastFocus.focus();}catch{}}_lastFocus=null;}
 function openModal(){
   _lastFocus=document.activeElement;
+  // Pre-fill Life Area / Type / Priority from the current filter so a New Item
+  // defaults to the area you're viewing (e.g. in Personal → Personal, in High → High).
+  const mc=document.getElementById('m-cat'); if(mc&&filterMode==='cat'&&CATS[filter])mc.value=filter;
+  const mt=document.getElementById('m-type'); if(mt&&filterMode==='type')mt.value=filter;
+  const mp=document.getElementById('m-priority'); if(mp&&filterMode==='prio'&&['high','normal','low'].includes(filter))mp.value=filter;
   document.getElementById('modal').classList.remove('hidden');
   setTimeout(()=>document.getElementById('m-title').focus(),50);
 }
