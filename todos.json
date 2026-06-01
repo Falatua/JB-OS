@@ -1,5 +1,19 @@
 [
   {
+    "id": "tg-023-musubi-archie-gear",
+    "text": "Musubi: order Archie's gear for photo shoots",
+    "type": "task",
+    "emoji": "📸",
+    "notes": "Order Musubi Strong gear/apparel for Archie to have on hand for possible photo shoots.",
+    "description": "Musubi Strong to-do from JB: order Musubi gear for Archie so it's ready for possible photo shoots and similar content. Supports the 'use more models in product pictures' direction and the ohana/community angle for the brand. No date given.",
+    "priority": "normal",
+    "category": "work",
+    "source": "telegram",
+    "done": false,
+    "archived": false,
+    "createdAt": "2026-06-01T14:59:41Z"
+  },
+  {
     "id": "tg-019-musubi-auntie-tee",
     "text": "Musubi: \"auntie's favorite t-shirt\" concept",
     "type": "idea",
