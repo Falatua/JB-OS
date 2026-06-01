@@ -76,8 +76,9 @@ Optional fields: `dueDate` ("YYYY-MM-DD"), `links` ([]), `attachments` ([]), `up
 - **task** — a concrete action with a clear done-state. *"Buy more tuna", "Pay birth bill".*
 - **idea** — a possibility to explore later; no commitment yet. *"Auntie's-favorite-tee concept".*
 - **note** — reference info, an FYI, or "look into X". *"Dad in town Jun 7–11", "Look into Obsidian".*
-- **project** — a multi-step ongoing effort. Use sparingly; prefer discrete tasks unless JB
-  asks for an umbrella item. *(Currently none in use — confirm before introducing.)*
+- **project** — a multi-step ongoing effort. **JB's preference: do NOT create umbrella
+  project items.** Big efforts (Musubi Strong, JB OS, Roman TD) are tracked as discrete
+  tasks/ideas/notes tagged to a category instead. Only use `project` if JB explicitly asks.
 
 ### `category` (fixed set — never invent new ones)
 | Category | Use for |
