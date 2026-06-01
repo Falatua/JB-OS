@@ -89,6 +89,9 @@
   .page-title{font-size:20px;font-weight:700;letter-spacing:-.4px;color:var(--text);display:flex;align-items:center;gap:8px}
   .page-title-dot{width:10px;height:10px;border-radius:50%;display:none}
   .header-actions{margin-left:auto;display:flex;gap:6px;align-items:center}
+  .nav-hamburger{display:none;align-items:center;justify-content:center;width:34px;height:34px;border-radius:var(--radius);border:1px solid var(--border-2);background:var(--surface);color:var(--text-2);cursor:pointer;flex-shrink:0;padding:0}
+  .nav-hamburger:hover{background:var(--surface-hover);color:var(--text)}
+  .nav-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:250}
 
   .btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:6px 12px;border-radius:var(--radius);border:none;cursor:pointer;font-size:12.5px;font-weight:500;font-family:inherit;transition:background var(--t),color var(--t),transform var(--t);white-space:nowrap}
   .btn:active{transform:scale(.97)}
@@ -506,7 +509,10 @@
   @media(hover:none){ .j-entry-edit{opacity:1} }
 
   @media(max-width:640px){
-    .sidebar{display:none}
+    .nav-hamburger{display:inline-flex}
+    .sidebar{position:fixed;left:0;top:0;bottom:0;z-index:300;transform:translateX(-100%);transition:transform .22s ease;box-shadow:0 0 40px rgba(0,0,0,.55)}
+    .app.nav-open .sidebar{transform:translateX(0)}
+    .app.nav-open .nav-backdrop{display:block}
     .add-row .add-select:first-child{display:none}
     .detail-title{font-size:20px}
     .prop-label{width:104px;min-width:104px}
@@ -786,9 +792,14 @@
   </div>
 </aside>
 
+<div class="nav-backdrop" id="nav-backdrop" onclick="closeNav()"></div>
+
 <div class="main">
   <div class="header">
     <div class="header-row">
+      <button class="nav-hamburger" id="nav-ham" onclick="toggleNav()" aria-label="Open navigation menu" aria-expanded="false">
+        <svg width="17" height="17" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M2 4h12M2 8h12M2 12h12"/></svg>
+      </button>
       <div class="page-title" id="page-title">
         <div class="page-title-dot" id="page-title-dot"></div>
         All Items
@@ -1120,10 +1131,17 @@ function restore(id){
 
 function del(id){const prev=load();save(load().filter(x=>x.id!==id));render();updateCounts();toast('Deleted','Undo',()=>{save(prev);render();updateCounts();toast('Restored');});}
 
+/* ===== Mobile nav drawer ===== */
+function toggleNav(){const open=document.querySelector('.app').classList.toggle('nav-open');const h=document.getElementById('nav-ham');if(h)h.setAttribute('aria-expanded',open?'true':'false');}
+function closeNav(){document.querySelector('.app').classList.remove('nav-open');const h=document.getElementById('nav-ham');if(h)h.setAttribute('aria-expanded','false');}
+
 function setFilter(f, mode){
   filter=f; filterMode=mode; view='list';
+  closeNav();
   document.querySelectorAll('.nav-item').forEach(e=>{e.classList.remove('active');e.classList.remove('cat-active');});
-  const el=document.getElementById('nav-'+(mode==='cat'?'cat-':'')+f);
+  // Resolve the nav element id per mode so the active highlight lands on the right item
+  const navId=mode==='cat'?'nav-cat-'+f:mode==='prio'?'nav-prio-'+f:'nav-'+f;
+  const el=document.getElementById(navId);
   if(el){
     if(mode==='cat'){el.classList.add('cat-active');}else{el.classList.add('active');}
   }
@@ -1565,7 +1583,7 @@ function closeDetail(){document.getElementById('detail').classList.add('hidden')
 function closeDetailOutside(e){if(e.target.id==='detail')closeDetail();}
 
 document.addEventListener('keydown',e=>{
-  if(e.key==='Escape'){if(!document.getElementById('journal-modal').classList.contains('hidden')&&(!document.getElementById('j-question-menu').classList.contains('hidden')||!document.getElementById('j-template-menu').classList.contains('hidden'))){closeAllJMenus();return;}closeModal();closeDetail();closeJournal();closePrompts();closeRoutine();}
+  if(e.key==='Escape'){if(!document.getElementById('journal-modal').classList.contains('hidden')&&(!document.getElementById('j-question-menu').classList.contains('hidden')||!document.getElementById('j-template-menu').classList.contains('hidden'))){closeAllJMenus();return;}closeModal();closeDetail();closeJournal();closePrompts();closeRoutine();closeNav();}
   if((e.metaKey||e.ctrlKey)&&e.key==='n'){e.preventDefault();view==='journal'?newJournalEntry():openModal();}
   if((e.metaKey||e.ctrlKey)&&e.key==='f'&&view==='list'){e.preventDefault();document.getElementById('search').focus();}
   if((e.key==='Enter'||e.key===' ')&&e.target&&e.target.classList&&e.target.classList.contains('nav-item')){e.preventDefault();e.target.click();}
@@ -1851,6 +1869,7 @@ function applyViewChrome(v){
   const ha=document.querySelector('.header-actions');if(ha)ha.style.display=(v==='journal'||v==='musubi')?'none':'';
 }
 function setView(v){
+  closeNav();
   if(v==='list'){view='list';applyViewChrome('list');setFilter(filter,filterMode);updateCounts();return;}
   view=v; syncWorkspaceNav(v); applyViewChrome(v);
   ['nav-all','nav-active','nav-archive','nav-task','nav-idea','nav-note','nav-project','nav-overdue','nav-soon'].forEach(id=>{const e=document.getElementById(id);if(e)e.classList.remove('active');});
