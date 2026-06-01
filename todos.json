@@ -262,7 +262,30 @@
     "source": "telegram",
     "done": false,
     "archived": false,
-    "createdAt": "2026-05-29T19:17:00Z"
+    "createdAt": "2026-05-29T19:17:00Z",
+    "steps": [
+      {
+        "text": "Emailed LARQ to start the request",
+        "done": true
+      },
+      {
+        "text": "Waiting on their reply",
+        "done": false
+      },
+      {
+        "text": "Work out the details over email",
+        "done": false
+      },
+      {
+        "text": "They ship it out",
+        "done": false
+      },
+      {
+        "text": "Received it",
+        "done": false
+      }
+    ],
+    "updatedAt": "2026-06-01T00:00:00Z"
   },
   {
     "id": "tg-002",
