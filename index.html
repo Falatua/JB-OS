@@ -1122,6 +1122,11 @@ function setFilter(f, mode){
     const titles={all:'All Items',active:'Active Items',archive:'Archive',task:'Tasks',idea:'Ideas',note:'Notes',project:'Projects'};
     document.getElementById('page-title').lastChild.textContent=titles[f]||'All Items';
   }
+  // Sync the quick-add controls so new items default to the area you're viewing
+  const qCat=document.getElementById('quick-cat');
+  if(qCat&&mode==='cat'&&cat)qCat.value=f;
+  const qType=document.getElementById('quick-type');
+  if(qType&&mode==='type')qType.value=f;
   render();
 }
 
@@ -1302,7 +1307,9 @@ function quickAdd(e){
   const text=inp.value.trim();if(!text)return;
   const type=document.getElementById('quick-type').value;
   const cat=document.getElementById('quick-cat').value;
-  addItem(text,type,'','browser','normal',cat);
+  // If viewing a priority area, new items inherit that priority; otherwise default to normal
+  const prio=(filterMode==='prio'&&['high','normal','low'].includes(filter))?filter:'normal';
+  addItem(text,type,'','browser',prio,cat);
   inp.value='';
 }
 
