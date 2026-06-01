@@ -83,8 +83,8 @@ Optional fields: `dueDate` ("YYYY-MM-DD"), `links` ([]), `attachments` ([]), `up
 ### `category` (fixed set — never invent new ones)
 | Category | Use for |
 |----------|---------|
-| `musubi` | Anything for the **Musubi Strong** brand (product, content, IG, store, designs, shoots) |
-| `work` | JB's day job (**AnswerLab**) and other non-Musubi work |
+| `musubi` | Anything for the **Musubi Strong** brand (product, content, IG, store, designs, shoots). All Musubi brand work lives here — **not** in `work`. |
+| `work` | **AnswerLab** (day job) + JB's side/freelance **design** work (e.g. Heber). Nothing Musubi-related. |
 | `tech` | Coding, AI tools, devices, emulation/ROMs, the JB OS app, Roman TD, servers |
 | `finance` | Bills, taxes, investing, rent, payments |
 | `family` | Mackenzie (partner), JB's dad, extended family |
