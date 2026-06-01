@@ -134,7 +134,7 @@ Never push malformed JSON — it breaks the whole list render.
 
 - **Location:** Westside Oʻahu, Hawai‘i. Local/island voice matters for Musubi.
 - **Partner:** Mackenzie ("Kenzie").
-- **Kids:** Gigi (daughter).
+- **Kids:** Gigi (daughter) and Archie (son). Archie appears in Musubi photo-shoot gear items.
 - **Business:** **Musubi Strong** — a local Hawai‘i apparel brand. Shopify store + Instagram
   growth + original designs. Has its own tab and `musubi` category. Content directions on file:
   use more real models, region-realistic mockups, "auntie's favorite tee", Throwback Thursdays.
