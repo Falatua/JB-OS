@@ -1,5 +1,19 @@
 [
   {
+    "id": "c-manus-musubi",
+    "text": "Look into how Manus AI can help with Musubi",
+    "type": "note",
+    "emoji": "🤖",
+    "notes": "Research the Manus AI autonomous agent and how it could support Musubi Strong.",
+    "description": "Explore Manus AI (autonomous general AI agent) and evaluate concrete ways it could help run or grow Musubi Strong: e.g. drafting and scheduling IG content, automating store and product tasks, market and competitor research, design-asset prep, and customer comms. Note what it does better than the tools already in use, its pricing, and whether it's worth adopting.",
+    "priority": "normal",
+    "category": "tech",
+    "source": "chat",
+    "done": false,
+    "archived": false,
+    "createdAt": "2026-06-01T03:17:34Z"
+  },
+  {
     "id": "tg-018",
     "text": "Train Claude on Mike Israetel's RP content for hypertrophy programming",
     "type": "note",
