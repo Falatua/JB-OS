@@ -614,6 +614,33 @@
   #mz .mz-addrow button{background:var(--mz-red);color:#fff;border:none;border-radius:6px;padding:7px 13px;font-size:12px;font-weight:600;cursor:pointer;}
   #mz .mz-empty{padding:14px;color:var(--text-3);font-size:11.5px;text-align:center;}
   #mz .mz-done-chip{font-family:var(--mono);font-size:10px;color:var(--mz-teal2);}
+  /* ===== Progress steps ===== */
+  .item-prog{display:flex;align-items:center;gap:8px;margin-top:7px}
+  .prog-track{flex:1;max-width:160px;height:5px;border-radius:3px;background:var(--surface-hover);overflow:hidden}
+  .prog-track.full{background:var(--green-dim)}
+  .prog-fill{height:100%;border-radius:3px;background:var(--accent);transition:width var(--t)}
+  .prog-fill.full{background:var(--green)}
+  .prog-count{font-size:11px;font-weight:600;color:var(--text-2);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .prog-next{font-size:11.5px;color:var(--text-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+  .prog-next.done{color:var(--green)}
+  /* steps editor in detail modal */
+  .steps-bar{display:flex;align-items:center;gap:8px;margin-bottom:9px}
+  .steps-list{display:flex;flex-direction:column;gap:6px}
+  .step-row{display:flex;align-items:center;gap:9px}
+  .step-cb{flex-shrink:0;width:17px;height:17px;border-radius:5px;border:1.6px solid var(--border-2);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background var(--t),border-color var(--t)}
+  .step-cb.on{background:var(--green);border-color:var(--green)}
+  .step-cb .step-check{opacity:0}.step-cb.on .step-check{opacity:1}
+  .step-row input.step-text{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:7px 10px;color:var(--text);font-size:12.5px;font-family:inherit;outline:none;transition:border-color var(--t)}
+  .step-row input.step-text:focus{border-color:var(--accent)}
+  .step-row input.step-text.done{color:var(--text-3);text-decoration:line-through}
+  .step-row .row-del{background:none;border:none;color:var(--text-3);cursor:pointer;font-size:13px;padding:4px 6px;border-radius:var(--radius)}
+  .step-row .row-del:hover{color:var(--red);background:var(--surface-hover)}
+  /* dashboard in-progress list */
+  .dprog{display:flex;align-items:center;gap:10px;padding:9px 2px;border-top:1px solid var(--border);cursor:pointer}
+  .dprog:first-of-type{border-top:none}
+  .dprog-body{flex:1;min-width:0}
+  .dprog-text{font-size:13.5px;color:var(--text);line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .dprog-next{font-size:11.5px;color:var(--text-3);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 </style>
 </head>
 <body>
@@ -880,6 +907,13 @@
     </div>
 
     <div class="detail-section">
+      <div class="detail-section-title">Progress</div>
+      <div class="steps-bar" id="d-steps-bar"></div>
+      <div class="steps-list" id="d-steps"></div>
+      <button class="detail-add-btn" onclick="addStepRow()">+ Add step</button>
+    </div>
+
+    <div class="detail-section">
       <div class="detail-section-title">Links</div>
       <div id="d-links"></div>
       <button class="detail-add-btn" onclick="addLinkRow()">+ Add link</button>
@@ -1130,6 +1164,18 @@ function ageStr(iso){
   return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
 }
 
+function progressHTML(item){
+  const st=stepStats(item);
+  if(!st)return '';
+  const full=st.complete;
+  const next=full?'All steps complete':(st.next?'Next: '+esc(st.next):'');
+  return `<div class="item-prog">
+    <div class="prog-track${full?' full':''}"><div class="prog-fill${full?' full':''}" style="width:${st.pct}%"></div></div>
+    <span class="prog-count">${st.done}/${st.total}</span>
+    <span class="prog-next${full?' done':''}">${next}</span>
+  </div>`;
+}
+
 function itemHTML(item, isArchiveView, idx){
   const cat=CATS[item.category||'general']||CATS.general;
   const typeBadge=`<span class="badge badge-${item.type}">${TYPE_LABEL[item.type]||item.type}</span>`;
@@ -1175,6 +1221,7 @@ function itemHTML(item, isArchiveView, idx){
       <div class="item-body" onclick="openDetail('${item.id}')" role="button" tabindex="0" aria-label="Open details: ${esc(item.text||'')}" onkeydown="if(event.key==='Enter'){openDetail('${item.id}');event.preventDefault()}" title="Click to open & edit details">
         <div class="item-text" style="${isArchiveView?'text-decoration:line-through;color:var(--text-3)':''}"><span class="item-emoji">${item.emoji||guessEmoji(item.text||'',item.category)}</span> ${esc(item.text||'Untitled')}</div>
         ${notes}
+        ${progressHTML(item)}
         <div class="item-meta">${catBadge}${typeBadge}${prio}${dueChip}${indicators}${isArchiveView?archivedDate:`<span class="item-date">${ageStr(item.createdAt)}</span>`}${src}</div>
       </div>
       <div class="item-actions">${actions}</div>
@@ -1292,6 +1339,7 @@ function openDetail(id){
   document.getElementById('d-type').value=it.type||'task';
   document.getElementById('d-priority').value=it.priority||'normal';
   document.getElementById('d-duedate').value=it.dueDate||'';
+  renderDetailSteps(it.steps||[]);
   renderDetailLinks(it.links||[]);
   renderDetailAttach();
   renderDetailBadges();
@@ -1335,6 +1383,57 @@ function collectLinks(){
   })).filter(l=>l.url||l.label);
 }
 
+/* ===== Progress steps ===== */
+// Shared stats used by the list card and the dashboard
+function stepStats(item){
+  const steps=Array.isArray(item.steps)?item.steps:[];
+  if(!steps.length)return null;
+  const total=steps.length, done=steps.filter(s=>s&&s.done).length;
+  const nextStep=steps.find(s=>s&&!s.done)||null;
+  return {total,done,pct:Math.round(done/total*100),complete:done===total,
+    next:nextStep?nextStep.text:(steps[steps.length-1]||{}).text||''};
+}
+function stepRowHTML(text,done){
+  return `<div class="step-row">
+    <div class="step-cb${done?' on':''}" role="checkbox" aria-checked="${done?'true':'false'}" tabindex="0" onclick="toggleStepRow(this)" onkeydown="if(event.key===' '||event.key==='Enter'){toggleStepRow(this);event.preventDefault()}">
+      <svg class="step-check" width="9" height="9" viewBox="0 0 10 10" fill="none" stroke="#111" stroke-width="2.4"><path d="M1.5 5l2.8 2.8 4.2-5"/></svg>
+    </div>
+    <input class="step-text${done?' done':''}" placeholder="Describe this step…" value="${esc(text)}">
+    <button class="row-del" onclick="this.closest('.step-row').remove();updateStepsBar()" title="Remove step" aria-label="Remove step">✕</button>
+  </div>`;
+}
+function renderDetailSteps(steps){
+  document.getElementById('d-steps').innerHTML=(steps||[]).map(s=>stepRowHTML(s.text||'',!!s.done)).join('');
+  updateStepsBar();
+}
+function addStepRow(){
+  document.getElementById('d-steps').insertAdjacentHTML('beforeend',stepRowHTML('',false));
+  updateStepsBar();
+  const rows=document.querySelectorAll('#d-steps .step-row');
+  if(rows.length)rows[rows.length-1].querySelector('.step-text').focus();
+}
+function toggleStepRow(el){
+  const on=!el.classList.contains('on');
+  el.classList.toggle('on',on);el.setAttribute('aria-checked',on?'true':'false');
+  const txt=el.parentElement.querySelector('.step-text');if(txt)txt.classList.toggle('done',on);
+  updateStepsBar();
+}
+function collectSteps(){
+  return [...document.querySelectorAll('#d-steps .step-row')].map(r=>({
+    text:r.querySelector('.step-text').value.trim(),
+    done:r.querySelector('.step-cb').classList.contains('on')
+  })).filter(s=>s.text);
+}
+function updateStepsBar(){
+  const steps=collectSteps(),bar=document.getElementById('d-steps-bar');
+  if(!bar)return;
+  if(!steps.length){bar.innerHTML='';return;}
+  const total=steps.length,done=steps.filter(s=>s.done).length,pct=Math.round(done/total*100),full=done===total;
+  bar.innerHTML=`<div class="prog-track${full?' full':''}"><div class="prog-fill${full?' full':''}" style="width:${pct}%"></div></div>`
+    +`<span class="prog-count">${done}/${total}</span>`
+    +(full?'<span class="prog-next done">All steps complete</span>':'');
+}
+
 function renderDetailAttach(){
   const wrap=document.getElementById('d-attachments');
   wrap.innerHTML=_dAttach.map((a,i)=>{
@@ -1376,6 +1475,8 @@ function saveDetail(){
   const status=document.getElementById('d-status').value;
   if(status==='done'){if(!it.archived){it.archived=true;it.done=true;it.archivedAt=new Date().toISOString();}}
   else{it.archived=false;it.done=false;delete it.archivedAt;}
+  const steps=collectSteps();
+  if(steps.length)it.steps=steps; else delete it.steps;
   it.links=collectLinks();
   it.attachments=_dAttach;
   it.userEdited=true; // protect this item's fields from being overwritten by the server seed
@@ -1537,8 +1638,10 @@ function toast(msg){
         if(!srv)return loc;
         let next=loc;
         if(!loc.userEdited){
-          ['text','notes','description','priority','category','type','emoji','dueDate'].forEach(k=>{
-            if(srv[k]!==undefined && srv[k]!==next[k]){next=(next===loc?{...loc}:next);next[k]=srv[k];changed=true;}
+          ['text','notes','description','priority','category','type','emoji','dueDate','steps'].forEach(k=>{
+            if(srv[k]===undefined)return;
+            const differ=(typeof srv[k]==='object')?JSON.stringify(srv[k])!==JSON.stringify(next[k]):srv[k]!==next[k];
+            if(differ){next=(next===loc?{...loc}:next);next[k]=srv[k];changed=true;}
           });
         }
         if(srv.done&&!next.archived&&!loc.userEdited){next=(next===loc?{...loc}:next);next.done=true;next.archived=true;next.archivedAt=next.archivedAt||new Date().toISOString();changed=true;}
@@ -2290,6 +2393,20 @@ function renderDashboard(){
     return '<div class="dup" onclick="openDetail(\''+i.id+'\')" style="cursor:pointer"><span class="dup-date">'+fmtDue(i.dueDate)+'</span><span class="dup-cat" style="background:'+cat.color+'"></span><span class="dup-text">'+esc(i.text||'')+'</span></div>';}).join(''):'<div class="dempty">Nothing scheduled in the next week</div>';
   const upCard='<div class="dcard dlist-card"><div class="dcard-label"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 6.5h12M5 2v2M11 2v2"/></svg>Upcoming</div>'+upHTML+'</div>';
 
+  // in-progress: items with phasic steps not yet complete (started first, then by progress)
+  const inProg=active.map(i=>({i,st:stepStats(i)})).filter(x=>x.st&&!x.st.complete)
+    .sort((a,b)=>(b.st.done>0)-(a.st.done>0)||b.st.pct-a.st.pct).slice(0,7);
+  const inProgHTML=inProg.length?inProg.map(({i,st})=>{
+    const cat=CATS[i.category||'general']||CATS.general;
+    return '<div class="dprog" onclick="openDetail(\''+i.id+'\')">'
+      +'<div class="prog-track" style="max-width:64px"><div class="prog-fill" style="width:'+st.pct+'%"></div></div>'
+      +'<span class="prog-count">'+st.done+'/'+st.total+'</span>'
+      +'<div class="dprog-body"><div class="dprog-text"><span class="item-emoji">'+(i.emoji||guessEmoji(i.text||'',i.category))+'</span> '+esc(i.text||'')+'</div>'
+      +(st.next?'<div class="dprog-next">Next: '+esc(st.next)+'</div>':'')+'</div>'
+      +'<span class="badge-cat" style="background:'+cat.dim+';color:'+cat.color+'">'+cat.label+'</span></div>';
+  }).join(''):'<div class="dempty">No multi-step items in progress. Add steps to a task to track its phases.</div>';
+  const inProgCard='<div class="dcard dlist-card"><div class="dcard-label"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 8h6M2 4h10M2 12h8"/></svg>In progress</div>'+inProgHTML+'</div>';
+
   // journal insights (on-device analysis)
   const ji=journalInsights();
   let reflectSection;
@@ -2312,6 +2429,7 @@ function renderDashboard(){
     +'<div class="dins-row" style="margin-top:13px">'+catCard+compCard+'</div>'
     +'<div class="dash-sec">Now</div>'
     +'<div class="dins-row">'+focusCard+upCard+'</div>'
+    +'<div class="dins-row" style="grid-template-columns:1fr">'+inProgCard+'</div>'
     +'</div>';
 }
 
