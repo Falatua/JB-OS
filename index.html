@@ -2554,7 +2554,23 @@ updateCounts();
 
 /* ===== PWA: service worker + install affordance ===== */
 if('serviceWorker' in navigator){
-  window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});
+  // Auto-update: when a new deployed version takes control, reload once so the
+  // installed app (and any open tab) always lands on the latest push. Only attach
+  // when the page is ALREADY controlled — otherwise the first-install claim would
+  // trigger a spurious reload on the very first visit. The flag prevents loops.
+  let _swReloading=false;
+  if(navigator.serviceWorker.controller){
+    navigator.serviceWorker.addEventListener('controllerchange',function(){
+      if(_swReloading)return; _swReloading=true; location.reload();
+    });
+  }
+  window.addEventListener('load',function(){
+    navigator.serviceWorker.register('sw.js').then(function(reg){
+      // Proactively check for a newer service worker on each launch.
+      if(reg.update)reg.update();
+      setInterval(function(){if(reg.update)reg.update();}, 60*60*1000);
+    }).catch(function(){});
+  });
 }
 let _deferredPrompt=null;
 function showInstallBtn(show){var b=document.getElementById('install-btn');if(b)b.style.display=show?'':'none';}
