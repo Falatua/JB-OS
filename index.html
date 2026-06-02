@@ -3377,7 +3377,7 @@ function sbInit(){
   SB_CFG=sbGetCfg(); if(!SB_CFG||!SB_CFG.url||!SB_CFG.key)return;
   if(!window.supabase){
     var sc=document.createElement('script'); sc.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
-    sc.onload=sbInit; sc.onerror=function(){sbSetStatus('Offline - using your local copy.'); if(localStorage.getItem('jbos_au')){var gm=document.getElementById('auth-modal'); if(gm)gm.classList.add('hidden');}}; document.head.appendChild(sc); return;
+    sc.onload=sbInit; sc.onerror=function(){if(localStorage.getItem('jbos_au')){var gm=document.getElementById('auth-modal'); if(gm)gm.classList.add('hidden'); sbSetStatus('Offline - using your local copy.');}else{sbWipeLocal(); sbSetStatus('Offline - sign in when back online.');}}; document.head.appendChild(sc); return;
   }
   if(!SB){ try{ SB=window.supabase.createClient(SB_CFG.url, SB_CFG.key); }catch(e){ sbSetStatus('Sync: invalid URL/key'); SB=null; return; } }
   // Sync is gated on auth: the cloud is only read/written once a user is signed in, so data
@@ -3386,12 +3386,13 @@ function sbInit(){
   try{
     SB.auth.getSession().then(function(r){
       var u=r&&r.data&&r.data.session?r.data.session.user:null;
+      var wasAuthed=!!localStorage.getItem('jbos_au');
       sbAuthUI(u);
-      if(u){ sbStartSync(); } else { sbSetStatus('Sign in to load your private data.'); }
+      if(u){ sbStartSync(); } else { if(!wasAuthed)sbWipeLocal(); sbSetStatus('Sign in to load your private data.'); }
     },function(){});
-    SB.auth.onAuthStateChange(function(_e,s){
-      var u=s?s.user:null; sbAuthUI(u);
-      if(u){ sbStartSync(); } else { sbStopSync(); sbSetStatus('Signed out — this device is local-only.'); }
+    SB.auth.onAuthStateChange(function(ev,s){
+      var u=s?s.user:null; var wasAuthed=!!localStorage.getItem('jbos_au'); sbAuthUI(u);
+      if(u){ sbStartSync(); } else { sbStopSync(); if(ev==='SIGNED_OUT'||!wasAuthed)sbWipeLocal(); sbSetStatus('Signed out — this device is local-only.'); }
     });
   }catch(e){}
 }
@@ -3432,6 +3433,12 @@ function sbStartSync(){
 function sbStopSync(){
   _sbAuthed=false; _sbStarted=false;
   if(_sbChannel){try{SB.removeChannel(_sbChannel);}catch(e){} _sbChannel=null;}
+}
+// Wipe locally-cached personal data from this device. The cloud copy is untouched and re-pulls
+// on next sign-in — this just stops stale copies lingering on untrusted / signed-out devices.
+function sbWipeLocal(){
+  try{[KEY,DKEY,MKEY,JKEY,MZKEY,TKEY].forEach(function(k){localStorage.removeItem(k);});}catch(e){}
+  try{render();updateCounts();}catch(e){}
 }
 // Re-pull all stores from the cloud (used on app open/refocus for automatic sync)
 function sbPull(){
