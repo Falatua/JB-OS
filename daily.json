@@ -1,7 +1,62 @@
 [
-  { "id": "d-water", "text": "Drink water (105 fl oz)", "emoji": "💧", "category": "health", "priority": "high" },
-  { "id": "d-exercise", "text": "Heavy walking, etc. (30 min)", "emoji": "🏋️", "category": "health", "priority": "high" },
-  { "id": "d-ai", "text": "Sharpen AI skills (learn or optimize one thing)", "emoji": "🤖", "category": "tech", "priority": "normal" },
-  { "id": "d-vitamins", "text": "Take vitamins", "emoji": "💊", "category": "health", "priority": "normal" },
-  { "id": "d-stretch", "text": "Stretching & mobility work", "emoji": "🧘", "category": "health", "priority": "normal", "notes": "Hips + shoulders, ~10 min" }
+  {
+    "id": "d-water",
+    "text": "Drink water (105 fl oz)",
+    "emoji": "💧",
+    "category": "health",
+    "priority": "high"
+  },
+  {
+    "id": "d-exercise",
+    "text": "Heavy walking, etc. (30 min)",
+    "emoji": "🏋️",
+    "category": "health",
+    "priority": "high"
+  },
+  {
+    "id": "d-ai",
+    "text": "Sharpen AI skills (learn or optimize one thing)",
+    "emoji": "🤖",
+    "category": "tech",
+    "priority": "normal"
+  },
+  {
+    "id": "d-vitamins",
+    "text": "Take vitamins",
+    "emoji": "💊",
+    "category": "health",
+    "priority": "normal"
+  },
+  {
+    "id": "d-stretch",
+    "text": "Stretching & mobility work",
+    "emoji": "🧘",
+    "category": "health",
+    "priority": "normal",
+    "notes": "Hips + shoulders, ~10 min"
+  },
+  {
+    "id": "d-journal",
+    "text": "Journal one entry",
+    "emoji": "📔",
+    "category": "personal",
+    "priority": "normal",
+    "notes": "Even one line counts — keep the streak."
+  },
+  {
+    "id": "d-musubi-ig",
+    "text": "Musubi: 1 IG action (post, story, or engage 10 min)",
+    "emoji": "📸",
+    "category": "musubi",
+    "priority": "normal",
+    "notes": "Grow the brand with daily reps."
+  },
+  {
+    "id": "d-protein",
+    "text": "Hit protein target",
+    "emoji": "🥩",
+    "category": "health",
+    "priority": "high",
+    "notes": "Set your daily grams (RP ~1g/lb bodyweight)."
+  }
 ]

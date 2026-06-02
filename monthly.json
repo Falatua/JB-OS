@@ -1,4 +1,32 @@
 [
-  { "id": "m-creditcard", "text": "Pay off credit card", "emoji": "💳", "category": "finance", "priority": "high" },
-  { "id": "m-rent", "text": "Pay Kenzie rent", "emoji": "🏠", "category": "finance", "priority": "high" }
+  {
+    "id": "m-creditcard",
+    "text": "Pay off credit card",
+    "emoji": "💳",
+    "category": "finance",
+    "priority": "high"
+  },
+  {
+    "id": "m-rent",
+    "text": "Pay Kenzie rent",
+    "emoji": "🏠",
+    "category": "finance",
+    "priority": "high"
+  },
+  {
+    "id": "m-budget",
+    "text": "Budget + subscription audit",
+    "emoji": "💰",
+    "category": "finance",
+    "priority": "normal",
+    "notes": "Review spend; cancel any subscriptions you're not using."
+  },
+  {
+    "id": "m-review",
+    "text": "Monthly review — reflect + tidy JB OS",
+    "emoji": "🔄",
+    "category": "personal",
+    "priority": "normal",
+    "notes": "Reflect on the month and clear out stale tasks."
+  }
 ]
