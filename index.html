@@ -83,7 +83,7 @@
   .sidebar{width:220px;min-width:220px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto}
   .main{flex:1;display:flex;flex-direction:column;overflow:hidden;background:radial-gradient(900px 380px at 78% -8%,rgba(232,160,32,.045),transparent 70%),var(--bg)}
 
-  .sb-logo{padding:20px 14px 14px;display:flex;align-items:center;gap:8px}
+  .sb-logo{padding:20px 14px 14px;display:flex;align-items:center;gap:8px;cursor:pointer}
   .sb-logo-mark{width:22px;height:22px;background:var(--accent);border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#111;flex-shrink:0}
   .sb-logo-text{font-size:14px;font-weight:600;letter-spacing:-.3px;color:var(--text)}
   .sb-logo-text span{color:var(--text-2);font-weight:400}
@@ -122,6 +122,8 @@
   .page-title{font-size:20px;font-weight:700;letter-spacing:-.4px;color:var(--text);display:flex;align-items:center;gap:8px}
   .page-title-dot{width:10px;height:10px;border-radius:50%;display:none}
   .header-actions{margin-left:auto;display:flex;gap:6px;align-items:center}
+  .header-list-actions{display:inline-flex;gap:6px;align-items:center}
+  .hdr-view.active{color:var(--accent);background:var(--accent-dim);border-color:var(--accent-ring)}
   .nav-hamburger{display:none;align-items:center;justify-content:center;width:34px;height:34px;border-radius:var(--radius);border:1px solid var(--border-2);background:var(--surface);color:var(--text-2);cursor:pointer;flex-shrink:0;padding:0}
   .nav-hamburger:hover{background:var(--surface-hover);color:var(--text)}
   .nav-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:250}
@@ -864,7 +866,7 @@
 <div class="app">
 
 <aside class="sidebar">
-  <div class="sb-logo">
+  <div class="sb-logo" onclick="setView('dashboard')" role="button" tabindex="0" aria-label="Go to Today dashboard" onkeydown="if(event.key==='Enter')setView('dashboard')">
     <div class="sb-logo-mark">JB</div>
     <div class="sb-logo-text">JB's <span>OS</span></div>
   </div>
@@ -904,14 +906,6 @@
     <div class="nav-item" id="nav-view-journal" onclick="setView('journal')" role="button" tabindex="0">
       <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3.5 2.5H10a1.5 1.5 0 0 1 1.5 1.5v9.5H5A1.5 1.5 0 0 1 3.5 12z"/><path d="M11.5 4H13v9.5M5.5 5.5h3.5M5.5 8h2.5"/></svg>
       Journal <span class="nav-count" id="cnt-journal">0</span>
-    </div>
-    <div class="nav-item" id="nav-view-musubi" onclick="setView('musubi')" role="button" tabindex="0">
-      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5.5 2.5L8 4l2.5-1.5L13 4.5l-1.5 2v6a.5.5 0 0 1-.5.5h-6a.5.5 0 0 1-.5-.5v-6L3 4.5z"/></svg>
-      Musubi
-    </div>
-    <div class="nav-item" id="nav-view-graph" onclick="setView('graph')" role="button" tabindex="0">
-      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="3" r="1.6"/><circle cx="3" cy="11" r="1.6"/><circle cx="13" cy="11" r="1.6"/><circle cx="8" cy="9" r="1.4"/><path d="M8 4.6V7.6M6.9 8.2L4 10M9.1 8.2L12 10"/></svg>
-      Graph
     </div>
   </div>
 
@@ -1009,18 +1003,28 @@
       </div>
       <span class="page-title-count" id="pt-count">0</span>
       <div class="header-actions">
-        <button class="btn btn-ghost" onclick="importJSON()" aria-label="Import items">
-          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 10v3h12v-3M8 2v8M5 7l3 3 3-3"/></svg>
-          <span>Import</span>
+        <button class="btn btn-ghost hdr-view" id="hdr-musubi" onclick="setView('musubi')" aria-label="Musubi">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5.5 2.5L8 4l2.5-1.5L13 4.5l-1.5 2v6a.5.5 0 0 1-.5.5h-6a.5.5 0 0 1-.5-.5v-6L3 4.5z"/></svg>
+          <span>Musubi</span>
         </button>
-        <button class="btn btn-ghost" onclick="exportJSON()" aria-label="Export items">
-          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 10v3h12v-3M8 10V2M5 5l3-3 3 3"/></svg>
-          <span>Export</span>
+        <button class="btn btn-ghost hdr-view" id="hdr-graph" onclick="setView('graph')" aria-label="Graph">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="3" r="1.6"/><circle cx="3" cy="11" r="1.6"/><circle cx="13" cy="11" r="1.6"/><circle cx="8" cy="9" r="1.4"/><path d="M8 4.6V7.6M6.9 8.2L4 10M9.1 8.2L12 10"/></svg>
+          <span>Graph</span>
         </button>
-        <button class="btn btn-primary" onclick="openModal()">
-          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8 2v12M2 8h12"/></svg>
-          <span>New Item</span>
-        </button>
+        <span class="header-list-actions">
+          <button class="btn btn-ghost" onclick="importJSON()" aria-label="Import items">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 10v3h12v-3M8 2v8M5 7l3 3 3-3"/></svg>
+            <span>Import</span>
+          </button>
+          <button class="btn btn-ghost" onclick="exportJSON()" aria-label="Export items">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 10v3h12v-3M8 10V2M5 5l3-3 3 3"/></svg>
+            <span>Export</span>
+          </button>
+          <button class="btn btn-primary" onclick="openModal()">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8 2v12M2 8h12"/></svg>
+            <span>New Item</span>
+          </button>
+        </span>
       </div>
     </div>
     <div class="search-wrap" id="search-wrap">
@@ -1604,6 +1608,7 @@ function render(){
     html+=`<div class="section-head"><span class="section-head-label">Archived · ${all.length}</span><div class="section-head-line"></div>${sortControlHTML()}</div>`;
     html+=all.map((i,idx)=>itemHTML(i,true,idx)).join('');
   } else {
+    html+=reminderBar();
     html+=`<div class="section-head"><span class="section-head-label">Active · ${all.length}</span><div class="section-head-line"></div>${sortControlHTML()}</div>`;
     html+=all.map((i,idx)=>itemHTML(i,false,idx)).join('');
   }
@@ -2217,7 +2222,7 @@ function closeRoutine(){document.getElementById('routine-modal').classList.add('
 function closeRoutineOutside(e){if(e.target.id==='routine-modal')closeRoutine();}
 
 /* ===== View switching ===== */
-function syncWorkspaceNav(v){['dashboard','list','daily','monthly','calendar','journal','musubi','graph'].forEach(k=>{const e=document.getElementById('nav-view-'+k);if(e)e.classList.toggle('active',k===v);});}
+function syncWorkspaceNav(v){['dashboard','list','daily','monthly','calendar','journal','musubi','graph'].forEach(k=>{const e=document.getElementById('nav-view-'+k);if(e)e.classList.toggle('active',k===v);});['musubi','graph'].forEach(k=>{const e=document.getElementById('hdr-'+k);if(e)e.classList.toggle('active',k===v);});}
 function applyViewChrome(v){
   const sw=document.getElementById('search-wrap'), aa=document.getElementById('add-area'), qt=document.getElementById('quick-type'), qi=document.getElementById('quick-input');
   if(v==='list'){sw.style.display='';aa.style.display='';qt.style.display='';qi.placeholder='Quick add — press Enter to save';}
@@ -2229,7 +2234,7 @@ function applyViewChrome(v){
   else if(v==='musubi'){sw.style.display='none';aa.style.display='none';}
   else if(v==='graph'){sw.style.display='none';aa.style.display='none';}
   // Task action buttons (Import/Export/New Item) only apply to the list views; hide elsewhere
-  const ha=document.querySelector('.header-actions');if(ha)ha.style.display=(v==='journal'||v==='musubi'||v==='graph')?'none':'';
+  const la=document.querySelector('.header-list-actions');if(la)la.style.display=(v==='journal'||v==='musubi'||v==='graph')?'none':'';
 }
 function setView(v){
   closeNav();
@@ -3208,14 +3213,15 @@ function loadConditions(){
 
 /* ===== Due-date reminders (free, on-device notifications via the PWA) ===== */
 function reminderBar(){
-  if(!('Notification' in window)||Notification.permission!=='default')return '';
+  if(!('Notification' in window)||Notification.permission==='granted')return '';
   return '<div class="remind-bar" onclick="requestReminders()" role="button" tabindex="0" onkeydown="if(event.key===\'Enter\'){requestReminders()}"><span>🔔</span> Get reminded about overdue &amp; due-today items <span class="rb-cta">Turn on →</span></div>';
 }
 function requestReminders(){
-  if(!('Notification' in window))return;
+  if(!('Notification' in window)){toast('This browser does not support notifications.');return;}
+  if(Notification.permission==='denied'){toast('Notifications are blocked — enable JB OS in your device Settings, then reopen. (iPhone: add to Home Screen first.)');return;}
   Notification.requestPermission().then(function(p){
     if(p==='granted'){toast('Reminders on — 5× a day (7a · 12p · 3:30p · 7:30p · 9p)');fireDueNotification('Reminders on ✓');}
-    if(view==='dashboard')render();
+    render();
   });
 }
 // Five reminder times a day (local). Phone push when the app is closed is handled
