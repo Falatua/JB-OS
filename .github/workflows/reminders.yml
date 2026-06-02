@@ -22,7 +22,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Push reminder
+      - name: Push reminder (ntfy)
         env:
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
         run: python3 .github/scripts/reminder_push.py
+      - name: Web push (installed PWA)
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          VAPID_PUBLIC: ${{ secrets.VAPID_PUBLIC }}
+          VAPID_PRIVATE: ${{ secrets.VAPID_PRIVATE }}
+          VAPID_SUBJECT: ${{ secrets.VAPID_SUBJECT }}
+        run: |
+          npm i web-push@3 --no-save --silent || exit 0
+          node .github/scripts/send_push.js

@@ -1,7 +1,7 @@
 /* JB OS service worker — offline support via network-first with cache fallback.
    Network-first keeps the live GitHub Pages sync intact (fresh data when online),
    and falls back to the last cached copy when offline. */
-const CACHE = 'jbos-v3';
+const CACHE = 'jbos-v4';
 const SHELL = [
   './', './index.html', './manifest.json',
   './todos.json', './daily.json', './monthly.json',
@@ -23,6 +23,16 @@ self.addEventListener('activate', e => {
       .then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
       .then(() => self.clients.claim())
   );
+});
+
+// Web push: show the notification pushed by the reminders Action (works when app is closed)
+self.addEventListener('push', e => {
+  let data = { title: 'JB OS reminder', body: 'Tap to open your tasks.' };
+  try { if (e.data) data = Object.assign(data, e.data.json()); }
+  catch (err) { if (e.data) data.body = e.data.text(); }
+  e.waitUntil(self.registration.showNotification(data.title, {
+    body: data.body, icon: 'icon-192.png', badge: 'icon-192.png', tag: 'jbos-push', renotify: true, data: { url: './' }
+  }));
 });
 
 // Focus (or open) the app when a reminder notification is tapped
