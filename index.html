@@ -167,7 +167,12 @@
   .item.done{opacity:.6}
   .item.done:hover{opacity:.75}
   .item-bar{width:3px;min-width:3px;background:var(--item-cat-color,var(--border-2));flex-shrink:0;align-self:stretch}
-  .item-inner{display:flex;align-items:flex-start;gap:10px;padding:11px 12px;flex:1;min-width:0}
+  .item-inner{display:flex;align-items:flex-start;gap:10px;padding:11px 12px;flex:1;min-width:0;transition:transform .18s ease}
+  .item.sw-active .item-inner{transition:none}
+  .item.sw-active .item-inner,.item.sw-right .item-inner,.item.sw-left .item-inner{background:var(--surface)}
+  .item::after{content:'';position:absolute;inset:0;display:flex;align-items:center;padding:0 18px;font-size:13.5px;font-weight:600;opacity:0;pointer-events:none}
+  .item.sw-right::after{content:'✓ Done';color:var(--green);background:var(--green-dim);justify-content:flex-start;opacity:1}
+  .item.sw-left::after{content:'Delete';color:var(--red);background:var(--red-dim);justify-content:flex-end;opacity:1}
 
   .cb{width:16px;height:16px;min-width:16px;border:1.5px solid var(--border-2);border-radius:5px;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-top:1px;transition:background var(--t),border-color var(--t);flex-shrink:0}
   .cb:hover{border-color:var(--accent)}
@@ -3013,6 +3018,41 @@ if((window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||naviga
 /* Offline indicator */
 function updOnline(){var e=document.getElementById('offline-pill');if(e)e.classList.toggle('show',navigator.onLine===false);}
 window.addEventListener('online',updOnline);window.addEventListener('offline',updOnline);updOnline();
+
+/* Swipe gestures on list items (touch): swipe right = complete, swipe left = delete (both undoable) */
+(function swipeInit(){
+  var listEl=document.getElementById('list'); if(!listEl)return;
+  var startX=0,startY=0,cur=null,inner=null,dx=0,axis=null;
+  function reset(){if(cur){cur.classList.remove('sw-active','sw-right','sw-left');if(inner)inner.style.transform='';}cur=null;inner=null;dx=0;axis=null;}
+  listEl.addEventListener('touchstart',function(e){
+    if(view!=='list'||filter==='archive'||e.touches.length>1){cur=null;return;}
+    var item=e.target.closest('.item'); if(!item){cur=null;return;}
+    cur=item;inner=item.querySelector('.item-inner');startX=e.touches[0].clientX;startY=e.touches[0].clientY;dx=0;axis=null;
+  },{passive:true});
+  listEl.addEventListener('touchmove',function(e){
+    if(!cur)return;
+    dx=e.touches[0].clientX-startX; var dy=e.touches[0].clientY-startY;
+    if(axis===null){ if(Math.abs(dx)>8||Math.abs(dy)>8) axis=Math.abs(dx)>Math.abs(dy)?'x':'y'; else return; }
+    if(axis!=='x'){return;}
+    e.preventDefault(); // own the horizontal gesture; vertical still scrolls
+    cur.classList.add('sw-active');
+    var d=Math.max(-160,Math.min(160,dx));
+    if(inner)inner.style.transform='translateX('+d+'px)';
+    cur.classList.toggle('sw-right',dx>44);
+    cur.classList.toggle('sw-left',dx<-44);
+  },{passive:false});
+  function end(e){
+    if(!cur)return;
+    var item=cur,inr=inner,id=item.id.replace('item-',''),T=92,d=dx,ax=axis;
+    if(ax==='x'&&Math.abs(d)>10&&e.cancelable)e.preventDefault(); // suppress the click after a real swipe
+    item.classList.remove('sw-active');
+    if(ax==='x'&&d>T){ if(inr)inr.style.transform='translateX(110%)'; setTimeout(function(){toggleDone(id);},160); cur=null;inner=null;dx=0;axis=null; return; }
+    if(ax==='x'&&d<-T){ if(inr)inr.style.transform='translateX(-110%)'; setTimeout(function(){del(id);},160); cur=null;inner=null;dx=0;axis=null; return; }
+    reset();
+  }
+  listEl.addEventListener('touchend',end,{passive:false});
+  listEl.addEventListener('touchcancel',reset,{passive:true});
+})();
 /* One-time "Add to Home Screen" hint on iOS Safari (not yet installed) */
 (function(){
   var isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent||'');
