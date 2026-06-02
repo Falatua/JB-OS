@@ -630,6 +630,22 @@
   #mz .mz-addrow button{background:var(--mz-red);color:#fff;border:none;border-radius:6px;padding:7px 13px;font-size:12px;font-weight:600;cursor:pointer;}
   #mz .mz-empty{padding:14px;color:var(--text-3);font-size:11.5px;text-align:center;}
   #mz .mz-done-chip{font-family:var(--mono);font-size:10px;color:var(--mz-teal2);}
+  /* Content Ideas board */
+  #mz .mz-igroup{margin-bottom:14px;}
+  #mz .mz-igroup-h{display:flex;align-items:center;gap:7px;font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--mz-cream);margin:0 0 7px;}
+  #mz .mz-igroup-h .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+  #mz .mz-igroup-h .ct{margin-left:auto;color:var(--text-3);font-size:10px;}
+  #mz .mz-icard{display:flex;align-items:flex-start;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:9px 11px;margin-bottom:6px;}
+  #mz .mz-icard.done{opacity:.55;}
+  #mz .mz-icard.done .itext{text-decoration:line-through;}
+  #mz .mz-icard .ick{flex-shrink:0;width:18px;height:18px;border-radius:5px;border:1.5px solid var(--border-2);background:none;color:var(--mz-teal2);cursor:pointer;font-size:11px;line-height:1;display:flex;align-items:center;justify-content:center;margin-top:1px;}
+  #mz .mz-icard.done .ick{background:var(--mz-teal2);border-color:var(--mz-teal2);color:#fff;}
+  #mz .mz-icard .ibody{flex:1;min-width:0;}
+  #mz .mz-icard .itext{font-size:13px;color:var(--mz-cream);line-height:1.4;}
+  #mz .mz-icard .inote{font-size:11.5px;color:var(--text-2);margin-top:3px;line-height:1.45;}
+  #mz .mz-icard .ibadge{flex-shrink:0;font-family:var(--mono);font-size:9px;letter-spacing:.04em;text-transform:uppercase;padding:3px 7px;border-radius:4px;white-space:nowrap;}
+  #mz .mz-icard .idel{flex-shrink:0;background:none;border:none;color:var(--text-3);cursor:pointer;font-size:13px;padding:0 2px;line-height:1;}
+  #mz .mz-icard .idel:hover{color:var(--mz-red);}
   /* ===== Progress steps ===== */
   .item-prog{display:flex;align-items:center;gap:8px;margin-top:7px}
   .prog-track{flex:1;max-width:160px;height:5px;border-radius:3px;background:var(--surface-hover);overflow:hidden}
@@ -2637,6 +2653,19 @@ const MZ_SEED=[
   {id:'p5',type:'story',title:'This or That — PI Edition',stage:'idea'},
   {id:'p6',type:'reel',title:'How the Tee Gets Made',stage:'idea'}
 ];
+// Content-idea categories for the Musubi "Content Ideas" board
+const MZ_IDEA_CATS={
+  reel:     {label:'Reel',              color:'#C8443A'},
+  carousel: {label:'Carousel',          color:'#E5B23A'},
+  story:    {label:'Story',             color:'#2E8090'},
+  throwback:{label:'Throwback',         color:'#b07cc6'},
+  product:  {label:'Product / Drop',    color:'#E5B23A'},
+  models:   {label:'Models / UGC',      color:'#5aa9e6'},
+  local:    {label:'Local / Region',    color:'#46d489'},
+  ohana:    {label:'Ohana / Family',    color:'#f08fb0'},
+  bts:      {label:'Behind the Scenes', color:'#9aa0a6'},
+  other:    {label:'Other',             color:'#83838d'}
+};
 const MZ_CHECK={
   morning:{icon:'🌅',title:'Morning Block',pill:'6–9 AM PT',cls:'',tasks:[
     ['m1','30','Leave 30 meaningful comments (4+ words) on posts in your niche'],
@@ -2666,6 +2695,8 @@ function mzLoad(){
   if(!s.checklist)s.checklist={};
   if(!Array.isArray(s.pipeline))s.pipeline=MZ_SEED.map(x=>({...x}));
   if(!Array.isArray(s.perf))s.perf=[];
+  if(!Array.isArray(s.ideas))s.ideas=[];
+  if(!Array.isArray(s.ideasDel))s.ideasDel=[];
   const cut=dateKey(new Date(Date.now()-31*864e5));
   Object.keys(s.checklist).forEach(k=>{if(k<cut)delete s.checklist[k];});
   return s;
@@ -2721,6 +2752,48 @@ function mzPanelContent(){
     <table class="mz-tb"><thead><tr><th>Part</th><th>What to Write</th><th>Example</th></tr></thead><tbody>${caption.map(c=>`<tr><td class="lbl">${c[0]}</td><td>${c[1]}</td><td style="color:var(--mz-cream)">${c[2]}</td></tr>`).join('')}</tbody></table>
     <div class="mz-callout red"><h4>Never Do These in Captions</h4><p>“Aloha vibes!” · “Rise and grind” · “For the real ones” · “Double tap if you agree” · “Island time” · “Mahalo!” with an exclamation. Off-brand, and the engagement-bait ones now hurt reach.</p></div>`;
 }
+function mzIdeaCard(i){
+  const c=MZ_IDEA_CATS[i.cat||'other']||MZ_IDEA_CATS.other;
+  return `<div class="mz-icard${i.done?' done':''}">
+    <button class="ick" onclick="mzIdeaToggle('${i.id}')" title="${i.done?'Mark as not used':'Mark as used / posted'}">${i.done?'✓':''}</button>
+    <div class="ibody"><div class="itext">${esc(i.text||'')}</div>${i.note?`<div class="inote">${esc(i.note)}</div>`:''}</div>
+    <span class="ibadge" style="background:${c.color}22;color:${c.color}">${c.label}</span>
+    <button class="idel" onclick="mzIdeaDel('${i.id}')" title="Delete idea">✕</button>
+  </div>`;
+}
+function mzPanelIdeas(){
+  const s=mzLoad(), ideas=Array.isArray(s.ideas)?s.ideas:[];
+  const active=ideas.filter(i=>!i.done), used=ideas.filter(i=>i.done);
+  const opts=Object.keys(MZ_IDEA_CATS).map(k=>`<option value="${k}">${MZ_IDEA_CATS[k].label}</option>`).join('');
+  let groups='';
+  Object.keys(MZ_IDEA_CATS).forEach(k=>{
+    const inCat=active.filter(i=>(i.cat||'other')===k);
+    if(!inCat.length)return;
+    const c=MZ_IDEA_CATS[k];
+    groups+=`<div class="mz-igroup"><div class="mz-igroup-h"><span class="dot" style="background:${c.color}"></span>${c.label}<span class="ct">${inCat.length}</span></div>`
+      +inCat.map(mzIdeaCard).join('')+`</div>`;
+  });
+  const usedHTML=used.length?`<div class="mz-sec mt">Used / Posted · ${used.length}</div>`+used.map(mzIdeaCard).join(''):'';
+  return `<div class="mz-callout gold"><h4>Content Ideas — Musubi Strong</h4><p>Drop a content idea here the moment it sparks, tag the format, and keep them organized by type. Check one off as “used” once you post it.</p></div>
+    <div class="mz-addrow"><input id="mz-ii" placeholder="New Musubi content idea…" onkeydown="if(event.key==='Enter')mzIdeaAdd()"><select id="mz-ic">${opts}</select><button onclick="mzIdeaAdd()">Add idea</button></div>
+    ${active.length?groups:'<div class="mz-empty">No content ideas yet. Add your first one above — a reel, carousel, throwback, product drop, anything.</div>'}
+    ${usedHTML}`;
+}
+function mzIdeaAdd(){
+  const inp=document.getElementById('mz-ii'),cat=document.getElementById('mz-ic'),v=inp.value.trim();
+  if(!v)return;
+  const s=mzLoad(); if(!Array.isArray(s.ideas))s.ideas=[];
+  s.ideas.unshift({id:'ci'+Date.now(),text:v,cat:cat.value,done:false,createdAt:new Date().toISOString()});
+  mzSave(s); renderMusubi();
+}
+function mzIdeaToggle(id){const s=mzLoad();const it=(s.ideas||[]).find(x=>x.id===id);if(!it)return;it.done=!it.done;mzSave(s);renderMusubi();}
+function mzIdeaDel(id){
+  const s=mzLoad();
+  if(!Array.isArray(s.ideasDel))s.ideasDel=[];
+  if(!s.ideasDel.includes(id))s.ideasDel.push(id); // tombstone so a seeded idea doesn't re-appear
+  s.ideas=(s.ideas||[]).filter(x=>x.id!==id);
+  mzSave(s); renderMusubi();
+}
 function mzPanelAlgo(){
   const sig=[['#1 Strongest','Sends per Reach','How often people DM your post to a friend. Weighted well above likes. The primary lever for reaching new audiences.','var(--mz-gold)','100%'],['#2 Strong','Watch Time','For Reels: how long people watch and whether they rewatch. A 45s video finished by 70% beats a 15s at 40%. Hook in 1.7s.','var(--mz-red)','65%'],['#3 Meaningful','Saves','Educational carousels and cultural reference guides earn saves. Bookmarks signal durable value.','var(--mz-teal2)','45%']];
   const phases=[['Minute 0–30','Shown to a small non-follower test group; engagement rate measured.','Reply to every comment immediately. Be online. Don’t post and vanish.'],['Hour 1–3','Strong performance → wider audience. Sends and saves matter most.','Keep engaging. Add the post to your Stories to drive more views.'],['Day 1–3','Continued strength unlocks Explore. Sends are the key lever.','If a post is performing, don’t post another feed post that day. Let it breathe.'],['Trial Reels','Shows a Reel to non-followers first; promotes to followers only if it performs.','Use Trial Reels to test hooks without risking your main feed.']];
@@ -2758,12 +2831,34 @@ function mzPerfAdd(){const g=id=>document.getElementById(id).value;const e={id:'
 function mzPerfDel(id){const s=mzLoad();s.perf=s.perf.filter(p=>p.id!==id);mzSave(s);renderMusubi();}
 function renderMusubi(){
   setTitle('Musubi Strong');
-  const tabs=[['daily','Daily'],['perf','Performance'],['numbers','Numbers'],['schedule','Schedule'],['content','Content'],['algo','Algorithm']];
-  const builders={daily:mzPanelDaily,perf:mzPanelPerf,numbers:mzPanelNumbers,schedule:mzPanelSchedule,content:mzPanelContent,algo:mzPanelAlgo};
+  const tabs=[['daily','Daily'],['ideas','Content Ideas'],['perf','Performance'],['numbers','Numbers'],['schedule','Schedule'],['content','Content'],['algo','Algorithm']];
+  const builders={daily:mzPanelDaily,ideas:mzPanelIdeas,perf:mzPanelPerf,numbers:mzPanelNumbers,schedule:mzPanelSchedule,content:mzPanelContent,algo:mzPanelAlgo};
   const panel=builders[mzTab]||mzPanelDaily;
   document.getElementById('list').innerHTML=`<div id="mz"><div class="mz-hero"><span class="mz-badge">Musubi Strong</span><h2>IG Growth System</h2><span class="mz-src">Research-backed · 2025–26</span></div><div class="mz-tabs">${tabs.map(t=>`<button class="mz-tab ${mzTab===t[0]?'active':''}" onclick="mzSubTab('${t[0]}')">${t[1]}</button>`).join('')}</div><div class="mz-panel">${panel()}</div></div>`;
 }
 function mzSubTab(t){mzTab=t;renderMusubi();}
+
+/* Seed Musubi content ideas from musubi-content.json (new ids only) so ideas
+   added via chat sync into the board, mirroring the main todos sync. Deleted
+   ideas are tombstoned (s.ideasDel) so they don't re-appear. */
+(function fetchMusubiIdeas(){
+  fetch('musubi-content.json?v='+Date.now())
+    .then(function(r){return r.ok?r.json():Promise.reject();})
+    .then(function(seeds){
+      if(!Array.isArray(seeds)||!seeds.length)return;
+      var s=mzLoad();
+      if(!Array.isArray(s.ideas))s.ideas=[];
+      if(!Array.isArray(s.ideasDel))s.ideasDel=[];
+      var have={};s.ideas.forEach(function(x){have[x.id]=1;});
+      var changed=false;
+      seeds.forEach(function(seed){
+        if(!seed||!seed.id||have[seed.id]||s.ideasDel.indexOf(seed.id)>=0)return;
+        s.ideas.push(Object.assign({cat:'other',done:false,createdAt:new Date().toISOString()},seed));
+        changed=true;
+      });
+      if(changed){mzSave(s);if(view==='musubi')renderMusubi();}
+    }).catch(function(){});
+})();
 </script>
 </body>
 </html>

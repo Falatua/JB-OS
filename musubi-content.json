@@ -1,0 +1,8 @@
+[
+  { "id": "mc-auntie-tee", "text": "\"Auntie's favorite tee\" — feature a real local auntie wearing it", "cat": "models", "note": "Tie into the auntie's-favorite concept; shoot a genuine local auntie, not a model-y shot." },
+  { "id": "mc-throwback-thursday", "text": "Throwback Thursday — Kalohe Kai / island-reggae era nostalgia", "cat": "throwback", "note": "Recurring Thursday slot. Lean on the Kalohe Kai reference and that era's vibe." },
+  { "id": "mc-region-mockups", "text": "Region-real mockups — tees shot on Westside Oʻahu backdrops", "cat": "local", "note": "Make previews read as authentically local instead of generic studio mockups." },
+  { "id": "mc-real-models", "text": "Use real community members as models in product shots", "cat": "models", "note": "Shoot actual people from the community for the lifestyle/local feel." },
+  { "id": "mc-archie-gear", "text": "Archie in Musubi gear — ohana mini photo shoot", "cat": "ohana", "note": "Kid-in-the-gear content for the ohana/family angle. Pull from the Archie gear order." },
+  { "id": "mc-bts-drop", "text": "Behind the scenes — how a drop comes together (print → fold → pack)", "cat": "bts", "note": "Process content builds trust faster than flat product shots. No voiceover, brand soundtrack." }
+]
