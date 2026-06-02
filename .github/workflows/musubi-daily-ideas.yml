@@ -1,0 +1,35 @@
+name: Daily Musubi content ideas
+
+# Drips a few fresh, on-brand content ideas onto the Musubi "Content Ideas" board
+# each morning. Free — no API key. Runs ~6:00 AM Hawaiʻi time, or on demand.
+on:
+  schedule:
+    - cron: "0 16 * * *"   # 16:00 UTC = 06:00 HST
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: musubi-daily-ideas
+  cancel-in-progress: false
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate ideas
+        run: python3 .github/scripts/musubi_daily_ideas.py
+      - name: Commit & push if changed
+        run: |
+          if [ -n "$(git status --porcelain musubi-content.json)" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add musubi-content.json
+            git commit -m "Daily Musubi content ideas (auto)"
+            git pull --rebase --autostash origin main || true
+            git push
+          else
+            echo "No new ideas to add today."
+          fi
