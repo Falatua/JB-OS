@@ -746,6 +746,14 @@
   .prog-count{font-size:11px;font-weight:600;color:var(--text-2);font-variant-numeric:tabular-nums;white-space:nowrap}
   .prog-next{font-size:11.5px;color:var(--text-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
   .prog-next.done{color:var(--green)}
+  .istep-list{display:flex;flex-direction:column;gap:1px;margin-top:6px}
+  .istep{display:flex;align-items:center;gap:8px;padding:3px 4px;cursor:pointer;border-radius:6px}
+  .istep:hover{background:var(--surface-hover)}
+  .istep-cb{flex-shrink:0;width:16px;height:16px;border-radius:5px;border:1.5px solid var(--border-2);display:flex;align-items:center;justify-content:center;transition:background var(--t),border-color var(--t)}
+  .istep.done .istep-cb{background:var(--green);border-color:var(--green)}
+  .istep-check{opacity:0}.istep.done .istep-check{opacity:1}
+  .istep-text{font-size:12.5px;color:var(--text-2);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .istep.done .istep-text{text-decoration:line-through;color:var(--text-3)}
   /* steps editor in detail modal */
   .steps-bar{display:block;margin-bottom:12px}
   .prog-head{display:flex;align-items:baseline;gap:10px;margin-bottom:8px}
@@ -1521,12 +1529,21 @@ function progressHTML(item){
   const st=stepStats(item);
   if(!st)return '';
   const full=st.complete;
-  const next=full?'All steps complete':(st.next?'Next: '+esc(st.next):'');
+  const steps=Array.isArray(item.steps)?item.steps:[];
+  const rows=steps.map((s,idx)=>`<div class="istep${s.done?' done':''}" role="checkbox" aria-checked="${s.done?'true':'false'}" tabindex="0" title="Tap to check off" onclick="event.stopPropagation();toggleItemStep('${item.id}',${idx})" onkeydown="if(event.key===' '||event.key==='Enter'){event.stopPropagation();toggleItemStep('${item.id}',${idx});event.preventDefault()}"><span class="istep-cb"><svg class="istep-check" width="8" height="8" viewBox="0 0 10 10" fill="none" stroke="#111" stroke-width="2.6"><path d="M1.5 5l2.8 2.8 4.2-5"/></svg></span><span class="istep-text">${esc(s.text||'')}</span></div>`).join('');
   return `<div class="item-prog">
     <div class="prog-track${full?' full':''}"><div class="prog-fill${full?' full':''}" style="width:${st.pct}%"></div></div>
     <span class="prog-count">${st.done}/${st.total}</span>
-    <span class="prog-next${full?' done':''}">${next}</span>
-  </div>`;
+  </div>
+  <div class="istep-list">${rows}</div>`;
+}
+// Toggle a single progress step right from the card/list, persisting immediately (and syncing).
+function toggleItemStep(id,idx){
+  const items=load();const it=items.find(x=>x.id===id);
+  if(!it||!Array.isArray(it.steps)||!it.steps[idx])return;
+  it.steps[idx].done=!it.steps[idx].done;
+  it.userEdited=true;it.updatedAt=new Date().toISOString();
+  save(items);render();updateCounts();
 }
 
 function itemHTML(item, isArchiveView, idx){
@@ -1834,6 +1851,16 @@ function toggleStepRow(el){
   el.classList.toggle('on',on);el.setAttribute('aria-checked',on?'true':'false');
   const txt=el.parentElement.querySelector('.step-text');if(txt)txt.classList.toggle('done',on);
   updateStepsBar();
+  persistSteps(); // check-offs stick immediately, even if the modal is closed without "Save changes"
+}
+// Persist just the current steps to the open item (so toggling a step doesn't require a full save).
+function persistSteps(){
+  if(!detailId)return;
+  const items=load();const it=items.find(x=>x.id===detailId);if(!it)return;
+  const steps=collectSteps();
+  if(steps.length)it.steps=steps; else delete it.steps;
+  it.userEdited=true;it.updatedAt=new Date().toISOString();
+  try{save(items);render();updateCounts();}catch(e){}
 }
 function collectSteps(){
   return [...document.querySelectorAll('#d-steps .step-row')].map(r=>({
