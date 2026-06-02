@@ -859,10 +859,6 @@
     <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M8 2v8M5 7l3 3 3-3M3 13h10"/></svg>
     Install app
   </button>
-  <button id="sync-btn" class="sync-btn" onclick="openSync()" aria-label="Cloud sync settings">
-    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4.5 12a3 3 0 0 1-.3-6 4 4 0 0 1 7.7-1A3 3 0 0 1 12 12z"/></svg>
-    <span id="sync-btn-label">Cloud sync</span>
-  </button>
 
   <div class="sb-section">
     <div class="sb-label">Workspace</div>
@@ -1057,40 +1053,6 @@
   </div>
 </div>
 <div class="offline-pill" id="offline-pill" role="status">Offline — changes save locally &amp; sync later</div>
-
-<div class="backdrop hidden" id="sync-modal" onclick="if(event.target.id==='sync-modal')closeSync()" role="dialog" aria-modal="true" aria-label="Cloud sync">
-  <div class="modal">
-    <div class="modal-title">☁️ Cloud Sync (Supabase)</div>
-    <p style="font-size:12.5px;color:var(--text-2);line-height:1.5;margin-bottom:14px">Sync your tasks across phone &amp; laptop in real time. Paste your Supabase <b>Project URL</b> and <b>anon key</b> (Supabase → Project Settings → API). Stored only in this browser — never committed to the repo.</p>
-    <div class="field">
-      <label for="sb-url">Project URL</label>
-      <input id="sb-url" placeholder="https://xxxx.supabase.co" autocomplete="off" spellcheck="false">
-    </div>
-    <div class="field">
-      <label for="sb-key">Anon public key</label>
-      <input id="sb-key" placeholder="eyJhbGciOi…" autocomplete="off" spellcheck="false">
-    </div>
-    <div class="field">
-      <label for="sb-space">Sync space <span style="color:var(--text-3);font-weight:400">(any private word — use the same on every device)</span></label>
-      <input id="sb-space" placeholder="main" autocomplete="off" spellcheck="false">
-    </div>
-    <div id="sb-status" style="font-size:12px;color:var(--text-3);margin:4px 0 12px">Not connected.</div>
-    <div style="border-top:1px solid var(--border);margin:2px 0 12px;padding-top:12px">
-      <div style="font-size:12px;color:var(--text-2);margin-bottom:8px"><b>Push to this device</b> — native reminders even when JB OS is closed (no extra app).</div>
-      <button class="btn btn-ghost" onclick="sbEnablePush()" style="margin-bottom:14px">🔔 Enable push on this device</button>
-      <div style="font-size:12px;color:var(--text-2);margin-bottom:6px"><b>Sign in</b> <span style="color:var(--text-3);font-weight:400">— optional, for private &amp; secure sync</span></div>
-      <div style="display:flex;gap:7px;margin-bottom:6px"><input id="sb-email" placeholder="you@email.com" autocomplete="email" spellcheck="false" style="flex:1"><button class="btn btn-ghost" onclick="sbSignIn()" style="white-space:nowrap">Email link</button></div>
-      <div id="sb-auth-status" style="font-size:11.5px;color:var(--text-3)">Not signed in (anon mode).</div>
-      <button id="sb-signout" class="btn btn-ghost" style="display:none;color:var(--red);margin-top:8px" onclick="sbSignOut()">Sign out</button>
-    </div>
-    <div class="detail-actions">
-      <button class="btn btn-ghost" style="color:var(--red)" onclick="disconnectSync()">Disconnect</button>
-      <div style="flex:1"></div>
-      <button class="btn btn-ghost" onclick="closeSync()">Close</button>
-      <button class="btn btn-primary" onclick="connectSync()">Connect</button>
-    </div>
-  </div>
-</div>
 
 <div class="backdrop hidden" id="modal" onclick="closeModalOutside(event)" role="dialog" aria-modal="true" aria-label="New item">
   <div class="modal">
@@ -1674,7 +1636,6 @@ function cmdCommands(){
   [['dashboard','🏠','Today'],['list','🗒️','All items'],['daily','🔁','Daily'],['monthly','📆','Monthly'],['calendar','📅','Calendar'],['journal','📔','Journal'],['musubi','🌺','Musubi'],['graph','🕸️','Graph']].forEach(function(v){add('Go to',v[1],v[2],'',function(){setView(v[0]);});});
   add('Action','➕','New item','',function(){openModal();});
   add('Action','📝','New journal entry','',function(){newJournalEntry();});
-  add('Action','☁️','Cloud sync settings','',function(){openSync();});
   add('Action','🔔','Enable reminders','',function(){requestReminders();});
   add('Action','⤓','Export data','',function(){exportJSON();});
   add('Action','⤒','Import data','',function(){importJSON();});
@@ -3233,7 +3194,10 @@ fetchJournalSeeds();
    and a realtime subscription + boot pull merge changes from your other devices. Falls back to
    local-only silently if not configured or offline — never breaks the app. */
 var SB=null, SB_CFG=null, SB_CLIENT=Math.random().toString(36).slice(2), _sbApplying=false, _sbT={};
-function sbGetCfg(){try{return JSON.parse(localStorage.getItem('jbos_sb')||'null');}catch(e){return null;}}
+// Cloud sync config is baked in so every device auto-connects on load — no in-app setup.
+// The publishable key is meant to be public; the jbos_sync table runs with RLS disabled per JB's "no-login" choice.
+var SB_EMBED={url:'https://jdkfafvfczzgtzhtynjr.supabase.co',key:'sb_publishable_QFHs4u69thMisxqLi35Zjw_0AX4BkTT',space:'main'};
+function sbGetCfg(){return SB_EMBED;}
 function sbSetStatus(msg,ok){var e=document.getElementById('sb-status');if(e){e.textContent=msg;e.style.color=ok?'var(--green)':'var(--text-3)';}var l=document.getElementById('sync-btn-label');if(l)l.textContent=ok?'Cloud sync ✓':'Cloud sync';}
 function sbSpace(){return (SB_CFG&&SB_CFG.space)||'main';}
 function sbErr(m){ if(/row-level|permission|jwt|not authorized|401|403/i.test(m||'')) sbSetStatus('Locked — sign in below to sync to your account.'); else sbSetStatus('Sync: '+(m||'error')); }
