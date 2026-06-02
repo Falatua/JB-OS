@@ -3209,7 +3209,7 @@ function sbSetStatus(msg,ok){
   var l=document.getElementById('sync-btn-label');if(l)l.textContent=ok?'Cloud sync ✓':'Cloud sync';
 }
 function sbSpace(){return (SB_CFG&&SB_CFG.space)||'main';}
-function sbErr(m){ if(/row-level|permission|jwt|not authorized|401|403/i.test(m||'')) sbSetStatus('Locked — sign in below to sync to your account.'); else sbSetStatus('Sync: '+(m||'error')); }
+function sbErr(m){ try{console.log('[sync] error:',m);}catch(_){} sbSetStatus('Blocked: '+(m||'unknown error')); }
 // ---- Tombstones: deleting an item records id→delete-time so a union merge can't
 // resurrect it. A later edit/recreate (item ts > tombstone ts) wins, so re-using an id works. ----
 var TKEY='jbos_tomb_v1';
