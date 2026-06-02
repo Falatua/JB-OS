@@ -211,6 +211,9 @@
 
   .backdrop{position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;z-index:100;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);padding:16px}
   .backdrop.hidden{display:none}
+  /* The auth gate is opaque + non-dismissible while signed out, so locally-cached personal
+     data is never visible until a valid session is confirmed (see sbAuthUI). */
+  #auth-modal{background:var(--bg)}
   .modal{background:var(--surface-modal);border:1px solid var(--border-2);border-radius:14px;padding:24px;width:480px;max-width:100%;box-shadow:0 24px 60px rgba(0,0,0,.5)}
   .modal-title{font-size:16px;font-weight:700;letter-spacing:-.3px;margin-bottom:18px}
   .field{margin-bottom:14px}
@@ -412,6 +415,8 @@
   .dash-hero{display:grid;grid-template-columns:repeat(4,1fr);gap:13px;margin-bottom:6px}
   .dcard{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:15px 16px;display:flex;flex-direction:column;transition:border-color var(--t),box-shadow var(--t),transform var(--t);min-width:0}
   .dcard:hover{border-color:var(--border-2);transform:translateY(-2px);box-shadow:0 10px 28px -16px rgba(0,0,0,.7)}
+  .dcard-click{cursor:pointer}
+  .dcard-click:hover{border-color:var(--accent)}
   .dcard-label{font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);margin-bottom:11px;display:flex;align-items:center;gap:6px}
   .dcard-label svg{opacity:.8}
   .dcard-cta{margin-top:auto;font-size:12px;color:var(--accent);background:none;border:none;cursor:pointer;font-family:inherit;padding:6px 0 0;text-align:left;width:fit-content}
@@ -575,6 +580,10 @@
   .a2hs button{background:none;border:none;color:var(--text-3);font-size:15px;cursor:pointer;margin-left:auto;flex-shrink:0;padding:0 2px}
   @media(max-width:640px){
     .nav-hamburger{display:inline-flex}
+    /* Respect the iOS safe area: keep modal headers + the ✕ close button out from under the
+       status bar / Dynamic Island (where taps don't register) and the home indicator. */
+    .backdrop{align-items:flex-start;padding:calc(12px + env(safe-area-inset-top,0px)) 12px calc(12px + env(safe-area-inset-bottom,0px))}
+    .detail-modal,.modal{max-height:calc(100vh - 26px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));max-height:calc(100dvh - 26px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))}
     .tabbar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:80;background:color-mix(in srgb,var(--surface) 92%,transparent);backdrop-filter:saturate(140%) blur(12px);-webkit-backdrop-filter:saturate(140%) blur(12px);border-top:1px solid var(--border);padding-bottom:env(safe-area-inset-bottom,0px)}
     .tabbar button{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;color:var(--text-3);font-size:9.5px;font-weight:500;font-family:inherit;padding:7px 0 6px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:color var(--t)}
     .tabbar button svg{width:21px;height:21px}
@@ -1064,7 +1073,7 @@
 </div>
 <div class="offline-pill" id="offline-pill" role="status">Offline — changes save locally &amp; sync later</div>
 
-<div class="backdrop hidden" id="auth-modal" onclick="if(event.target.id==='auth-modal')closeAuth()" role="dialog" aria-modal="true" aria-label="Sign in">
+<div class="backdrop" id="auth-modal" onclick="if(event.target.id==='auth-modal'&&_sbAuthed)closeAuth()" role="dialog" aria-modal="true" aria-label="Sign in">
   <div class="modal">
     <div class="modal-title">🔐 Sign in to JB OS</div>
     <p style="font-size:12.5px;color:var(--text-2);line-height:1.5;margin-bottom:14px">Your data is private to your account. Sign in once on this device — it stays signed in afterward, just like any other app.</p>
@@ -1080,7 +1089,7 @@
     <div class="detail-actions">
       <button id="au-signout" class="btn btn-ghost" style="display:none;color:var(--red)" onclick="authSignOut()">Sign out</button>
       <div style="flex:1"></div>
-      <button class="btn btn-ghost" onclick="closeAuth()">Close</button>
+      <button id="au-close" class="btn btn-ghost" style="display:none" onclick="closeAuth()">Close</button>
       <button class="btn btn-primary" onclick="authSignIn()">Sign in</button>
     </div>
   </div>
@@ -1347,6 +1356,9 @@ function buildCatNav(){
 
 function addItem(text, type='task', notes='', source='browser', priority='normal', category='general'){
   if(!text.trim())return;
+  // Auto-organize: when no specific life area was chosen, infer one from the title + notes
+  // so new items don't pile up under "General". (guessEmoji then picks a fitting emoji.)
+  if(!category||category==='general')category=guessCategory(text,notes);
   const items=load();
   const now=new Date().toISOString();
   items.unshift({id:uid(),text:text.trim(),notes:notes.trim(),type,priority,source,category,done:false,
@@ -1941,6 +1953,27 @@ function importJSON(){
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 
 /* Pick a fitting emoji for any item (used across all views; stored on add, guessed at render as fallback) */
+// Infer a life area from the title + notes so items don't pile up in "General".
+// Ordered most-specific first; mirrors JB's fixed category set. Returns 'general' if nothing fits.
+function guessCategory(text,notes){
+  const s=((text||'')+' '+(notes||'')).toLowerCase();
+  const map=[
+    [/\barchie\b|\bgigi\b|\bbaby\b|diaper|nursery|stroller|\bpump\b|onesie|\bcrib\b|toddler|\bkids?\b/,'kids'],
+    [/mackenzie|kenzie|\bdad\b|\bmom\b|\bwife\b|partner|in-?laws?|\bfamily\b|anniversary/,'family'],
+    [/musubi|shopify|instagram|\big\b|\btee\b|t-?shirt|\bshirt\b|apparel|hoodie|\bmerch\b|throwback|auntie|\bisland\b|hawaii|hawaiian|oahu|polynesian|\bbrand\b/,'musubi'],
+    [/answerlab|end-of-day|\beod\b|stakeholder|usability|research study|\bheber\b|freelance|client deck|\bdeck\b/,'work'],
+    [/\bcode\b|coding|\bapp\b|\bapi\b|\bai\b|claude|chatgpt|\broms?\b|emulat|\bserver\b|\bvps\b|github|\brepo\b|roman td|deploy|website|web app|automation|\bscript\b|supabase|obsidian|second brain/,'tech'],
+    [/\bbill\b|\btaxe?s?\b|invoice|\brent\b|mortgage|invest|stocks?|portfolio|\bbank\b|payment|\bpay\b|budget|insurance|refund|venmo|paypal/,'finance'],
+    [/\bgym\b|workout|work out|\blift\b|hypertrophy|israetel|\btrain\b|cardio|\brun\b|\bdiet\b|protein|macros|doctor|dentist|appointment|checkup|therapy|\bsleep\b|stretch|mobility|\bmeds?\b|vitamin|supplement/,'health'],
+    [/grocer|\bmilk\b|\beggs?\b|\bbread\b|tuna|\bahi\b|poke|chicken|\bbeef\b|\brice\b|\bsnacks?\b|produce|\bfruit\b|veggie|trader joe|\bfood\b/,'grocery'],
+    [/errand|\bcoins?\b|key fob|\bfob\b|post office|\bdmv\b|pick ?up|drop ?off|dry clean|car wash|oil change/,'errands'],
+    [/\bbuy\b|\border\b|\bshop\b|purchase|amazon|\bcart\b|\bgear\b|accessor/,'shopping'],
+    [/\bgame\b|gaming|\bmovie\b|\bshow\b|\bhobby\b|vacation|\btrip\b|\btravel\b|concert|\bsurf\b|\bbeach\b|leisure/,'lifestyle'],
+    [/haircut|barber|relationship|\badmin\b|password|reflect|self-?care/,'personal']
+  ];
+  for(let i=0;i<map.length;i++){if(map[i][0].test(s))return map[i][1];}
+  return 'general';
+}
 function guessEmoji(text,category){
   const s=(text||'').toLowerCase();
   const map=[
@@ -2956,7 +2989,7 @@ function journalInsights(){
     moodRead='Mood averages '+avg.toFixed(1)+'/5'+(bestWd!=null&&bestA>=avg?', brightest on '+wdName[bestWd]:'')+trend+'.';
   }
   let snip=null;
-  for(const e of entries){const b=(e.blocks||[]).find(x=>(x.a||'').trim());if(b){snip={date:e.date,q:b.free?'':(b.q||''),a:b.a.trim()};break;}}
+  for(const e of entries){const b=(e.blocks||[]).find(x=>(x.a||'').trim());if(b){snip={id:e.id,date:e.date,q:b.free?'':(b.q||''),a:b.a.trim()};break;}}
   const catC={};recent.forEach(e=>(e.blocks||[]).forEach(b=>{if((b.a||'').trim()&&b.cat&&!b.free)catC[b.cat]=(catC[b.cat]||0)+1;}));
   const topCat=Object.entries(catC).sort((a,b)=>b[1]-a[1])[0];
   return {n:entries.length,chips,moodRead,snip,topCat:topCat?jCat(topCat[0]).label:null};
@@ -3087,7 +3120,7 @@ function renderDashboard(){
     const chipsHTML=ji.chips.length?'<div class="di-label">Recurring themes &amp; people</div><div class="di-chips">'+ji.chips.map(c=>'<span class="di-chip">'+esc(c.w)+'<span class="di-chip-n">'+c.c+'</span></span>').join('')+'</div>':'<div class="dstat-sub">Themes will surface as you write more.</div>';
     const topcat=ji.topCat?'<div class="dchart-cap">You reflect most on <strong style="color:var(--text-2)">'+esc(ji.topCat)+'</strong>.</div>':'';
     const left='<div class="dcard"><div class="dcard-label">'+JI_ICON+'Journal insights</div>'+moodLine+chipsHTML+topcat+'<button class="dcard-cta" onclick="setView(\'journal\')">Open journal →</button></div>';
-    const right=ji.snip?'<div class="dcard"><div class="dcard-label">From your journal</div><div class="di-quote"><div class="di-quote-q">'+(ji.snip.q?esc(ji.snip.q):'Free writing')+'</div><div class="di-quote-a">'+esc(ji.snip.a.slice(0,170))+(ji.snip.a.length>170?'…':'')+'</div><div class="di-quote-d">'+esc(jFullDate(ji.snip.date))+'</div></div></div>':'';
+    const right=ji.snip?'<div class="dcard dcard-click" role="button" tabindex="0" title="Open this journal entry" onclick="'+(ji.snip.id?'openJournal(\''+ji.snip.id+'\')':'setView(\'journal\')')+'" onkeydown="if(event.key===\'Enter\')this.click()"><div class="dcard-label">From your journal</div><div class="di-quote"><div class="di-quote-q">'+(ji.snip.q?esc(ji.snip.q):'Free writing')+'</div><div class="di-quote-a">'+esc(ji.snip.a.slice(0,170))+(ji.snip.a.length>170?'…':'')+'</div><div class="di-quote-d">'+esc(jFullDate(ji.snip.date))+'</div></div></div>':'';
     reflectSection=right?'<div class="dins">'+left+right+'</div>':left;
   }
   // Week in review (client-side — reflects your actual in-app completions, which a server can't see)
@@ -3344,7 +3377,7 @@ function sbInit(){
   SB_CFG=sbGetCfg(); if(!SB_CFG||!SB_CFG.url||!SB_CFG.key)return;
   if(!window.supabase){
     var sc=document.createElement('script'); sc.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
-    sc.onload=sbInit; sc.onerror=function(){sbSetStatus('Sync: could not load library (offline?)');}; document.head.appendChild(sc); return;
+    sc.onload=sbInit; sc.onerror=function(){sbSetStatus('Offline - using your local copy.'); if(localStorage.getItem('jbos_au')){var gm=document.getElementById('auth-modal'); if(gm)gm.classList.add('hidden');}}; document.head.appendChild(sc); return;
   }
   if(!SB){ try{ SB=window.supabase.createClient(SB_CFG.url, SB_CFG.key); }catch(e){ sbSetStatus('Sync: invalid URL/key'); SB=null; return; } }
   // Sync is gated on auth: the cloud is only read/written once a user is signed in, so data
@@ -3354,7 +3387,7 @@ function sbInit(){
     SB.auth.getSession().then(function(r){
       var u=r&&r.data&&r.data.session?r.data.session.user:null;
       sbAuthUI(u);
-      if(u){ sbStartSync(); } else { sbSetStatus('Sign in to load your private data.'); openAuth(true); }
+      if(u){ sbStartSync(); } else { sbSetStatus('Sign in to load your private data.'); }
     },function(){});
     SB.auth.onAuthStateChange(function(_e,s){
       var u=s?s.user:null; sbAuthUI(u);
@@ -3430,14 +3463,12 @@ function sbEnablePush(){
   });
 }
 /* ---- Email + password auth: private, per-account sync ---- */
-var _authDismissed=false;
-function openAuth(autoOnly){
+function openAuth(){
   var m=document.getElementById('auth-modal'); if(!m)return;
-  if(autoOnly&&(_authDismissed||_sbAuthed))return; // on boot, don't nag if already dismissed or signed in
   m.classList.remove('hidden');
   var em=document.getElementById('au-email'); if(em&&!em.value)setTimeout(function(){try{em.focus();}catch(e){}},60);
 }
-function closeAuth(){var m=document.getElementById('auth-modal'); if(m)m.classList.add('hidden'); _authDismissed=true;}
+function closeAuth(){ if(!_sbAuthed)return; var m=document.getElementById('auth-modal'); if(m)m.classList.add('hidden'); } // can't dismiss the gate while signed out
 function authMsg(t,ok){var e=document.getElementById('au-msg'); if(e){e.textContent=t||' '; e.style.color=ok?'var(--green)':'var(--text-3)';}}
 function authSignIn(){
   if(!window.supabase||!SB){authMsg('Connecting… give it a second, then try again.'); sbInit(); return;}
@@ -3447,7 +3478,7 @@ function authSignIn(){
   authMsg('Signing in…');
   SB.auth.signInWithPassword({email:email,password:pw}).then(function(res){
     if(res&&res.error){authMsg(res.error.message);return;}
-    var p=document.getElementById('au-pass'); if(p)p.value=''; authMsg(''); closeAuth();
+    var p=document.getElementById('au-pass'); if(p)p.value=''; authMsg('');
     // onAuthStateChange fires → sbStartSync() loads your data.
   },function(){authMsg('Sign-in failed — check your connection.');});
 }
@@ -3456,6 +3487,10 @@ function sbAuthUI(user){
   var lbl=document.getElementById('auth-btn-label'); if(lbl)lbl.textContent=user?('Signed in'+(user.email?' · '+user.email.split('@')[0]:'')):'Sign in to sync';
   var b=document.getElementById('auth-btn'); if(b)b.classList.toggle('ok',!!user);
   var so=document.getElementById('au-signout'); if(so)so.style.display=user?'':'none';
+  var cl=document.getElementById('au-close'); if(cl)cl.style.display=user?'':'none';
+  var m=document.getElementById('auth-modal');
+  if(user){ try{localStorage.setItem('jbos_au','1');}catch(e){} if(m)m.classList.add('hidden'); }            // signed in -> lift the gate
+  else { try{localStorage.removeItem('jbos_au');}catch(e){} if(m)m.classList.remove('hidden'); openAuth(); }  // signed out -> lock the gate
 }
 
 if(load().length)_booting=false;
