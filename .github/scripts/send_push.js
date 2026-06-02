@@ -42,7 +42,7 @@ function todayPT() { return new Date().toLocaleDateString('en-CA', { timeZone: '
   const due = act.filter(i => i.dueDate === today);
   const over = act.filter(i => i.dueDate && i.dueDate < today);
   const parts = [];
-  if (due.length) parts.push('Due today: ' + due.slice(0, 4).map(i => i.text).join(', '));
+  if (due.length) parts.push('Due today: ' + due.slice(0, 4).map(i => i.text || 'untitled').join(', '));
   if (over.length) parts.push(over.length + ' overdue');
   if (!parts.length) parts.push('Nothing due right now — nice.');
   const payload = JSON.stringify({ title: 'JB OS reminder', body: parts.join(' · ') });
@@ -52,6 +52,7 @@ function todayPT() { return new Date().toLocaleDateString('en-CA', { timeZone: '
   if (!Array.isArray(subs) || !subs.length) { console.log('No push subscriptions.'); return; }
 
   for (const row of subs) {
+    if (!row.sub || !row.sub.endpoint) { console.log('skip invalid sub', row.id); continue; }
     try { await webpush.sendNotification(row.sub, payload); console.log('pushed →', row.id); }
     catch (e) {
       console.log('push failed', row.id, e.statusCode || e.message);

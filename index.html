@@ -887,22 +887,6 @@
       <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3h10v8l-3 3H3z"/><path d="M6 6h4M6 9h2"/></svg>
       Notes <span class="nav-count" id="cnt-note">0</span>
     </div>
-    <div class="nav-item" id="nav-project" onclick="setFilter('project','type')" role="button" tabindex="0">
-      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 13V6l4-3h4l4 3v7H2z"/><path d="M6 13V9h4v4"/></svg>
-      Projects <span class="nav-count" id="cnt-project">0</span>
-    </div>
-  </div>
-
-  <div class="sb-divider"></div>
-
-  <div class="sb-section">
-    <div class="sb-label">Telegram</div>
-    <div class="sb-commands">
-      <div class="cmd-row"><span class="cmd-chip">todo:</span><span class="cmd-desc">Add a task</span></div>
-      <div class="cmd-row"><span class="cmd-chip">idea:</span><span class="cmd-desc">Capture an idea</span></div>
-      <div class="cmd-row"><span class="cmd-chip">note:</span><span class="cmd-desc">Save a note</span></div>
-      <div class="cmd-row"><span class="cmd-chip">project:</span><span class="cmd-desc">Start a project</span></div>
-    </div>
   </div>
 
   <div class="sb-footer">
@@ -1291,6 +1275,7 @@ function toggleDone(id){
   items[i].done=true;
   items[i].archived=true;
   items[i].archivedAt=new Date().toISOString();
+  items[i].updatedAt=items[i].archivedAt; // recency for cross-device last-write-wins
   items[i].userEdited=true; // lock this item's state so the server seed won't revert it
   save(items);render();updateCounts();
   toast('Done — moved to Archive','Undo',()=>{save(prev);render();updateCounts();toast('Restored to active list');});
@@ -1299,6 +1284,7 @@ function toggleDone(id){
 function restore(id){
   const items=load();const i=items.findIndex(x=>x.id===id);if(i<0)return;
   items[i].done=false;items[i].archived=false;delete items[i].archivedAt;
+  items[i].updatedAt=new Date().toISOString(); // recency for cross-device last-write-wins
   items[i].userEdited=true; // lock so a server done-state doesn't re-archive it on reload
   save(items);render();updateCounts();
   toast('Restored to active list');
@@ -2885,11 +2871,12 @@ function sbSetStatus(msg,ok){var e=document.getElementById('sb-status');if(e){e.
 function sbSpace(){return (SB_CFG&&SB_CFG.space)||'main';}
 function sbErr(m){ if(/row-level|permission|jwt|not authorized|401|403/i.test(m||'')) sbSetStatus('Locked — sign in below to sync to your account.'); else sbSetStatus('Sync: '+(m||'error')); }
 // ---- per-store merge helpers (union by id; logs union by date; booleans OR) ----
+function _itemTs(x){return (x&&(x.updatedAt||x.archivedAt||x.createdAt))||'';}
 function _mergeById(remote,local){
-  var out=[],seen={};
-  (remote||[]).forEach(function(x){if(x&&x.id!=null&&!seen[x.id]){out.push(x);seen[x.id]=1;}}); // remote-authoritative for shared ids
-  (local||[]).forEach(function(x){if(x&&x.id!=null&&!seen[x.id]){out.push(x);seen[x.id]=1;}});   // keep local-only items
-  return out;
+  var map={},order=[];
+  function consider(x){if(!x||x.id==null)return;var id=x.id;if(!(id in map)){map[id]=x;order.push(id);}else if(_itemTs(x)>_itemTs(map[id]))map[id]=x;} // last-write-wins on shared ids
+  (remote||[]).forEach(consider); (local||[]).forEach(consider);
+  return order.map(function(id){return map[id];});
 }
 function _mergeRoutine(r,l){ // daily/monthly: {templates, log}
   r=r||{};l=l||{}; var log={};
@@ -2914,7 +2901,7 @@ function sbStores(){return {
 function sbApplyStore(name,payload){
   var st=sbStores()[name]; if(!st||payload==null)return;
   var merged=st.merge(payload, st.load());
-  _sbApplying=true; st.save(merged); _sbApplying=false;
+  _sbApplying=true; try{ st.save(merged); } finally { _sbApplying=false; } // never leave the push-guard stuck on
 }
 function sbPushStore(name){
   if(!SB)return;
@@ -2954,6 +2941,16 @@ function sbInit(){
       sbApplyStore(name,row.payload); render(); updateCounts();
     }).subscribe();
   }catch(e){}
+}
+// Re-pull all stores from the cloud (used on app open/refocus for automatic sync)
+function sbPull(){
+  if(!SB)return;
+  var space=sbSpace();
+  SB.from('jbos_sync').select('id,payload').or('id.eq.'+space+',id.like.'+space+':%').then(function(res){
+    if(res&&res.error)return;
+    (res&&res.data||[]).forEach(function(row){ if(row.id===space)sbApplyStore('todos',row.payload); else sbApplyStore(row.id.slice(space.length+1),row.payload); });
+    render(); updateCounts();
+  },function(){});
 }
 function openSync(){
   var c=sbGetCfg()||{};
@@ -3061,7 +3058,8 @@ window.addEventListener('online',updOnline);window.addEventListener('offline',up
 })();
 tickReminders();
 setInterval(tickReminders,60000);
-document.addEventListener('visibilitychange',function(){if(!document.hidden)tickReminders();});
+document.addEventListener('visibilitychange',function(){if(!document.hidden){tickReminders();sbPull();}});
+window.addEventListener('focus',function(){sbPull();});
 
 /* ===== PWA: service worker + install affordance ===== */
 if('serviceWorker' in navigator){
