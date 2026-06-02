@@ -132,6 +132,7 @@
   .sb-pill{position:fixed;left:10px;bottom:10px;z-index:99999;font-size:11px;font-weight:600;padding:5px 10px;border-radius:999px;background:var(--surface);color:var(--text-2);border:1px solid var(--border);box-shadow:0 2px 10px rgba(0,0,0,.2);max-width:78vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;opacity:.9;transition:opacity .4s}
   .sb-pill.ok{color:var(--green);border-color:var(--green)}
   .sb-pill.err{color:var(--red);border-color:var(--red)}
+  .sync-btn.ok{color:var(--green);border-color:var(--green)}
 
   .btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:6px 12px;border-radius:var(--radius);border:none;cursor:pointer;font-size:12.5px;font-weight:500;font-family:inherit;transition:background var(--t),color var(--t),transform var(--t);white-space:nowrap}
   .btn:active{transform:scale(.97)}
@@ -863,6 +864,11 @@
     Install app
   </button>
 
+  <button id="auth-btn" class="sync-btn" onclick="openAuth()" aria-label="Account and sign in">
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 8a2.4 2.4 0 1 0 0-4.8 2.4 2.4 0 0 0 0 4.8zM3.5 13c.4-2.2 2.2-3.4 4.5-3.4s4.1 1.2 4.5 3.4"/></svg>
+    <span id="auth-btn-label">Sign in to sync</span>
+  </button>
+
   <div class="sb-section">
     <div class="sb-label">Workspace</div>
     <div class="nav-item active" id="nav-view-dashboard" onclick="setView('dashboard')" role="button" tabindex="0">
@@ -1056,6 +1062,28 @@
   </div>
 </div>
 <div class="offline-pill" id="offline-pill" role="status">Offline — changes save locally &amp; sync later</div>
+
+<div class="backdrop hidden" id="auth-modal" onclick="if(event.target.id==='auth-modal')closeAuth()" role="dialog" aria-modal="true" aria-label="Sign in">
+  <div class="modal">
+    <div class="modal-title">🔐 Sign in to JB OS</div>
+    <p style="font-size:12.5px;color:var(--text-2);line-height:1.5;margin-bottom:14px">Your data is private to your account. Sign in once on this device — it stays signed in afterward, just like any other app.</p>
+    <div class="field">
+      <label for="au-email">Email</label>
+      <input id="au-email" type="email" autocomplete="username" placeholder="you@email.com" spellcheck="false">
+    </div>
+    <div class="field">
+      <label for="au-pass">Password</label>
+      <input id="au-pass" type="password" autocomplete="current-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')authSignIn()">
+    </div>
+    <div id="au-msg" style="font-size:12px;color:var(--text-3);margin:4px 0 12px">&nbsp;</div>
+    <div class="detail-actions">
+      <button id="au-signout" class="btn btn-ghost" style="display:none;color:var(--red)" onclick="authSignOut()">Sign out</button>
+      <div style="flex:1"></div>
+      <button class="btn btn-ghost" onclick="closeAuth()">Close</button>
+      <button class="btn btn-primary" onclick="authSignIn()">Sign in</button>
+    </div>
+  </div>
+</div>
 
 <div class="backdrop hidden" id="modal" onclick="closeModalOutside(event)" role="dialog" aria-modal="true" aria-label="New item">
   <div class="modal">
@@ -1639,6 +1667,7 @@ function cmdCommands(){
   [['dashboard','🏠','Today'],['list','🗒️','All items'],['daily','🔁','Daily'],['monthly','📆','Monthly'],['calendar','📅','Calendar'],['journal','📔','Journal'],['musubi','🌺','Musubi'],['graph','🕸️','Graph']].forEach(function(v){add('Go to',v[1],v[2],'',function(){setView(v[0]);});});
   add('Action','➕','New item','',function(){openModal();});
   add('Action','📝','New journal entry','',function(){newJournalEntry();});
+  add('Action','🔐','Sign in / account','',function(){openAuth();});
   add('Action','🔔','Enable reminders','',function(){requestReminders();});
   add('Action','⤓','Export data','',function(){exportJSON();});
   add('Action','⤒','Import data','',function(){importJSON();});
@@ -3196,7 +3225,7 @@ fetchJournalSeeds();
    Hooks save() so every change to the task list pushes to a shared Supabase row (debounced),
    and a realtime subscription + boot pull merge changes from your other devices. Falls back to
    local-only silently if not configured or offline — never breaks the app. */
-var SB=null, SB_CFG=null, SB_CLIENT=Math.random().toString(36).slice(2), _sbApplying=false, _sbT={};
+var SB=null, SB_CFG=null, SB_CLIENT=Math.random().toString(36).slice(2), _sbApplying=false, _sbT={}, _sbAuthed=false, _sbChannel=null, _sbStarted=false;
 // Cloud sync config is baked in so every device auto-connects on load — no in-app setup.
 // The publishable key is meant to be public; the jbos_sync table runs with RLS disabled per JB's "no-login" choice.
 var SB_EMBED={url:'https://jdkfafvfczzgtzhtynjr.supabase.co',key:'sb_publishable_QFHs4u69thMisxqLi35Zjw_0AX4BkTT',space:'main'};
@@ -3289,7 +3318,7 @@ function sbApplyStore(name,payload){
   _sbApplying=true; try{ st.save(merged); } finally { _sbApplying=false; } // never leave the push-guard stuck on
 }
 function sbPushStore(name){
-  if(!SB)return;
+  if(!SB||!_sbAuthed)return;
   clearTimeout(_sbT[name]);
   _sbT[name]=setTimeout(function(){
     var st=sbStores()[name]; if(!st)return;
@@ -3304,9 +3333,29 @@ function sbInit(){
     var sc=document.createElement('script'); sc.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
     sc.onload=sbInit; sc.onerror=function(){sbSetStatus('Sync: could not load library (offline?)');}; document.head.appendChild(sc); return;
   }
-  try{ SB=window.supabase.createClient(SB_CFG.url, SB_CFG.key); }catch(e){ sbSetStatus('Sync: invalid URL/key'); SB=null; return; }
-  try{ SB.auth.getSession().then(function(r){sbAuthUI(r&&r.data&&r.data.session?r.data.session.user:null);}); SB.auth.onAuthStateChange(function(_e,s){sbAuthUI(s?s.user:null);}); }catch(e){}
+  if(!SB){ try{ SB=window.supabase.createClient(SB_CFG.url, SB_CFG.key); }catch(e){ sbSetStatus('Sync: invalid URL/key'); SB=null; return; } }
+  // Sync is gated on auth: the cloud is only read/written once a user is signed in, so data
+  // stays private (RLS allows the authenticated role only) and logged-out devices never touch
+  // the table. The session is remembered per-device until sign-out.
+  try{
+    SB.auth.getSession().then(function(r){
+      var u=r&&r.data&&r.data.session?r.data.session.user:null;
+      sbAuthUI(u);
+      if(u){ sbStartSync(); } else { sbSetStatus('Sign in to load your private data.'); openAuth(true); }
+    },function(){});
+    SB.auth.onAuthStateChange(function(_e,s){
+      var u=s?s.user:null; sbAuthUI(u);
+      if(u){ sbStartSync(); } else { sbStopSync(); sbSetStatus('Signed out — this device is local-only.'); }
+    });
+  }catch(e){}
+}
+// Begin syncing for a signed-in user: pull cloud → merge, push local-only data up once, and
+// open a realtime stream for live cross-device updates. Idempotent across repeated auth events.
+function sbStartSync(){
+  if(!SB)return;
+  _sbAuthed=true;
   var space=sbSpace();
+  var firstStart=!_sbStarted; _sbStarted=true;
   SB.from('jbos_sync').select('id,payload').or('id.eq.'+space+',id.like.'+space+':%').then(function(res){
     if(res&&res.error){ sbErr(res.error.message); return; }
     var hadLegacy=false;
@@ -3315,52 +3364,38 @@ function sbInit(){
       else { sbApplyStore(row.id.slice(space.length+1), row.payload); }
     });
     render(); updateCounts();
-    sbSetStatus('Connected — everything syncs across your devices.',true);
-    Object.keys(sbStores()).forEach(function(n){sbPushStore(n);}); // push local-only data up
+    sbSetStatus('Synced — private to your account ✓',true);
+    if(firstStart){ Object.keys(sbStores()).forEach(function(n){sbPushStore(n);}); } // push local-only data up once
     if(hadLegacy){try{SB.from('jbos_sync').delete().eq('id',space).then(function(){},function(){});}catch(e){}}
   },function(){ sbSetStatus('Sync: connection failed'); });
-  try{
-    // Scope the realtime stream to THIS space's rows server-side, so another person sharing the
-    // same anon key never receives your payloads over the wire (defense-in-depth alongside RLS).
-    var myRows=[space].concat(Object.keys(sbStores()).map(function(n){return space+':'+n;}));
-    SB.channel('jbos-'+space).on('postgres_changes',{event:'*',schema:'public',table:'jbos_sync',filter:'id=in.('+myRows.join(',')+')'},function(p){
-      var row=p&&p.new; if(!row||row.client===SB_CLIENT)return; // ignore our own echo
-      var name=row.id===space?'todos':(row.id.indexOf(space+':')===0?row.id.slice(space.length+1):null);
-      if(!name||!sbStores()[name])return;
-      sbApplyStore(name,row.payload); render(); updateCounts();
-    }).subscribe();
-  }catch(e){}
+  if(!_sbChannel){
+    try{
+      // Scope the realtime stream to THIS space's rows. Realtime honors RLS, so only the
+      // signed-in account ever receives the payloads.
+      var myRows=[space].concat(Object.keys(sbStores()).map(function(n){return space+':'+n;}));
+      _sbChannel=SB.channel('jbos-'+space).on('postgres_changes',{event:'*',schema:'public',table:'jbos_sync',filter:'id=in.('+myRows.join(',')+')'},function(p){
+        var row=p&&p.new; if(!row||row.client===SB_CLIENT)return; // ignore our own echo
+        var name=row.id===space?'todos':(row.id.indexOf(space+':')===0?row.id.slice(space.length+1):null);
+        if(!name||!sbStores()[name])return;
+        sbApplyStore(name,row.payload); render(); updateCounts();
+      }).subscribe();
+    }catch(e){}
+  }
+}
+// Stop syncing on sign-out: drop the realtime stream and block further reads/writes.
+function sbStopSync(){
+  _sbAuthed=false; _sbStarted=false;
+  if(_sbChannel){try{SB.removeChannel(_sbChannel);}catch(e){} _sbChannel=null;}
 }
 // Re-pull all stores from the cloud (used on app open/refocus for automatic sync)
 function sbPull(){
-  if(!SB)return;
+  if(!SB||!_sbAuthed)return;
   var space=sbSpace();
   SB.from('jbos_sync').select('id,payload').or('id.eq.'+space+',id.like.'+space+':%').then(function(res){
     if(res&&res.error)return;
     (res&&res.data||[]).forEach(function(row){ if(row.id===space)sbApplyStore('todos',row.payload); else sbApplyStore(row.id.slice(space.length+1),row.payload); });
     render(); updateCounts();
   },function(){});
-}
-function openSync(){
-  var c=sbGetCfg()||{};
-  var u=document.getElementById('sb-url'),k=document.getElementById('sb-key'),s=document.getElementById('sb-space');
-  if(u)u.value=c.url||''; if(k)k.value=c.key||''; if(s)s.value=c.space||'main';
-  if(c.url&&c.key)sbSetStatus(SB?'Connected — syncing across your devices.':'Saved — reconnecting…',!!SB);
-  document.getElementById('sync-modal').classList.remove('hidden');
-}
-function closeSync(){document.getElementById('sync-modal').classList.add('hidden');}
-function connectSync(){
-  var url=(document.getElementById('sb-url').value||'').trim().replace(/\/+$/,'');
-  var key=(document.getElementById('sb-key').value||'').trim();
-  var space=((document.getElementById('sb-space').value||'main').trim().replace(/[^\w-]/g,''))||'main';
-  if(!url||!key){sbSetStatus('Enter both the Project URL and anon key.');return;}
-  localStorage.setItem('jbos_sb',JSON.stringify({url:url,key:key,space:space}));
-  SB=null; sbSetStatus('Connecting…'); sbInit();
-}
-function disconnectSync(){
-  localStorage.removeItem('jbos_sb'); SB=null; SB_CFG=null;
-  sbSetStatus('Disconnected (this device stays local-only).');
-  var l=document.getElementById('sync-btn-label'); if(l)l.textContent='Cloud sync';
 }
 /* ---- Web push (native reminders when the app is closed; sent by the GitHub Action) ---- */
 var VAPID_PUBLIC='BPHY242LozXdvyrrIBmaVa7xz5IIaEGJLGsi1Io4aDPrxCeT_p_NdqAs91OyNymekaW0XL3a0GuMjbhQBhyxP9A';
@@ -3381,18 +3416,33 @@ function sbEnablePush(){
     function(e){ sbSetStatus('Push: '+(e&&e.message||'failed (is this an installed app?)')); });
   });
 }
-function sbSignIn(){
-  if(!SB){sbSetStatus('Connect your Supabase project first.');return;}
-  var email=((document.getElementById('sb-email')||{}).value||'').trim();
-  if(!email){sbSetStatus('Enter your email for the sign-in link.');return;}
-  SB.auth.signInWithOtp({email:email,options:{emailRedirectTo:location.href.split('#')[0]}}).then(function(res){
-    if(res&&res.error)sbSetStatus('Sign-in: '+res.error.message); else sbSetStatus('Check your email for the sign-in link ✉️',true);
-  },function(){sbSetStatus('Sign-in failed.');});
+/* ---- Email + password auth: private, per-account sync ---- */
+var _authDismissed=false;
+function openAuth(autoOnly){
+  var m=document.getElementById('auth-modal'); if(!m)return;
+  if(autoOnly&&(_authDismissed||_sbAuthed))return; // on boot, don't nag if already dismissed or signed in
+  m.classList.remove('hidden');
+  var em=document.getElementById('au-email'); if(em&&!em.value)setTimeout(function(){try{em.focus();}catch(e){}},60);
 }
-function sbSignOut(){ if(SB&&SB.auth)SB.auth.signOut().then(function(){sbAuthUI(null);},function(){}); }
+function closeAuth(){var m=document.getElementById('auth-modal'); if(m)m.classList.add('hidden'); _authDismissed=true;}
+function authMsg(t,ok){var e=document.getElementById('au-msg'); if(e){e.textContent=t||' '; e.style.color=ok?'var(--green)':'var(--text-3)';}}
+function authSignIn(){
+  if(!window.supabase||!SB){authMsg('Connecting… give it a second, then try again.'); sbInit(); return;}
+  var email=((document.getElementById('au-email')||{}).value||'').trim();
+  var pw=(document.getElementById('au-pass')||{}).value||'';
+  if(!email||!pw){authMsg('Enter your email and password.');return;}
+  authMsg('Signing in…');
+  SB.auth.signInWithPassword({email:email,password:pw}).then(function(res){
+    if(res&&res.error){authMsg(res.error.message);return;}
+    var p=document.getElementById('au-pass'); if(p)p.value=''; authMsg(''); closeAuth();
+    // onAuthStateChange fires → sbStartSync() loads your data.
+  },function(){authMsg('Sign-in failed — check your connection.');});
+}
+function authSignOut(){ if(SB&&SB.auth){SB.auth.signOut().then(function(){sbAuthUI(null);},function(){});} }
 function sbAuthUI(user){
-  var e=document.getElementById('sb-auth-status'); if(e)e.textContent=user?('Signed in as '+(user.email||'you')+' ✓'):'Not signed in (anon mode).';
-  var so=document.getElementById('sb-signout'); if(so)so.style.display=user?'':'none';
+  var lbl=document.getElementById('auth-btn-label'); if(lbl)lbl.textContent=user?('Signed in'+(user.email?' · '+user.email.split('@')[0]:'')):'Sign in to sync';
+  var b=document.getElementById('auth-btn'); if(b)b.classList.toggle('ok',!!user);
+  var so=document.getElementById('au-signout'); if(so)so.style.display=user?'':'none';
 }
 
 if(load().length)_booting=false;
