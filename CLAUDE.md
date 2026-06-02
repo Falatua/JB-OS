@@ -51,7 +51,7 @@ habit, a monthly recurring item, a journaling prompt, or a dated calendar event.
   "emoji": "🛍️",                   // always set one explicitly
   "notes": "One-line summary shown under the title",
   "description": "Fuller context: what it means, why, and any open questions",
-  "priority": "normal",            // normal | high
+  "priority": "normal",            // high | in_progress | normal | low
   "category": "work",              // see §3
   "source": "chat",                // chat (default for me) | telegram | browser
   "done": false,
@@ -115,7 +115,9 @@ checks the item off himself. Add `steps` when JB describes a process with phases
 
 ### `priority`
 - **high** — money is at stake, there's a hard deadline, or it blocks something else.
+- **in_progress** — actively being worked, handed off, or waiting on a current next step.
 - **normal** — everything else (the default).
+- **low** — someday, nice-to-have, or intentionally de-emphasized.
 
 ### `dueDate`
 - Set it whenever JB names a date or window. A range → use the **start** date
@@ -175,6 +177,6 @@ Never push malformed JSON — it breaks the whole list render.
   plain calendar date. Use UTC ISO-8601 for `createdAt`/`updatedAt`.
 - Don't delete or archive items unless JB asks. To mark something done, set `done: true`
   (the app will archive it on sync).
-- Keep the 13 categories and 4 types fixed. If a new category seems needed, **ask first** —
-  adding one also requires a matching entry in `CATS` in `index.html`.
+- Keep the 13 categories, 4 types, and 4 priorities fixed. If a new category/type/priority
+  seems needed, **ask first** — adding one also requires matching UI support in `index.html`.
 - Keep this file accurate. When the system or JB's preferences change, update it in the same push.
