@@ -1,0 +1,3 @@
+# Python bytecode cache (generated when reminder scripts run)
+__pycache__/
+*.pyc
