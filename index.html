@@ -13,6 +13,15 @@
 <meta name="format-detection" content="telephone=no">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="splash-1290x2796.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="splash-1179x2556.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="splash-1170x2532.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="splash-1284x2778.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="splash-1125x2436.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="splash-1242x2688.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="splash-828x1792.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="splash-750x1334.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 360px) and (device-height: 780px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="splash-1080x2340.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -63,6 +72,11 @@
   .btn,.nav-item,.badge,.badge-cat,.badge-task,.badge-idea,.badge-note,.badge-project,.prio-high,.mz-tab,.cb,.step-cb,.sync-btn,.install-btn,.section-head,.sb-label,.sb-logo,.page-title,.nav-icon,.item-actions,.cond,.remind-bar,.dcard-label,.rv-item{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
   input,textarea{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
   @media(hover:none){input,textarea,select,.add-input,.add-select{font-size:16px !important}}  /* stop iOS focus-zoom */
+  /* macOS / desktop installed app: use the title bar (window-controls-overlay) */
+  @media(display-mode:window-controls-overlay){
+    .header{padding-top:calc(8px + env(titlebar-area-height,0px));-webkit-app-region:drag;app-region:drag}
+    .header button,.header a,.header input,.header select,.header .page-title{-webkit-app-region:no-drag;app-region:no-drag}
+  }
   .nav-count,.item-date,.attach-name,.cmd-chip,.detail-meta{font-variant-numeric:tabular-nums}
 
   .app{display:flex;height:100vh;height:100dvh;overflow:hidden}
@@ -544,8 +558,14 @@
 
   @media(hover:none){ .j-entry-edit{opacity:1} }
 
+  .tabbar{display:none}
   @media(max-width:640px){
     .nav-hamburger{display:inline-flex}
+    .tabbar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:80;background:color-mix(in srgb,var(--surface) 92%,transparent);backdrop-filter:saturate(140%) blur(12px);-webkit-backdrop-filter:saturate(140%) blur(12px);border-top:1px solid var(--border);padding-bottom:env(safe-area-inset-bottom,0px)}
+    .tabbar button{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;color:var(--text-3);font-size:9.5px;font-weight:500;font-family:inherit;padding:7px 0 6px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:color var(--t)}
+    .tabbar button svg{width:21px;height:21px}
+    .tabbar button.active{color:var(--accent)}
+    .list-area{padding-bottom:calc(74px + env(safe-area-inset-bottom,0px))}
     .sidebar{position:fixed;left:0;top:0;bottom:0;z-index:300;transform:translateX(-100%);transition:transform .22s ease;box-shadow:0 0 40px rgba(0,0,0,.55);padding-top:env(safe-area-inset-top,0px);overscroll-behavior:contain}
     .app.nav-open .sidebar{transform:translateX(0)}
     .app.nav-open .nav-backdrop{display:block}
@@ -916,6 +936,14 @@
 
   <div class="list-area" id="list" role="list"></div>
 </div>
+
+<nav class="tabbar" id="tabbar" aria-label="Primary">
+  <button id="tab-dashboard" onclick="setView('dashboard')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 9.5L8 4l6 5.5"/><path d="M3.5 8.5V13a.5.5 0 0 0 .5.5h3v-3h2v3h3a.5.5 0 0 0 .5-.5V8.5"/></svg>Today</button>
+  <button id="tab-list" onclick="setView('list')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 4h8M6 8h8M6 12h6"/><circle cx="3" cy="4" r="1" fill="currentColor" stroke="none"/><circle cx="3" cy="8" r="1" fill="currentColor" stroke="none"/><circle cx="3" cy="12" r="1" fill="currentColor" stroke="none"/></svg>List</button>
+  <button id="tab-daily" onclick="setView('daily')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="3"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3 3l1.4 1.4M11.6 11.6L13 13M13 3l-1.4 1.4M4.4 11.6L3 13"/></svg>Daily</button>
+  <button id="tab-journal" onclick="setView('journal')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3.5 2.5H10a1.5 1.5 0 0 1 1.5 1.5v9.5H5A1.5 1.5 0 0 1 3.5 12z"/><path d="M11.5 4H13v9.5M5.5 5.5h3M5.5 8h2"/></svg>Journal</button>
+  <button id="tab-musubi" onclick="setView('musubi')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1.5c1.5 2 3 3.5 3 6a3 3 0 0 1-6 0c0-1.2.6-2.2 1.3-3"/></svg>Musubi</button>
+</nav>
 
 </div>
 
@@ -1404,7 +1432,11 @@ function itemHTML(item, isArchiveView, idx){
   </div>`;
 }
 
+function updateTabBar(){
+  ['dashboard','list','daily','journal','musubi'].forEach(function(v){var e=document.getElementById('tab-'+v);if(e)e.classList.toggle('active',view===v);});
+}
 function render(){
+  updateTabBar();
   if(view!=='list'){renderView();return;}
   const all=getFiltered();
   const el=document.getElementById('list');
