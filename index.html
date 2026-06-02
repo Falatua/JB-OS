@@ -821,12 +821,16 @@
   .graph-info .gi-actions .btn{flex:1;font-size:12.5px;padding:7px 10px}
   /* Mini-map (top-left under toolbar) */
   #graph-mini{position:absolute;top:52px;left:8px;border:1px solid var(--border);border-radius:10px;background:color-mix(in srgb,var(--surface) 78%,transparent);backdrop-filter:blur(8px);cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.35);z-index:2}
+  /* Stats HUD (bottom-center) */
+  .graph-stats{position:absolute;bottom:34px;left:50%;transform:translateX(-50%);display:flex;gap:6px;pointer-events:none;z-index:2}
+  .graph-stats span{font-size:10px;font-variant-numeric:tabular-nums;color:var(--text-2);background:color-mix(in srgb,var(--surface) 86%,transparent);border:1px solid var(--border);padding:2px 8px;border-radius:20px;backdrop-filter:blur(6px)}
+  .graph-stats span.od{color:#f87171;border-color:color-mix(in srgb,#f87171 40%,transparent)}
   /* Hover tooltip */
   .graph-tip{position:absolute;left:0;top:0;max-width:170px;pointer-events:none;opacity:0;transform:translateY(3px);transition:opacity .12s,transform .12s;background:color-mix(in srgb,var(--surface) 96%,transparent);border:1px solid var(--border);border-radius:9px;padding:6px 9px;font-size:11.5px;line-height:1.35;box-shadow:0 8px 22px rgba(0,0,0,.45);backdrop-filter:blur(10px);z-index:4}
   .graph-tip.on{opacity:1;transform:none}
   .graph-tip b{display:block;color:var(--text-1);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .graph-tip span{color:var(--text-3);font-size:10.5px}
-  @media(max-width:560px){.graph-info{left:8px;right:8px;top:auto;bottom:8px;width:auto}.graph-legend{display:none}.graph-hint{display:none}#graph-mini{display:none}.graph-tip{display:none}}
+  @media(max-width:560px){.graph-info{left:8px;right:8px;top:auto;bottom:8px;width:auto}.graph-legend{display:none}.graph-hint{display:none}#graph-mini{display:none}.graph-tip{display:none}.graph-stats{bottom:8px}}
 </style>
 </head>
 <body>
@@ -2239,6 +2243,7 @@ function renderGraph(){
     +'<div class="graph-toolbar"><input id="graph-search" placeholder="Search the graph…" oninput="graphSearch(this.value)" spellcheck="false" autocomplete="off"><div class="graph-groups" id="graph-groups"></div></div>'
     +'<div class="graph-zoom"><button title="Zoom in" onclick="graphZoom(1.25)">+</button><button title="Zoom out" onclick="graphZoom(0.8)">−</button><button title="Fit" onclick="graphFit()">⛶</button></div>'
     +'<div class="graph-legend" id="graph-legend"></div>'
+    +'<div class="graph-stats" id="graph-stats"></div>'
     +'<div class="graph-info hidden" id="graph-info"></div>'
     +'<canvas id="graph-mini" title="Mini-map — click or drag to pan"></canvas>'
     +'<div class="graph-tip" id="graph-tip"></div>'
@@ -2260,9 +2265,9 @@ function renderGraph(){
       if(byKey[key])return byKey[key];
       var n={key:key,label:label,kind:kind,group:group,color:color,baseR:r,r:r,ref:ref||null,deg:0,od:false,hi:false,x:0,y:0,vx:0,vy:0,ph:Math.random()*6.2832};
       var p=prev&&prev[key];
-      if(p){n.x=p.x;n.y=p.y;n.vx=p.vx;n.vy=p.vy;n.ph=p.ph;}
+      if(p){n.x=p.x;n.y=p.y;n.vx=p.vx;n.vy=p.vy;n.ph=p.ph;n.born=p.born;}
       else if(first){var a=Math.random()*6.2832,rad=Math.min(W,H)*0.32*(0.4+Math.random()*0.6);n.x=W/2+Math.cos(a)*rad;n.y=H/2+Math.sin(a)*rad;}
-      else{var a2=Math.random()*6.2832,r2=Math.min(W,H)*0.10*(0.4+Math.random());n.x=W/2+Math.cos(a2)*r2;n.y=H/2+Math.sin(a2)*r2;} // new node drifts out from center
+      else{var a2=Math.random()*6.2832,r2=Math.min(W,H)*0.10*(0.4+Math.random());n.x=W/2+Math.cos(a2)*r2;n.y=H/2+Math.sin(a2)*r2;n.born=performance.now();} // new node drifts out from center + pops in
       nodes.push(n);byKey[key]=n;return n;
     }
     function edge(a,b){if(a&&b){edges.push([a,b]);a.deg++;b.deg++;}}
@@ -2343,16 +2348,22 @@ function renderGraph(){
     nodes.forEach(function(n){if(!visible(n))return;var X=bx(n),Y=by(n),dim=hi&&!hi[n.key];
       ctx.globalAlpha=dim?0.16:1;
       var pulse=0.5+0.5*Math.sin(_now*0.0038+n.ph);
+      var age=n.born?(_now-n.born):1e9, grow=age<600?(0.4+0.6*(1-Math.pow(1-age/600,2))):1, R=n.r*grow;
       if(!dim&&(n===selected||n.od||n.kind==='hub')){var aur=n.od?'#f87171':(n===selected?ACC:n.color);
-        ctx.beginPath();ctx.arc(X,Y,n.r+5+pulse*5,0,6.2832);ctx.fillStyle=_hexA(aur,0.08+pulse*0.12);ctx.fill();}
+        ctx.beginPath();ctx.arc(X,Y,R+5+pulse*5,0,6.2832);ctx.fillStyle=_hexA(aur,0.08+pulse*0.12);ctx.fill();}
+      if(!dim&&n===selected){for(var sk=0;sk<2;sk++){var st2=((_now*0.0007+sk*0.5)%1);ctx.beginPath();ctx.arc(X,Y,R+st2*30,0,6.2832);ctx.strokeStyle=_hexA(ACC,0.5*(1-st2));ctx.lineWidth=1.5/scale;ctx.stroke();}} // sonar ping
       if(glow&&!dim){ctx.shadowColor=n.color;ctx.shadowBlur=(n.kind==='hub'?22:n.kind==='item'?6:13);}
-      ctx.beginPath();ctx.arc(X,Y,n.r,0,6.2832);ctx.fillStyle=n.color;ctx.fill();ctx.shadowBlur=0;
+      ctx.beginPath();ctx.arc(X,Y,R,0,6.2832);ctx.fillStyle=n.color;ctx.fill();ctx.shadowBlur=0;
+      if(n.kind==='hub'){ctx.beginPath();ctx.arc(X,Y,R+3.5,0,6.2832);ctx.strokeStyle=_hexA('#ffffff',0.5);ctx.lineWidth=1.4/scale;ctx.stroke();} // core ring
       if(n.od){ctx.lineWidth=2/scale;ctx.strokeStyle='#f87171';ctx.stroke();}
       else if(n.hi){ctx.lineWidth=1.6/scale;ctx.strokeStyle='rgba(255,255,255,.7)';ctx.stroke();}
-      else if(n.kind!=='item'){ctx.lineWidth=1.5/scale;ctx.strokeStyle='rgba(0,0,0,.30)';ctx.stroke();}
-      if(!dim&&n.r>=7){ctx.beginPath();ctx.arc(X-n.r*0.3,Y-n.r*0.3,n.r*0.34,0,6.2832);ctx.fillStyle='rgba(255,255,255,.22)';ctx.fill();}});
+      else if(n.kind!=='item'&&n.kind!=='hub'){ctx.lineWidth=1.5/scale;ctx.strokeStyle='rgba(0,0,0,.30)';ctx.stroke();}
+      if(age<600){ctx.beginPath();ctx.arc(X,Y,R+(age/600)*26,0,6.2832);ctx.strokeStyle=_hexA(n.color,0.6*(1-age/600));ctx.lineWidth=2/scale;ctx.stroke();} // spawn burst
+      if(!dim&&R>=7){ctx.beginPath();ctx.arc(X-R*0.3,Y-R*0.3,R*0.34,0,6.2832);ctx.fillStyle='rgba(255,255,255,.22)';ctx.fill();}});
     ctx.globalAlpha=1;ctx.textAlign='center';ctx.textBaseline='top';
-    nodes.forEach(function(n){if(!visible(n))return;var big=(n.kind!=='item'&&n.kind!=='journal'&&n.kind!=='habit');var show=big||n===hover||n===selected||(hi&&hi[n.key]&&(scale>1.1||q));if(!show)return;ctx.globalAlpha=(hi&&!hi[n.key])?0.18:1;ctx.font=(n.kind==='hub'?'600 13px ':big?'600 11px ':'10px ')+"'Geist',system-ui,sans-serif";ctx.fillStyle=big?'#fff':'rgba(230,230,235,.92)';var t=n.label.length>26?n.label.slice(0,25)+'…':n.label;ctx.fillText(t,bx(n),by(n)+n.r+3);});
+    nodes.forEach(function(n){if(!visible(n))return;var big=(n.kind!=='item'&&n.kind!=='journal'&&n.kind!=='habit');var emph=(n===hover||n===selected);var show=big||emph||(hi&&hi[n.key]&&(scale>1.1||q));if(!show)return;ctx.globalAlpha=(hi&&!hi[n.key])?0.18:1;ctx.font=(n.kind==='hub'?'600 13px ':big?'600 11px ':'10px ')+"'Geist',system-ui,sans-serif";var t=n.label.length>26?n.label.slice(0,25)+'…':n.label,lx=bx(n),ly=by(n)+n.r+4;
+      if(emph){var tw=ctx.measureText(t).width,ph2=13/scale;ctx.fillStyle='rgba(12,12,16,.72)';if(ctx.roundRect){ctx.beginPath();ctx.roundRect(lx-tw/2-5/scale,ly-2/scale,tw+10/scale,ph2+4/scale,5/scale);ctx.fill();}} // readable label pill
+      ctx.fillStyle=big||emph?'#fff':'rgba(230,230,235,.92)';ctx.fillText(t,lx,ly);});
     ctx.globalAlpha=1;ctx.restore();
     drawMini();
   }
@@ -2411,7 +2422,8 @@ function renderGraph(){
   _graphCleanup.push(function(){document.removeEventListener('keydown',gkey);window.removeEventListener('resize',onResize);});
   function renderGroups(){var el=document.getElementById('graph-groups');if(!el)return;el.innerHTML=GRAPH_GROUPS.filter(function(g){return nodes.some(function(n){return n.group===g[0];});}).map(function(g){return '<button class="gg'+(groups[g[0]]!==false?' on':'')+'" onclick="graphToggleGroup(\''+g[0]+'\')"><span class="gg-dot" style="background:'+g[2]+'"></span>'+g[1]+'</button>';}).join('');}
   function renderLegend(){var el=document.getElementById('graph-legend');if(!el)return;el.innerHTML=Object.keys(catUsed).map(function(c){var cc=CATS[c]||CATS.general;return '<span class="gl"><span class="gl-dot" style="background:'+cc.color+'"></span>'+esc(cc.label)+'</span>';}).join('')+'<span class="gl"><span class="gl-dot" style="border:1.5px solid #f87171;background:transparent"></span>Overdue</span>';}
-  renderGroups();renderLegend();
+  function renderStats(){var el=document.getElementById('graph-stats');if(!el)return;var it=0,od=0;nodes.forEach(function(n){if(n.kind==='item'){it++;if(n.od)od++;}});el.innerHTML='<span>'+it+' item'+(it===1?'':'s')+'</span><span>'+edges.length+' link'+(edges.length===1?'':'s')+'</span>'+(od?'<span class="od">'+od+' overdue</span>':'');}
+  renderGroups();renderLegend();renderStats();
   for(var t=0;t<160;t++)step(); // pre-settle so the graph opens framed
   fitView();
   _G={zoom:function(f){var ns=Math.max(0.3,Math.min(3.2,(cam?cam.s:scale)*f)),cx=W/2,cy=H/2,wx=(cx-ox)/scale,wy=(cy-oy)/scale;camTo(ns,cx-wx*ns,cy-wy*ns);},
@@ -2422,7 +2434,7 @@ function renderGraph(){
       focus:function(){focusNode=selected;if(selected){var rel=[selected];edges.forEach(function(ed){if(ed[0]===selected)rel.push(ed[1]);if(ed[1]===selected)rel.push(ed[0]);});frameTo(rel,120,2.2,true);}},
       openSel:function(){act(selected);},
       // Live auto-update: rebuild the model from current data in place, keep positions, re-warm the sim
-      rebuild:function(){build();renderGroups();renderLegend();if(selected)showInfo(selected);else{var el=document.getElementById('graph-info');if(el)el.classList.add('hidden');}alpha=Math.max(alpha,0.5);}};
+      rebuild:function(){build();renderGroups();renderLegend();renderStats();if(selected)showInfo(selected);else{var el=document.getElementById('graph-info');if(el)el.classList.add('hidden');}alpha=Math.max(alpha,0.5);}};
   loop();
 }
 
