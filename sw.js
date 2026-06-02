@@ -1,7 +1,7 @@
 /* JB OS service worker — offline support via network-first with cache fallback.
    Network-first keeps the live GitHub Pages sync intact (fresh data when online),
    and falls back to the last cached copy when offline. */
-const CACHE = 'jbos-v2';
+const CACHE = 'jbos-v3';
 const SHELL = [
   './', './index.html', './manifest.json',
   './todos.json', './daily.json', './monthly.json',
@@ -22,6 +22,17 @@ self.addEventListener('activate', e => {
     caches.keys()
       .then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
       .then(() => self.clients.claim())
+  );
+});
+
+// Focus (or open) the app when a reminder notification is tapped
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  e.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(cl => {
+      for (const c of cl) { if ('focus' in c) return c.focus(); }
+      if (clients.openWindow) return clients.openWindow('./');
+    })
   );
 });
 

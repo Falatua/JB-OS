@@ -358,6 +358,15 @@
   /* ===== Today dashboard ===== */
   .dash-wrap{max-width:1080px;margin:0 auto;padding:4px 0 52px;animation:headIn .4s ease both}
   .dash-greet{margin:4px 0 18px}
+  .cond{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;margin:-8px 0 16px;font-size:12.5px;color:var(--text-2)}
+  .cond:empty{display:none}
+  .cond-item{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+  .cond-item b{color:var(--text);font-weight:600}
+  .cond-item .cl{color:var(--text-3);font-size:11px}
+  .cond-loc{margin-left:auto;font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--text-3)}
+  .remind-bar{display:flex;align-items:center;gap:9px;background:var(--accent-dim);border:1px solid var(--accent-ring);border-radius:var(--radius-lg);padding:10px 14px;margin:0 0 16px;font-size:13px;color:var(--text);cursor:pointer;transition:background var(--t)}
+  .remind-bar:hover{background:var(--accent-dim-h)}
+  .remind-bar .rb-cta{margin-left:auto;color:var(--accent);font-weight:600;font-size:12px}
   .dash-hello{font-size:25px;font-weight:700;letter-spacing:-.5px;color:var(--text)}
   .dash-sub{font-size:13px;color:var(--text-2);margin-top:5px}
   .dash-sub .hl{color:var(--accent);font-weight:500}
@@ -2553,6 +2562,8 @@ function renderDashboard(){
   }
   document.getElementById('list').innerHTML='<div class="dash-wrap">'
     +'<div class="dash-greet"><div class="dash-hello">'+timeGreeting()+', JB</div><div class="dash-sub">'+now.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})+' &nbsp;·&nbsp; '+highlight+'</div></div>'
+    +'<div class="cond" id="cond-strip"></div>'
+    +reminderBar()
     +'<div class="dash-hero">'+habitCard+moodCard+tasksCard+journalCard+'</div>'
     +'<div class="dash-sec">This week</div>'
     +'<div class="dins">'+heatCard+moodTrendCard+'</div>'
@@ -2562,6 +2573,83 @@ function renderDashboard(){
     +'<div class="dins-row">'+focusCard+upCard+'</div>'
     +'<div class="dins-row" style="grid-template-columns:1fr">'+inProgCard+'</div>'
     +'</div>';
+  loadConditions();
+}
+
+/* ===== Local conditions strip (Westside Oʻahu) — free, no-key Open-Meteo feeds ===== */
+function _wmo(c){
+  if(c===0)return['☀️','Clear'];
+  if(c<=2)return['🌤️','Partly cloudy'];
+  if(c===3)return['☁️','Cloudy'];
+  if(c<=48)return['🌫️','Fog'];
+  if(c<=57)return['🌦️','Drizzle'];
+  if(c<=67)return['🌧️','Rain'];
+  if(c<=82)return['🌧️','Showers'];
+  if(c<=99)return['⛈️','Storm'];
+  return['🌡️',''];
+}
+function _hm(iso){var t=(iso||'').split('T')[1]||'';var p=t.split(':');return {h:+p[0]||0,m:+p[1]||0};}
+function _fmtT(h,m){var ap=h<12?'a':'p',hh=h%12;if(hh===0)hh=12;return hh+':'+(m<10?'0':'')+m+ap;}
+function _addMin(h,m,d){var t=((h*60+m+d)%1440+1440)%1440;return {h:Math.floor(t/60),m:t%60};}
+function loadConditions(){
+  var el=document.getElementById('cond-strip');if(!el)return;
+  var LAT=21.4469,LON=-158.1858; // Waiʻanae, Westside Oʻahu
+  var cached=null;try{cached=JSON.parse(localStorage.getItem('jbos_cond')||'null');}catch(e){}
+  if(cached&&cached.html){el.innerHTML=cached.html;if(Date.now()-cached.ts<30*60*1000)return;}
+  var fc=fetch('https://api.open-meteo.com/v1/forecast?latitude='+LAT+'&longitude='+LON+'&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max&temperature_unit=fahrenheit&timezone=Pacific%2FHonolulu&forecast_days=1').then(function(r){return r.json();});
+  var mc=fetch('https://marine-api.open-meteo.com/v1/marine?latitude='+LAT+'&longitude='+LON+'&current=wave_height&timezone=Pacific%2FHonolulu').then(function(r){return r.json();}).catch(function(){return null;});
+  Promise.all([fc,mc]).then(function(res){
+    var d=res[0]||{},m=res[1],cur=d.current||{},day=d.daily||{},items=[];
+    if(typeof cur.temperature_2m==='number'){
+      var w=_wmo(cur.weather_code),hi=Math.round((day.temperature_2m_max||[])[0]),lo=Math.round((day.temperature_2m_min||[])[0]);
+      items.push('<span class="cond-item" title="'+w[1]+'">'+w[0]+' <b>'+Math.round(cur.temperature_2m)+'°</b>'+(isNaN(hi)?'':' <span class="cl">'+hi+'/'+lo+'</span>')+'</span>');
+    }
+    var sr=(day.sunrise||[])[0],ss=(day.sunset||[])[0];
+    if(sr&&ss){var a=_hm(sr),b=_hm(ss),g=_addMin(b.h,b.m,-60);
+      items.push('<span class="cond-item">🌅 '+_fmtT(a.h,a.m)+'</span>');
+      items.push('<span class="cond-item">🌇 '+_fmtT(b.h,b.m)+'</span>');
+      items.push('<span class="cond-item" title="Best light for Musubi shoots">📸 Golden '+_fmtT(g.h,g.m)+'–'+_fmtT(b.h,b.m)+'</span>');
+    }
+    var uv=Math.round((day.uv_index_max||[])[0]);
+    if(!isNaN(uv))items.push('<span class="cond-item" title="Max UV index today">☀️ UV '+uv+'</span>');
+    if(m&&m.current&&typeof m.current.wave_height==='number')
+      items.push('<span class="cond-item" title="Open-ocean swell">🌊 '+(m.current.wave_height*3.281).toFixed(1)+' ft</span>');
+    if(!items.length){if(!el.innerHTML)el.style.display='none';return;}
+    var html=items.join('')+'<span class="cond-loc">Westside Oʻahu</span>';
+    el.innerHTML=html;
+    try{localStorage.setItem('jbos_cond',JSON.stringify({ts:Date.now(),html:html}));}catch(e){}
+  }).catch(function(){if(!el.innerHTML)el.style.display='none';});
+}
+
+/* ===== Due-date reminders (free, on-device notifications via the PWA) ===== */
+function reminderBar(){
+  if(!('Notification' in window)||Notification.permission!=='default')return '';
+  return '<div class="remind-bar" onclick="requestReminders()" role="button" tabindex="0" onkeydown="if(event.key===\'Enter\'){requestReminders()}"><span>🔔</span> Get reminded about overdue &amp; due-today items <span class="rb-cta">Turn on →</span></div>';
+}
+function requestReminders(){
+  if(!('Notification' in window))return;
+  Notification.requestPermission().then(function(p){
+    if(p==='granted'){toast('Reminders on — JB OS will nudge you about due items');checkReminders(true);}
+    if(view==='dashboard')render();
+  });
+}
+function checkReminders(force){
+  if(!('Notification' in window)||Notification.permission!=='granted')return;
+  var todayK=dateKey(new Date());
+  if(!force&&localStorage.getItem('jbos_remind_last')===todayK)return; // nudge at most once/day
+  var items=load().filter(function(x){return !x.archived;});
+  var overdue=items.filter(function(x){return x.dueDate&&x.dueDate<todayK;}).length;
+  var today=items.filter(function(x){return x.dueDate===todayK;}).length;
+  if(!overdue&&!today)return;
+  var parts=[];if(overdue)parts.push(overdue+' overdue');if(today)parts.push(today+' due today');
+  var body=parts.join(' · ');
+  localStorage.setItem('jbos_remind_last',todayK);
+  var opts={body:body,icon:'icon-192.png',badge:'icon-192.png',tag:'jbos-due'};
+  try{
+    if(navigator.serviceWorker&&navigator.serviceWorker.ready)
+      navigator.serviceWorker.ready.then(function(reg){reg.showNotification('JB OS',opts);}).catch(function(){new Notification('JB OS',opts);});
+    else new Notification('JB OS',opts);
+  }catch(e){}
 }
 
 /* Init */
@@ -2574,6 +2662,8 @@ fetchJournalSeeds();
 if(load().length)_booting=false;
 render();
 updateCounts();
+checkReminders();
+document.addEventListener('visibilitychange',function(){if(!document.hidden)checkReminders();});
 
 /* ===== PWA: service worker + install affordance ===== */
 if('serviceWorker' in navigator){
