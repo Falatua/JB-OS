@@ -1,5 +1,19 @@
 [
   {
+    "id": "c-vibesec-gstack",
+    "text": "Look into VibeSec and G-Stack skills",
+    "type": "note",
+    "emoji": "💻",
+    "notes": "Research the 'vibe sec' and 'g-stack' skills and how they could work better for JB's workflow.",
+    "description": "Look into the VibeSec and G-Stack skills (names as dictated — confirm exact spelling) and evaluate how each could fit into and improve JB's dev/AI workflow. Figure out what they do and where they'd give the most leverage.",
+    "priority": "normal",
+    "category": "tech",
+    "source": "chat",
+    "done": false,
+    "archived": false,
+    "createdAt": "2026-06-02T00:00:00Z"
+  },
+  {
     "id": "tg-023-musubi-archie-gear",
     "text": "Musubi: order Archie's gear for photo shoots",
     "type": "task",
