@@ -2237,7 +2237,8 @@ function renderView(){
    multi-dimensional network, not a star). Degree-sized nodes, color-coded by
    life-area with state rings (overdue/high), group toggles, search, zoom/fit,
    and a click-to-open details panel showing each node's connections. */
-var _graphGen=0, _G=null, _graphCleanup=[], _graphGroups=null, _graphColorMode='area';
+var _graphGen=0, _G=null, _graphCleanup=[], _graphGroups=null, _graphColorMode='area', _graphPos=null, _graphCam=null;
+var TYPEGLYPH={task:'🗂️',idea:'💡',note:'🗒️',project:'📦'};
 function graphZoom(f){_G&&_G.zoom(f);}
 function graphFit(){_G&&_G.fit();}
 function graphSearch(v){_G&&_G.search(v);}
@@ -2279,13 +2280,13 @@ function renderGraph(){
   // (Re)build the node/edge model from current data, preserving the positions of nodes that
   // still exist so the layout doesn't jump — this is what lets the graph auto-update in place.
   function build(){
-    var prev=byKey, first=(prev==null||!prev.hub);
+    var prev=byKey, first=!((prev&&prev.hub)||(_graphPos&&_graphPos.hub)); // "first" only if no positions known anywhere (incl. a prior mount)
     nodes=[];edges=[];byKey={};catUsed={};typeUsed={};catNode={};typeNode={};
     function node(key,label,kind,group,color,r,ref){
       if(byKey[key])return byKey[key];
       var n={key:key,label:label,kind:kind,group:group,color:color,baseR:r,r:r,ref:ref||null,deg:0,od:false,hi:false,x:0,y:0,vx:0,vy:0,ph:Math.random()*6.2832};
-      var p=prev&&prev[key];
-      if(p){n.x=p.x;n.y=p.y;n.vx=p.vx;n.vy=p.vy;n.ph=p.ph;n.born=p.born;}
+      var p=(prev&&prev[key])||(_graphPos&&_graphPos[key]); // restore from current model or a prior mount → stable layout
+      if(p){n.x=p.x;n.y=p.y;n.vx=p.vx||0;n.vy=p.vy||0;if(p.ph!=null)n.ph=p.ph;n.born=p.born;}
       else if(first){var a=Math.random()*6.2832,rad=Math.min(W,H)*0.32*(0.4+Math.random()*0.6);n.x=W/2+Math.cos(a)*rad;n.y=H/2+Math.sin(a)*rad;}
       else{var a2=Math.random()*6.2832,r2=Math.min(W,H)*0.10*(0.4+Math.random());n.x=W/2+Math.cos(a2)*r2;n.y=H/2+Math.sin(a2)*r2;n.born=performance.now();} // new node drifts out from center + pops in
       nodes.push(n);byKey[key]=n;return n;
@@ -2295,9 +2296,9 @@ function renderGraph(){
     if(first){hub.x=W/2;hub.y=H/2;}
     var items=load().filter(function(x){return !x.archived;});
     var itemById={}; items.forEach(function(it){var c=it.category||'general';catUsed[c]=(catUsed[c]||0)+1;var t=it.type||'task';typeUsed[t]=(typeUsed[t]||0)+1;itemById[it.id]=it;});
-    Object.keys(catUsed).forEach(function(c){var cc=CATS[c]||CATS.general;var cn=node('cat:'+c,cc.label,'cat','cat',cc.color,9,{cat:c});edge(hub,cn);catNode[c]=cn;});
-    Object.keys(typeUsed).forEach(function(t){var tn=node('type:'+t,(TYPE_LABEL[t]||t)+'s','type','type',TYPEC[t]||'#8a8f98',8,{type:t});edge(hub,tn);typeNode[t]=tn;});
-    items.forEach(function(it){var c=it.category||'general',t=it.type||'task',cc=CATS[c]||CATS.general;var n=node('it:'+it.id,it.text||'Untitled','item','item',cc.color,it.priority==='high'?6:5,{id:it.id});n.od=!!(it.dueDate&&it.dueDate<todayK);n.hi=it.priority==='high';n.cl=catNode[c];n.catKey=c;n.typeKey=t;n.altColor=TYPEC[t]||'#8a8f98';n.glyph=it.emoji||'';var stt=(typeof stepStats==='function')?stepStats(it):null;n.prog=(stt&&stt.total)?(stt.done/stt.total):null;edge(n,catNode[c]);if(typeNode[t])edge(n,typeNode[t]);});
+    Object.keys(catUsed).forEach(function(c){var cc=CATS[c]||CATS.general;var cn=node('cat:'+c,cc.label,'cat','cat',cc.color,9,{cat:c});cn.glyph=CATEMOJI[c]||'';edge(hub,cn);catNode[c]=cn;});
+    Object.keys(typeUsed).forEach(function(t){var tn=node('type:'+t,(TYPE_LABEL[t]||t)+'s','type','type',TYPEC[t]||'#8a8f98',8,{type:t});tn.glyph=TYPEGLYPH[t]||'';edge(hub,tn);typeNode[t]=tn;});
+    items.forEach(function(it){var c=it.category||'general',t=it.type||'task',cc=CATS[c]||CATS.general;var n=node('it:'+it.id,it.text||'Untitled','item','item',cc.color,it.priority==='high'?6:5,{id:it.id});n.od=!!(it.dueDate&&it.dueDate<todayK);n.hi=it.priority==='high';n.cl=catNode[c];n.catKey=c;n.typeKey=t;n.altColor=TYPEC[t]||'#8a8f98';n.glyph=it.emoji||'';n.recent=((it.updatedAt||it.createdAt||'').slice(0,10)===todayK);var stt=(typeof stepStats==='function')?stepStats(it):null;n.prog=(stt&&stt.total)?(stt.done/stt.total):null;edge(n,catNode[c]);if(typeNode[t])edge(n,typeNode[t]);});
     try{var entries=(jEntries?jEntries():[]).slice(0,14);if(entries.length){var jh=node('jhub','Journal','jhub','journal','#b07cc6',11);edge(hub,jh);entries.forEach(function(e){edge(node('j:'+e.id,e.date||'entry','journal','journal','#b07cc6',4,{jid:e.id}),jh);});}}catch(e){}
     try{var tmpl=(loadDaily().templates||[]).slice(0,20);if(tmpl.length){var hh=node('hhub','Habits','hhub','habit','#2dd4bf',11);edge(hub,hh);tmpl.forEach(function(t){edge(node('h:'+t.id,t.text||'habit','habit','habit','#2dd4bf',4),hh);});}}catch(e){}
     nodes.forEach(function(n){ if(n.kind==='cat'||n.kind==='type'||n.kind==='jhub'||n.kind==='hhub') n.r=Math.min(16,n.baseR+Math.sqrt(n.deg)*1.6); }); // size hubs by connectivity
@@ -2372,6 +2373,7 @@ function renderGraph(){
       var age=n.born?(_now-n.born):1e9, grow=(RM||age>=600)?1:(0.4+0.6*(1-Math.pow(1-age/600,2))), R=n.r*grow;
       if(!dim&&(n===selected||n.od||n.kind==='hub')){var aur=n.od?'#f87171':(n===selected?ACC:col);
         ctx.beginPath();ctx.arc(X,Y,R+5+pulse*5,0,6.2832);ctx.fillStyle=_hexA(aur,0.08+pulse*0.12);ctx.fill();}
+      if(!dim&&n.recent&&n!==selected){ctx.beginPath();ctx.arc(X,Y,R+4+pulse*3,0,6.2832);ctx.strokeStyle=_hexA('#7CFFB2',0.3+pulse*0.4);ctx.lineWidth=1.4/scale;ctx.stroke();} // touched today
       if(!RM&&!dim&&n===selected){for(var sk=0;sk<2;sk++){var st2=((_now*0.0007+sk*0.5)%1);ctx.beginPath();ctx.arc(X,Y,R+st2*30,0,6.2832);ctx.strokeStyle=_hexA(ACC,0.5*(1-st2));ctx.lineWidth=1.5/scale;ctx.stroke();}} // sonar ping
       if(glow&&!dim){ctx.shadowColor=col;ctx.shadowBlur=(n.kind==='hub'?22:n.kind==='item'?6:13);}
       ctx.beginPath();ctx.arc(X,Y,R,0,6.2832);ctx.fillStyle=col;ctx.fill();ctx.shadowBlur=0;
@@ -2381,7 +2383,7 @@ function renderGraph(){
       else if(n.kind!=='item'&&n.kind!=='hub'){ctx.lineWidth=1.5/scale;ctx.strokeStyle='rgba(0,0,0,.30)';ctx.stroke();}
       if(!dim&&n.prog!=null&&n.prog>0){ctx.beginPath();ctx.arc(X,Y,R+2.6,-1.5708,-1.5708+n.prog*6.2832);ctx.strokeStyle=_hexA('#ffffff',0.9);ctx.lineWidth=2.2/scale;ctx.lineCap='round';ctx.stroke();ctx.lineCap='butt';} // step-progress arc
       if(!RM&&age<600){ctx.beginPath();ctx.arc(X,Y,R+(age/600)*26,0,6.2832);ctx.strokeStyle=_hexA(col,0.6*(1-age/600));ctx.lineWidth=2/scale;ctx.stroke();} // spawn burst
-      if(!dim&&R>=7&&!(n.kind==='hub'||n.kind==='item')){ctx.beginPath();ctx.arc(X-R*0.3,Y-R*0.3,R*0.34,0,6.2832);ctx.fillStyle='rgba(255,255,255,.22)';ctx.fill();}
+      if(!dim&&R>=7&&!(n.kind==='hub'||n.kind==='item')&&!n.glyph){ctx.beginPath();ctx.arc(X-R*0.3,Y-R*0.3,R*0.34,0,6.2832);ctx.fillStyle='rgba(255,255,255,.22)';ctx.fill();}
       if(n.glyph&&!dim){var fs=(n.kind==='hub')?R*1.05:R*1.9;if(scale*fs>=8){ctx.font=fs+"px 'Geist',system-ui,sans-serif";ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(n.glyph,X,Y+fs*0.04);}}});
     ctx.globalAlpha=1;ctx.textAlign='center';ctx.textBaseline='top';
     nodes.forEach(function(n){if(!visible(n))return;var big=(n.kind!=='item'&&n.kind!=='journal'&&n.kind!=='habit');var emph=(n===hover||n===selected);var show=big||emph||(hi&&hi[n.key]&&(scale>1.1||q));if(!show)return;ctx.globalAlpha=(hi&&!hi[n.key])?0.18:1;ctx.font=(n.kind==='hub'?'600 13px ':big?'600 11px ':'10px ')+"'Geist',system-ui,sans-serif";var t=n.label.length>26?n.label.slice(0,25)+'…':n.label,lx=bx(n),ly=by(n)+n.r+4;
@@ -2391,8 +2393,8 @@ function renderGraph(){
     if(nodes.length<=1){ctx.setTransform(dpr,0,0,dpr,0,0);ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='rgba(230,230,235,.5)';ctx.font="500 14px 'Geist',system-ui,sans-serif";ctx.fillText('Add a task, note, or habit and watch your graph come alive.',W/2,H/2+44);}
     drawMini();
   }
-  var myGen=++_graphGen;
-  function loop(){if(view!=='graph'||myGen!==_graphGen||!document.getElementById('graph-canvas')){_G=null;return;}_now=performance.now();camStep();if(alpha>0.02||drag)step();draw();requestAnimationFrame(loop);}
+  var myGen=++_graphGen, _saveTick=0;
+  function loop(){if(view!=='graph'||myGen!==_graphGen||!document.getElementById('graph-canvas')){if(typeof saveState==='function')saveState();_G=null;return;}_now=performance.now();camStep();if(alpha>0.02||drag)step();draw();if((++_saveTick%45)===0&&!drag&&!panning)saveState();requestAnimationFrame(loop);}
   function pos(e){var r=canvas.getBoundingClientRect();var p=e.touches&&e.touches[0]?e.touches[0]:(e.changedTouches&&e.changedTouches[0]?e.changedTouches[0]:e);return {x:p.clientX-r.left,y:p.clientY-r.top};}
   var tip=document.getElementById('graph-tip');
   function showTip(n,sx,sy){if(!tip)return;if(!n||n===selected){tip.classList.remove('on');return;}var sub=n.kind==='cat'?'Life area':n.kind==='type'?'Type':n.kind==='hub'?'Hub':n.kind==='journal'||n.kind==='jhub'?'Journal':n.kind==='habit'||n.kind==='hhub'?'Habit':(n.od?'Overdue':n.hi?'High priority':'Item');tip.innerHTML='<b>'+esc(n.label)+'</b><span>'+sub+' · '+n.deg+' link'+(n.deg===1?'':'s')+'</span>';tip.style.left=Math.min(W-150,sx+14)+'px';tip.style.top=(sy+14)+'px';tip.style.borderColor=_hexA(NC(n),0.6);tip.classList.add('on');}
@@ -2452,12 +2454,13 @@ function renderGraph(){
   function renderLegend(){var el=document.getElementById('graph-legend');if(!el)return;var html;
     if(colorMode==='type'){html=Object.keys(typeUsed).map(function(t){return '<button class="gl'+(isoKey===t?' iso':'')+'" onclick="graphIsolate(\''+t+'\')"><span class="gl-dot" style="background:'+(TYPEC[t]||'#8a8f98')+'"></span>'+esc((TYPE_LABEL[t]||t)+'s')+'</button>';}).join('');}
     else{html=Object.keys(catUsed).map(function(c){var cc=CATS[c]||CATS.general;return '<button class="gl'+(isoKey===c?' iso':'')+'" onclick="graphIsolate(\''+c+'\')"><span class="gl-dot" style="background:'+cc.color+'"></span>'+esc(cc.label)+'</button>';}).join('');}
-    el.innerHTML=html+'<span class="gl"><span class="gl-dot" style="border:1.5px solid #f87171;background:transparent"></span>Overdue</span>';}
+    el.innerHTML=html+'<span class="gl"><span class="gl-dot" style="border:1.5px solid #f87171;background:transparent"></span>Overdue</span><span class="gl"><span class="gl-dot" style="border:1.5px solid #7CFFB2;background:transparent"></span>Today</span>';}
   function renderStats(){var el=document.getElementById('graph-stats');if(!el)return;var it=0,od=0;nodes.forEach(function(n){if(n.kind==='item'){it++;if(n.od)od++;}});el.innerHTML='<span>'+it+' item'+(it===1?'':'s')+'</span><span>'+edges.length+' link'+(edges.length===1?'':'s')+'</span>'+(od?'<span class="od">'+od+' overdue</span>':'');}
   function renderCmode(){var el=document.getElementById('graph-cmode');if(!el)return;el.innerHTML='<span class="gg-dot" style="background:'+(colorMode==='type'?'#5aa9e6':ACC)+'"></span>'+(colorMode==='type'?'By type':'By area');}
   renderGroups();renderLegend();renderStats();renderCmode();
-  for(var t=0;t<160;t++)step(); // pre-settle so the graph opens framed
-  fitView();
+  function saveState(){_graphPos={};nodes.forEach(function(n){_graphPos[n.key]={x:n.x,y:n.y,vx:n.vx,vy:n.vy,ph:n.ph,born:n.born};});_graphCam={s:scale,ox:ox,oy:oy};}
+  if(_graphPos&&_graphPos.hub){alpha=0.06;if(_graphCam){scale=_graphCam.s;ox=_graphCam.ox;oy=_graphCam.oy;}else fitView();} // resume prior layout + framing
+  else{for(var t=0;t<160;t++)step();fitView();} // first ever: pre-settle so it opens framed
   _G={zoom:function(f){var ns=Math.max(0.3,Math.min(3.2,(cam?cam.s:scale)*f)),cx=W/2,cy=H/2,wx=(cx-ox)/scale,wy=(cy-oy)/scale;camTo(ns,cx-wx*ns,cy-wy*ns);},
       fit:function(){alpha=Math.max(alpha,0.2);fitView(true);},
       toggle:function(g){groups[g]=groups[g]===false;_graphGroups=Object.assign({},groups);renderGroups();alpha=Math.max(alpha,0.25);},
