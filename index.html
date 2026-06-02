@@ -1373,6 +1373,7 @@ function buildCatOptions(selId){
   const sel=document.getElementById(selId);
   if(!sel)return;
   sel.innerHTML=Object.entries(CATS).map(([k,v])=>`<option value="${k}">${v.label}</option>`).join('');
+  if(CATS.general)sel.value='general';
 }
 
 function buildCatNav(){
@@ -1389,7 +1390,9 @@ function addItem(text, type='task', notes='', source='browser', priority='normal
   if(!text.trim())return;
   // Auto-organize: when no specific life area was chosen, infer one from the title + notes
   // so new items don't pile up under "General". (guessEmoji then picks a fitting emoji.)
-  if(!category||category==='general')category=guessCategory(text,notes);
+  const autoOrganize=!category||category==='general';
+  if(autoOrganize&&type==='task')type=guessType(text,notes);
+  if(autoOrganize)category=guessCategory(text,notes);
   const items=load();
   const now=new Date().toISOString();
   items.unshift({id:uid(),text:text.trim(),notes:notes.trim(),type,priority,source,category,done:false,
@@ -1460,9 +1463,9 @@ function setFilter(f, mode){
   }
   // Sync the quick-add controls so new items default to the area you're viewing
   const qCat=document.getElementById('quick-cat');
-  if(qCat&&mode==='cat'&&cat)qCat.value=f;
+  if(qCat)qCat.value=(mode==='cat'&&cat)?f:'general';
   const qType=document.getElementById('quick-type');
-  if(qType&&mode==='type')qType.value=f;
+  if(qType)qType.value=(mode==='type')?f:'task';
   render();
 }
 
@@ -1718,8 +1721,8 @@ function openModal(){
   _lastFocus=document.activeElement;
   // Pre-fill Life Area / Type / Priority from the current filter so a New Item
   // defaults to the area you're viewing (e.g. in Personal → Personal, in High → High).
-  const mc=document.getElementById('m-cat'); if(mc&&filterMode==='cat'&&CATS[filter])mc.value=filter;
-  const mt=document.getElementById('m-type'); if(mt&&filterMode==='type')mt.value=filter;
+  const mc=document.getElementById('m-cat'); if(mc)mc.value=(filterMode==='cat'&&CATS[filter])?filter:'general';
+  const mt=document.getElementById('m-type'); if(mt)mt.value=(filterMode==='type')?filter:'task';
   const mp=document.getElementById('m-priority'); if(mp)mp.value=(filterMode==='prio'&&PRIORITY_IDS.includes(filter))?filter:'normal';
   document.getElementById('modal').classList.remove('hidden');
   setTimeout(()=>document.getElementById('m-title').focus(),50);
@@ -2019,6 +2022,27 @@ function importJSON(){
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 
 /* Pick a fitting emoji for any item (used across all views; stored on add, guessed at render as fallback) */
+// Infer whether a default/general item is an actionable to-do or a reference note.
+// Explicit Idea/Note/Project selections still win; this only refines the default Task path.
+function guessType(text,notes){
+  const s=((text||'')+' '+(notes||'')).toLowerCase().trim();
+  if(!s)return 'task';
+  const taskPatterns=[
+    /\blook\s+into\b|\bresearch\b|\binvestigate\b|\bcheck\s+(out|on|into)\b|\bfigure\s+out\b|\bfind\s+out\b|\blearn\b|\bcompare\b/,
+    /\bbuy\b|\border\b|\bpurchase\b|\bpay\b|\bschedule\b|\bbook\b|\bmake\b|\bcreate\b|\bbuild\b|\bfix\b|\bupdate\b|\bset\s+up\b|\bsetup\b|\binstall\b|\bdownload\b/,
+    /\bcall\b|\btext\b|\bemail\b|\breply\b|\bfollow\s*up\b|\bask\b|\bsend\b|\bsubmit\b|\brenew\b|\bcancel\b|\breturn\b|\bpick\s*up\b|\bdrop\s*off\b/,
+    /\btodo\b|\bto-do\b|\btask\b|\bremind\b|\bneed\s+to\b|\bshould\b|\bremember\s+to\b/
+  ];
+  for(let i=0;i<taskPatterns.length;i++){if(taskPatterns[i].test(s))return 'task';}
+  const notePatterns=[
+    /\b(in|into|coming\s+to)\s+town\b|\bvisiting\b|\bvisit\b|\barriv(e|es|ing)\b|\bleav(e|es|ing)\b|\bstaying\b/,
+    /\bheads?\s*up\b|\bfyi\b|\bnote\b|\breference\b|\binfo\b|\bremember\b|\bcontext\b/,
+    /\b(birthday|anniversary|appointment|event|trip|travel|flight)\b/,
+    /\b(jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)\.?\s+\d{1,2}\b|\b\d{1,2}[/-]\d{1,2}\b|\b\d{1,2}\s*(am|pm)\b/
+  ];
+  for(let i=0;i<notePatterns.length;i++){if(notePatterns[i].test(s))return 'note';}
+  return 'task';
+}
 // Infer a life area from the title + notes so items don't pile up in "General".
 // Ordered most-specific first; mirrors JB's fixed category set. Returns 'general' if nothing fits.
 function guessCategory(text,notes){
@@ -2141,12 +2165,13 @@ function toast(msg,actionLabel,actionFn){
       const catRemap={errands:'errands',shopping:'shopping',tech:'tech'};
       const fresh=serverItems
         .filter(x=>!localIds.has(x.id) && !_tombed(x,tomb))
-        .map(x=>({
-          ...x,
-          category: catRemap[x.category]||x.category||'general',
-          source: x.source||'telegram',
-          type: x.type||'task',
-        }));
+        .map(x=>{
+          const rawCat=catRemap[x.category]||x.category||'general';
+          const autoOrganize=!x.category||rawCat==='general';
+          const nextType=x.type||(autoOrganize?guessType(x.text,x.notes||x.description):'task');
+          const nextCat=autoOrganize?guessCategory(x.text,x.notes||x.description):rawCat;
+          return {...x,category:nextCat,source:x.source||'telegram',type:nextType};
+        });
       // For existing items: sync server field edits (dueDate, priority, etc.) unless the user edited it in-app, and pick up server done-state
       let changed=fresh.length>0;
       const merged=[...fresh,...local.map(loc=>{

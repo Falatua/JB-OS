@@ -90,8 +90,11 @@ checks the item off himself. Add `steps` when JB describes a process with phases
 
 ### `type`
 - **task** — a concrete action with a clear done-state. *"Buy more tuna", "Pay birth bill".*
+- **task** also includes investigation/action prompts such as *"Look into Obsidian"*,
+  *"Research second-brain tools"*, or *"Check out X"*.
 - **idea** — a possibility to explore later; no commitment yet. *"Auntie's-favorite-tee concept".*
-- **note** — reference info, an FYI, or "look into X". *"Dad in town Jun 7–11", "Look into Obsidian".*
+- **note** — reference info, an FYI, context, or an event/fact without a direct done-state.
+  *"Dad in town Jun 7–11"* is a note, not a task.
 - **project** — a multi-step ongoing effort. **JB's preference: do NOT create umbrella
   project items.** Big efforts (Musubi Strong, JB OS, Roman TD) are tracked as discrete
   tasks/ideas/notes tagged to a category instead. Only use `project` if JB explicitly asks.
