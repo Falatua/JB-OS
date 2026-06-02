@@ -1358,7 +1358,9 @@ function restore(id){
   toast('Restored to active list');
 }
 
-function del(id){const prev=load();save(load().filter(x=>x.id!==id));render();updateCounts();toast('Deleted','Undo',()=>{save(prev);render();updateCounts();toast('Restored');});}
+function del(id){const prev=load(),prevTomb=loadTomb();addTomb(id);save(load().filter(x=>x.id!==id));render();updateCounts();toast('Deleted','Undo',()=>{saveTombMap(prevTomb);
+  // Bump the restored item past its tombstone ts so a tombstone already synced to another device can't re-kill it.
+  save(prev.map(x=>x.id===id?Object.assign({},x,{updatedAt:new Date().toISOString()}):x));render();updateCounts();toast('Restored');});}
 
 /* ===== Mobile nav drawer ===== */
 function toggleNav(){const open=document.querySelector('.app').classList.toggle('nav-open');const h=document.getElementById('nav-ham');if(h)h.setAttribute('aria-expanded',open?'true':'false');}
@@ -2017,10 +2019,11 @@ function toast(msg,actionLabel,actionFn){
       if(!Array.isArray(serverItems)||!serverItems.length){render();updateCounts();return;}
       const local=load();
       const localIds=new Set(local.map(x=>x.id));
+      const tomb=loadTomb(); // don't re-seed items the user has deleted
       // Remap legacy category names
       const catRemap={errands:'errands',shopping:'shopping',tech:'tech'};
       const fresh=serverItems
-        .filter(x=>!localIds.has(x.id))
+        .filter(x=>!localIds.has(x.id) && !_tombed(x,tomb))
         .map(x=>({
           ...x,
           category: catRemap[x.category]||x.category||'general',
@@ -2056,9 +2059,11 @@ function toast(msg,actionLabel,actionFn){
     fetch(file+'?v='+Date.now()).then(function(r){return r.ok?r.json():Promise.reject();}).then(function(seeds){
       if(!Array.isArray(seeds)||!seeds.length)return;
       var store=rStore(scope), byId={}; store.templates.forEach(function(t){byId[t.id]=t;});
+      var tomb=loadTomb(); // don't re-seed routines the user has deleted
       var changed=false;
       seeds.forEach(function(s){
         if(!s||!s.id)return;
+        if(_tombed(s,tomb))return;
         var ex=byId[s.id];
         if(!ex){
           store.templates.push(Object.assign({notes:'',priority:'normal',type:'task',category:'general',createdAt:new Date().toISOString()}, s));
@@ -2107,7 +2112,9 @@ function toggleRoutine(scope,id){
   const store=rStore(scope), pkey=rPeriodKey(scope), arr=store.log[pkey]||[];
   const i=arr.indexOf(id);
   if(i>=0)arr.splice(i,1); else arr.push(id);
-  store.log[pkey]=arr; rSave(scope,store); render(); updateCounts();
+  store.log[pkey]=arr;
+  store.logTs=store.logTs||{}; (store.logTs[pkey]=store.logTs[pkey]||{})[id]=new Date().toISOString(); // stamp toggle so uncheck syncs (LWW)
+  rSave(scope,store); render(); updateCounts();
   if(i<0){const s=scope==='daily'?routineStreak('daily',id):0;toast(s>1?`Done — ${s} day streak 🔥`:'Done');}
 }
 function addRoutineItem(scope){
@@ -2118,7 +2125,7 @@ function addRoutineItem(scope){
 }
 function delRoutine(scope,id){
   const store=rStore(scope); store.templates=store.templates.filter(t=>t.id!==id);
-  rSave(scope,store); render(); updateCounts(); toast('Removed');
+  addTomb(id); rSave(scope,store); render(); updateCounts(); toast('Removed');
 }
 
 /* Routine item editor — edits the TEMPLATE, so changes carry forward to every future period */
@@ -2719,7 +2726,7 @@ function saveJournal(){
 }
 function deleteJournal(){
   if(!_jEditId)return;if(!confirm('Delete this journal entry permanently?'))return;
-  const store=jLoad();store.entries=store.entries.filter(x=>x.id!==_jEditId);jSave(store);
+  const store=jLoad();addTomb(_jEditId);store.entries=store.entries.filter(x=>x.id!==_jEditId);jSave(store);
   closeJournal();render();updateCounts();toast('Entry deleted');
 }
 function closeJournal(){closeAllJMenus();document.getElementById('journal-modal').classList.add('hidden');_jEditId=null;_jBlocks=[];_jMood=null;restoreFocus();}
@@ -2741,7 +2748,7 @@ function addPromptFromManager(){
   const store=jLoad();store.prompts.push({id:uid(),text,category:sel.value||'freeform',builtin:false,favorite:false,createdAt:new Date().toISOString()});jSave(store);
   inp.value='';renderPromptList();updateCounts();toast('Question added to your library');
 }
-function delPrompt(id){const store=jLoad();const p=store.prompts.find(x=>x.id===id);if(!p||p.builtin)return;if(!confirm('Remove this question from your library?'))return;store.prompts=store.prompts.filter(x=>x.id!==id);jSave(store);renderPromptList();toast('Question removed');}
+function delPrompt(id){const store=jLoad();const p=store.prompts.find(x=>x.id===id);if(!p||p.builtin)return;if(!confirm('Remove this question from your library?'))return;addTomb(id);store.prompts=store.prompts.filter(x=>x.id!==id);jSave(store);renderPromptList();toast('Question removed');}
 function closePrompts(){document.getElementById('prompts-modal').classList.add('hidden');restoreFocus();}
 function closePromptsOutside(e){if(e.target.id==='prompts-modal')closePrompts();}
 
@@ -3090,33 +3097,78 @@ function sbGetCfg(){try{return JSON.parse(localStorage.getItem('jbos_sb')||'null
 function sbSetStatus(msg,ok){var e=document.getElementById('sb-status');if(e){e.textContent=msg;e.style.color=ok?'var(--green)':'var(--text-3)';}var l=document.getElementById('sync-btn-label');if(l)l.textContent=ok?'Cloud sync ✓':'Cloud sync';}
 function sbSpace(){return (SB_CFG&&SB_CFG.space)||'main';}
 function sbErr(m){ if(/row-level|permission|jwt|not authorized|401|403/i.test(m||'')) sbSetStatus('Locked — sign in below to sync to your account.'); else sbSetStatus('Sync: '+(m||'error')); }
-// ---- per-store merge helpers (union by id; logs union by date; booleans OR) ----
+// ---- Tombstones: deleting an item records id→delete-time so a union merge can't
+// resurrect it. A later edit/recreate (item ts > tombstone ts) wins, so re-using an id works. ----
+var TKEY='jbos_tomb_v1';
+function loadTomb(){try{return JSON.parse(localStorage.getItem(TKEY))||{};}catch(e){return {};}}
+function saveTombMap(t){localStorage.setItem(TKEY,JSON.stringify(t));if(typeof sbPushStore==='function'&&!_sbApplying)sbPushStore('tombstones');}
+function addTomb(id){if(id==null)return;var t=loadTomb();t[id]=new Date().toISOString();saveTombMap(t);}
+function _tombed(x,tomb){var t=tomb&&tomb[x&&x.id];return !!(t&&t>=_itemTs(x));} // dead unless item is newer than its tombstone
+function _mergeTomb(r,l){var o={};[r||{},l||{}].forEach(function(m){Object.keys(m).forEach(function(id){if(!o[id]||m[id]>o[id])o[id]=m[id];});});return o;}
+// Apply a merged tombstone map, then prune every store so removals propagate even
+// when only the tombstone row (not the store row) arrived from another device.
+function applyTomb(t){localStorage.setItem(TKEY,JSON.stringify(t));pruneStores();}
+function pruneStores(){
+  var tomb=loadTomb(), keep=function(x){return !_tombed(x,tomb);};
+  var td=load(), f=td.filter(keep); if(f.length!==td.length)save(f);
+  ['daily','monthly'].forEach(function(sc){var s=rStore(sc),ft=(s.templates||[]).filter(keep);if(ft.length!==(s.templates||[]).length){s.templates=ft;rSave(sc,s);}});
+  var j=jLoad(),jp=(j.prompts||[]).filter(keep),je=(j.entries||[]).filter(keep);
+  if(jp.length!==(j.prompts||[]).length||je.length!==(j.entries||[]).length){j.prompts=jp;j.entries=je;jSave(j);}
+}
+// ---- per-store merge helpers (union by id, tombstone-filtered; logs LWW by timestamp) ----
 function _itemTs(x){return (x&&(x.updatedAt||x.archivedAt||x.createdAt))||'';}
 function _mergeById(remote,local){
   var map={},order=[];
   function consider(x){if(!x||x.id==null)return;var id=x.id;if(!(id in map)){map[id]=x;order.push(id);}else if(_itemTs(x)>_itemTs(map[id]))map[id]=x;} // last-write-wins on shared ids
   (remote||[]).forEach(consider); (local||[]).forEach(consider);
-  return order.map(function(id){return map[id];});
+  var tomb=loadTomb();
+  return order.map(function(id){return map[id];}).filter(function(x){return !_tombed(x,tomb);});
 }
-function _mergeRoutine(r,l){ // daily/monthly: {templates, log}
-  r=r||{};l=l||{}; var log={};
-  [r.log||{},l.log||{}].forEach(function(src){Object.keys(src).forEach(function(d){var a=log[d]||[];(src[d]||[]).forEach(function(id){if(a.indexOf(id)<0)a.push(id);});log[d]=a;});});
-  return {templates:_mergeById(r.templates,l.templates),log:log};
+function _mergeRoutine(r,l){ // daily/monthly: {templates, log, logTs}
+  r=r||{};l=l||{};
+  var rlog=r.log||{}, llog=l.log||{}, rt=r.logTs||{}, lt=l.logTs||{}, log={}, logTs={}, periods={};
+  [rlog,llog,rt,lt].forEach(function(m){Object.keys(m).forEach(function(p){periods[p]=1;});});
+  Object.keys(periods).forEach(function(p){
+    var rset=rlog[p]||[], lset=llog[p]||[], rtp=rt[p]||{}, ltp=lt[p]||{}, ids={}, on=[], ts={};
+    rset.concat(lset).forEach(function(id){ids[id]=1;});
+    Object.keys(rtp).concat(Object.keys(ltp)).forEach(function(id){ids[id]=1;});
+    Object.keys(ids).forEach(function(id){
+      var rTs=rtp[id]||'', lTs=ltp[id]||'', present;
+      if(rTs||lTs){var win=rTs>=lTs?rTs:lTs;ts[id]=win;present=(rTs>=lTs?rset:lset).indexOf(id)>=0;} // newest toggle wins → uncheck syncs
+      else present=rset.indexOf(id)>=0||lset.indexOf(id)>=0; // legacy data (no ts): preserve old OR-union
+      if(present)on.push(id);
+    });
+    log[p]=on; if(Object.keys(ts).length)logTs[p]=ts;
+  });
+  return {templates:_mergeById(r.templates,l.templates),log:log,logTs:logTs};
 }
 function _mergeJournal(r,l){r=r||{};l=l||{};return {prompts:_mergeById(r.prompts,l.prompts),entries:_mergeById(r.entries,l.entries)};}
 function _mergeMusubi(r,l){
-  r=r||{};l=l||{}; var checklist={};
-  [r.checklist||{},l.checklist||{}].forEach(function(src){Object.keys(src).forEach(function(d){checklist[d]=checklist[d]||{};Object.keys(src[d]||{}).forEach(function(t){if(src[d][t])checklist[d][t]=true;});});});
+  r=r||{};l=l||{};
+  var rc=r.checklist||{}, lc=l.checklist||{}, rct=r.checkTs||{}, lct=l.checkTs||{}, checklist={}, checkTs={}, days={};
+  [rc,lc,rct,lct].forEach(function(m){Object.keys(m).forEach(function(d){days[d]=1;});});
+  Object.keys(days).forEach(function(d){
+    var rd=rc[d]||{}, ld=lc[d]||{}, rdt=rct[d]||{}, ldt=lct[d]||{}, ids={}, out={}, outTs={};
+    [rd,ld,rdt,ldt].forEach(function(m){Object.keys(m).forEach(function(t){ids[t]=1;});});
+    Object.keys(ids).forEach(function(t){
+      var rTs=rdt[t]||'', lTs=ldt[t]||'', val;
+      if(rTs||lTs){var win=rTs>=lTs?rTs:lTs;outTs[t]=win;val=rTs>=lTs?!!rd[t]:!!ld[t];} // newest toggle wins → unchecking syncs
+      else val=!!rd[t]||!!ld[t]; // legacy data (no ts): preserve old OR-union
+      if(val)out[t]=true;
+    });
+    if(Object.keys(out).length)checklist[d]=out; if(Object.keys(outTs).length)checkTs[d]=outTs;
+  });
   var del=[];(r.ideasDel||[]).concat(l.ideasDel||[]).forEach(function(id){if(del.indexOf(id)<0)del.push(id);});
   var ideas=_mergeById(r.ideas,l.ideas).filter(function(x){return del.indexOf(x.id)<0;});
-  return {checklist:checklist,pipeline:_mergeById(r.pipeline,l.pipeline),perf:_mergeById(r.perf,l.perf),ideas:ideas,ideasDel:del,vibe:(r.vibe||l.vibe||'')};
+  return {checklist:checklist,checkTs:checkTs,pipeline:_mergeById(r.pipeline,l.pipeline),perf:_mergeById(r.perf,l.perf),ideas:ideas,ideasDel:del,vibe:(r.vibe||l.vibe||'')};
 }
 function sbStores(){return {
   todos:{load:load,save:save,merge:_mergeById},
   daily:{load:loadDaily,save:saveDaily,merge:_mergeRoutine},
   monthly:{load:loadMonthly,save:saveMonthly,merge:_mergeRoutine},
   journal:{load:jLoad,save:jSave,merge:_mergeJournal},
-  musubi:{load:mzLoad,save:mzSave,merge:_mergeMusubi}
+  musubi:{load:mzLoad,save:mzSave,merge:_mergeMusubi},
+  tombstones:{load:loadTomb,save:applyTomb,merge:_mergeTomb}
 };}
 function sbApplyStore(name,payload){
   var st=sbStores()[name]; if(!st||payload==null)return;
@@ -3154,7 +3206,10 @@ function sbInit(){
     if(hadLegacy){try{SB.from('jbos_sync').delete().eq('id',space).then(function(){},function(){});}catch(e){}}
   },function(){ sbSetStatus('Sync: connection failed'); });
   try{
-    SB.channel('jbos-'+space).on('postgres_changes',{event:'*',schema:'public',table:'jbos_sync'},function(p){
+    // Scope the realtime stream to THIS space's rows server-side, so another person sharing the
+    // same anon key never receives your payloads over the wire (defense-in-depth alongside RLS).
+    var myRows=[space].concat(Object.keys(sbStores()).map(function(n){return space+':'+n;}));
+    SB.channel('jbos-'+space).on('postgres_changes',{event:'*',schema:'public',table:'jbos_sync',filter:'id=in.('+myRows.join(',')+')'},function(p){
       var row=p&&p.new; if(!row||row.client===SB_CLIENT)return; // ignore our own echo
       var name=row.id===space?'todos':(row.id.indexOf(space+':')===0?row.id.slice(space.length+1):null);
       if(!name||!sbStores()[name])return;
@@ -3401,12 +3456,14 @@ const MZ_CHECK={
 function mzLoad(){
   let s;try{s=JSON.parse(localStorage.getItem(MZKEY))||{}}catch(e){s={}}
   if(!s.checklist)s.checklist={};
+  if(!s.checkTs)s.checkTs={};
   if(!Array.isArray(s.pipeline))s.pipeline=MZ_SEED.map(x=>({...x}));
   if(!Array.isArray(s.perf))s.perf=[];
   if(!Array.isArray(s.ideas))s.ideas=[];
   if(!Array.isArray(s.ideasDel))s.ideasDel=[];
   const cut=dateKey(new Date(Date.now()-31*864e5));
   Object.keys(s.checklist).forEach(k=>{if(k<cut)delete s.checklist[k];});
+  Object.keys(s.checkTs).forEach(k=>{if(k<cut)delete s.checkTs[k];});
   return s;
 }
 function mzSave(s){localStorage.setItem(MZKEY,JSON.stringify(s));if(typeof sbPushStore==='function'&&!_sbApplying)sbPushStore('musubi');}
@@ -3449,7 +3506,7 @@ function mzVibeSet(){
   var s=mzLoad();s.vibe=src;mzSave(s);renderMusubi();
 }
 function mzVibeClear(){var s=mzLoad();s.vibe='';mzSave(s);renderMusubi();}
-function mzToggle(el,id){const s=mzLoad(),k=dateKey(new Date());if(!s.checklist[k])s.checklist[k]={};s.checklist[k][id]=!s.checklist[k][id];mzSave(s);el.classList.toggle('done',!!s.checklist[k][id]);const c=document.getElementById('mz-done');if(c){const st=s.checklist[k];let total=0,done=0;Object.values(MZ_CHECK).forEach(b=>b.tasks.forEach(t=>{total++;if(st[t[0]])done++;}));c.textContent=done+'/'+total+' today';}}
+function mzToggle(el,id){const s=mzLoad(),k=dateKey(new Date());if(!s.checklist[k])s.checklist[k]={};s.checklist[k][id]=!s.checklist[k][id];s.checkTs=s.checkTs||{};(s.checkTs[k]=s.checkTs[k]||{})[id]=new Date().toISOString();mzSave(s);el.classList.toggle('done',!!s.checklist[k][id]);const c=document.getElementById('mz-done');if(c){const st=s.checklist[k];let total=0,done=0;Object.values(MZ_CHECK).forEach(b=>b.tasks.forEach(t=>{total++;if(st[t[0]])done++;}));c.textContent=done+'/'+total+' today';}}
 function mzPanelNumbers(){
   const stats=[['3–5','x','Feed posts/week','Sweet spot per Buffer 9.6M-post study'],['4','x','Reels/week','4+/wk ≈ more views vs 1/week'],['4–5','x','Story frames/day','Daily Stories lift views'],['50','+','Comments/week','30/day = strongest organic lever'],['+9','%','Follower growth lift','Daily posting vs 2–3×/week'],['60','min','Post+engage window','First hour drives most of your reach']];
   const metrics=[['Weekly','Follower growth','50–100 new'],['Per Reel','Organic reach','500+ views'],['Overall','Engagement rate','3–6% target'],['Per week','Profile visits','200+'],['Stories','Story view rate','15–20% of followers'],['Reel','Completion rate','50%+ (under 30s)'],['Monthly','Link-in-bio clicks','40+ clicks']];
