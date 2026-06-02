@@ -722,12 +722,28 @@
   .prog-next{font-size:11.5px;color:var(--text-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
   .prog-next.done{color:var(--green)}
   /* steps editor in detail modal */
-  .steps-bar{display:flex;align-items:center;gap:8px;margin-bottom:9px}
-  .steps-list{display:flex;flex-direction:column;gap:6px}
-  .step-row{display:flex;align-items:center;gap:9px}
-  .step-cb{flex-shrink:0;width:17px;height:17px;border-radius:5px;border:1.6px solid var(--border-2);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background var(--t),border-color var(--t)}
+  .steps-bar{display:block;margin-bottom:12px}
+  .prog-head{display:flex;align-items:baseline;gap:10px;margin-bottom:8px}
+  .prog-pct{font-size:22px;font-weight:700;color:var(--text);letter-spacing:-.5px}
+  .prog-pct.full{color:var(--green)}
+  .prog-stat{font-size:10px;text-transform:uppercase;letter-spacing:.06em;font-weight:600;padding:3px 9px;border-radius:20px;background:var(--surface-hover);color:var(--text-3)}
+  .prog-stat.mid{background:var(--accent-dim);color:var(--accent)}
+  .prog-stat.full{background:var(--green-dim);color:var(--green)}
+  .prog-head .prog-count{margin-left:auto;font-size:11.5px;color:var(--text-3)}
+  .steps-bar .prog-track{max-width:none;height:7px}
+  .steps-list{display:flex;flex-direction:column;gap:2px;counter-reset:jstep;position:relative}
+  .step-row{display:flex;align-items:center;gap:11px;position:relative;counter-increment:jstep;padding:3px 0}
+  .step-row:not(:last-child)::before{content:'';position:absolute;left:10px;top:23px;height:calc(100% - 8px);width:1.5px;background:var(--border);z-index:0}
+  .step-cb{flex-shrink:0;width:21px;height:21px;border-radius:50%;border:1.6px solid var(--border-2);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background var(--t),border-color var(--t);position:relative;z-index:1;background:var(--surface-modal)}
+  .step-cb::after{content:counter(jstep);font-size:10px;font-weight:600;color:var(--text-3)}
   .step-cb.on{background:var(--green);border-color:var(--green)}
-  .step-cb .step-check{opacity:0}.step-cb.on .step-check{opacity:1}
+  .step-cb.on::after{content:''}
+  .step-cb .step-check{opacity:0;position:absolute}.step-cb.on .step-check{opacity:1}
+  .d-yt{position:relative;width:100%;aspect-ratio:16/9;border-radius:var(--radius);overflow:hidden;background:#000}
+  .d-yt iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+  .d-video-set{display:flex;gap:7px}
+  .d-video-set input{flex:1;min-width:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:8px 10px;color:var(--text);font-size:12.5px;font-family:inherit;outline:none}
+  .d-video-set input:focus{border-color:var(--accent)}
   .step-row input.step-text{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:7px 10px;color:var(--text);font-size:12.5px;font-family:inherit;outline:none;transition:border-color var(--t)}
   .step-row input.step-text:focus{border-color:var(--accent)}
   .step-row input.step-text.done{color:var(--text-3);text-decoration:line-through}
@@ -1104,6 +1120,12 @@
     </div>
 
     <div class="detail-section">
+      <div class="detail-section-title">Video</div>
+      <div id="d-video"></div>
+      <div class="d-video-set" id="d-video-set"><input id="d-video-in" placeholder="Paste a YouTube link…" autocomplete="off" spellcheck="false" onkeydown="if(event.key==='Enter'){setDetailVideo();event.preventDefault()}"><button class="detail-add-btn" onclick="setDetailVideo()" style="white-space:nowrap">Add video</button></div>
+    </div>
+
+    <div class="detail-section">
       <div class="detail-section-title">Links</div>
       <div id="d-links"></div>
       <button class="detail-add-btn" onclick="addLinkRow()">+ Add link</button>
@@ -1428,6 +1450,7 @@ function itemHTML(item, isArchiveView, idx){
   if(item.description)indParts.push(`<span class="item-ind" title="Has description"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 4h10M3 8h10M3 12h6"/></svg></span>`);
   if(item.links&&item.links.length)indParts.push(`<span class="item-ind" title="${item.links.length} link(s)"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6.5 9.5l3-3M7 4.5l1-1a2.5 2.5 0 0 1 3.5 3.5l-1 1M9 11.5l-1 1A2.5 2.5 0 0 1 4.5 9l1-1"/></svg>${item.links.length}</span>`);
   if(item.attachments&&item.attachments.length)indParts.push(`<span class="item-ind" title="${item.attachments.length} attachment(s)"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M11 6.5l-4 4a1.5 1.5 0 0 0 2 2l4-4a3 3 0 0 0-4-4l-4 4a4.5 4.5 0 0 0 6 6l3-3"/></svg>${item.attachments.length}</span>`);
+  if(item.video)indParts.push(`<span class="item-ind" title="Has a video"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="3.5" width="12" height="9" rx="2"/><path d="M7 6.5l3 1.5-3 1.5z" fill="currentColor" stroke="none"/></svg></span>`);
   const indicators=indParts.length?`<span class="item-indicators">${indParts.join('')}</span>`:'';
   let dueChip='';
   if(item.dueDate){
@@ -1638,6 +1661,7 @@ function openDetail(id){
   document.getElementById('d-type').value=it.type||'task';
   document.getElementById('d-priority').value=it.priority||'normal';
   document.getElementById('d-duedate').value=it.dueDate||'';
+  _dVideo=it.video||''; renderDetailVideo();
   renderDetailSteps(it.steps||[]);
   renderDetailLinks(it.links||[]);
   renderDetailAttach();
@@ -1728,10 +1752,27 @@ function updateStepsBar(){
   if(!bar)return;
   if(!steps.length){bar.innerHTML='';return;}
   const total=steps.length,done=steps.filter(s=>s.done).length,pct=Math.round(done/total*100),full=done===total;
-  bar.innerHTML=`<div class="prog-track${full?' full':''}"><div class="prog-fill${full?' full':''}" style="width:${pct}%"></div></div>`
-    +`<span class="prog-count">${done}/${total}</span>`
-    +(full?'<span class="prog-next done">All steps complete</span>':'');
+  const label=full?'Complete':done===0?'Not started':'In progress', cls=full?'full':(done?'mid':'');
+  bar.innerHTML=`<div class="prog-head"><span class="prog-pct${full?' full':''}">${pct}%</span><span class="prog-stat ${cls}">${label}</span><span class="prog-count">${done}/${total} done</span></div>`
+    +`<div class="prog-track${full?' full':''}"><div class="prog-fill${full?' full':''}" style="width:${pct}%"></div></div>`;
 }
+/* ---- Per-item YouTube video ---- */
+function ytEmbed(raw){
+  raw=(raw||'').trim(); if(!raw)return '';
+  var list=raw.match(/[?&]list=([\w-]+)/), vid=raw.match(/(?:v=|youtu\.be\/|\/embed\/)([\w-]{6,})/);
+  if(list)return 'https://www.youtube.com/embed/videoseries?list='+list[1];
+  if(vid)return 'https://www.youtube.com/embed/'+vid[1];
+  if(/^[\w-]{6,}$/.test(raw))return 'https://www.youtube.com/embed/'+raw;
+  return '';
+}
+var _dVideo='';
+function renderDetailVideo(){
+  var wrap=document.getElementById('d-video'), seter=document.getElementById('d-video-set'); if(!wrap)return;
+  if(_dVideo){ wrap.innerHTML='<div class="d-yt"><iframe src="'+esc(_dVideo)+'" title="Video" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen loading="lazy"></iframe></div><button class="detail-add-btn" onclick="clearDetailVideo()" style="margin-top:6px">Remove video</button>'; if(seter)seter.style.display='none'; }
+  else { wrap.innerHTML=''; if(seter)seter.style.display='flex'; var inp=document.getElementById('d-video-in'); if(inp)inp.value=''; }
+}
+function setDetailVideo(){var s=ytEmbed((document.getElementById('d-video-in')||{}).value); if(!s){toast('Couldn’t read that YouTube link');return;} _dVideo=s; renderDetailVideo();}
+function clearDetailVideo(){_dVideo=''; renderDetailVideo();}
 
 function renderDetailAttach(){
   const wrap=document.getElementById('d-attachments');
@@ -1771,6 +1812,7 @@ function saveDetail(){
   it.type=document.getElementById('d-type').value;
   it.priority=document.getElementById('d-priority').value;
   it.dueDate=document.getElementById('d-duedate').value||'';
+  if(_dVideo)it.video=_dVideo; else delete it.video;
   const status=document.getElementById('d-status').value;
   if(status==='done'){if(!it.archived){it.archived=true;it.done=true;it.archivedAt=new Date().toISOString();}}
   else{it.archived=false;it.done=false;delete it.archivedAt;}
