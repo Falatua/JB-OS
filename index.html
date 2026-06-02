@@ -129,6 +129,9 @@
   .install-btn:hover{filter:brightness(1.08)}
   .sync-btn{display:flex;align-items:center;justify-content:center;gap:7px;margin:0 8px 12px;padding:8px 10px;background:var(--surface);color:var(--text-2);border:1px solid var(--border);border-radius:var(--radius);font-size:12.5px;font-weight:500;font-family:inherit;cursor:pointer;transition:background var(--t),color var(--t),border-color var(--t)}
   .sync-btn:hover{background:var(--surface-hover);color:var(--text);border-color:var(--border-2)}
+  .sb-pill{position:fixed;left:10px;bottom:10px;z-index:99999;font-size:11px;font-weight:600;padding:5px 10px;border-radius:999px;background:var(--surface);color:var(--text-2);border:1px solid var(--border);box-shadow:0 2px 10px rgba(0,0,0,.2);max-width:78vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;opacity:.9;transition:opacity .4s}
+  .sb-pill.ok{color:var(--green);border-color:var(--green)}
+  .sb-pill.err{color:var(--red);border-color:var(--red)}
 
   .btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:6px 12px;border-radius:var(--radius);border:none;cursor:pointer;font-size:12.5px;font-weight:500;font-family:inherit;transition:background var(--t),color var(--t),transform var(--t);white-space:nowrap}
   .btn:active{transform:scale(.97)}
@@ -3198,7 +3201,13 @@ var SB=null, SB_CFG=null, SB_CLIENT=Math.random().toString(36).slice(2), _sbAppl
 // The publishable key is meant to be public; the jbos_sync table runs with RLS disabled per JB's "no-login" choice.
 var SB_EMBED={url:'https://jdkfafvfczzgtzhtynjr.supabase.co',key:'sb_publishable_QFHs4u69thMisxqLi35Zjw_0AX4BkTT',space:'main'};
 function sbGetCfg(){return SB_EMBED;}
-function sbSetStatus(msg,ok){var e=document.getElementById('sb-status');if(e){e.textContent=msg;e.style.color=ok?'var(--green)':'var(--text-3)';}var l=document.getElementById('sync-btn-label');if(l)l.textContent=ok?'Cloud sync ✓':'Cloud sync';}
+function sbSetStatus(msg,ok){
+  try{console.log('[sync]',msg);}catch(_){}
+  var p=document.getElementById('sb-pill');
+  if(p){p.textContent=(ok?'✓ ':'☁︎ ')+msg;p.className='sb-pill'+(ok?' ok':(/error|fail|locked|invalid|denied|violat/i.test(msg||'')?' err':''));}
+  var e=document.getElementById('sb-status');if(e){e.textContent=msg;e.style.color=ok?'var(--green)':'var(--text-3)';}
+  var l=document.getElementById('sync-btn-label');if(l)l.textContent=ok?'Cloud sync ✓':'Cloud sync';
+}
 function sbSpace(){return (SB_CFG&&SB_CFG.space)||'main';}
 function sbErr(m){ if(/row-level|permission|jwt|not authorized|401|403/i.test(m||'')) sbSetStatus('Locked — sign in below to sync to your account.'); else sbSetStatus('Sync: '+(m||'error')); }
 // ---- Tombstones: deleting an item records id→delete-time so a union merge can't
@@ -3285,7 +3294,8 @@ function sbPushStore(name){
   _sbT[name]=setTimeout(function(){
     var st=sbStores()[name]; if(!st)return;
     try{ SB.from('jbos_sync').upsert({id:sbSpace()+':'+name,payload:st.load(),updated_at:new Date().toISOString(),client:SB_CLIENT})
-      .then(function(res){if(res&&res.error)sbErr(res.error.message);},function(){}); }catch(e){}
+      .then(function(res){if(res&&res.error){sbErr(res.error.message);}else{sbSetStatus('Saved to cloud ✓',true);}},
+            function(e){sbSetStatus('Sync: upload failed (offline?)');try{console.log('[sync] push rejected',e);}catch(_){}}); }catch(e){}
   }, 1000);
 }
 function sbInit(){
@@ -3750,5 +3760,6 @@ function mzSubTab(t){mzTab=t;renderMusubi();}
     }).catch(function(){});
 })();
 </script>
+<div id="sb-pill" class="sb-pill">☁︎ Sync: starting…</div>
 </body>
 </html>
