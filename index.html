@@ -132,6 +132,7 @@
   .sb-pill{position:fixed;left:10px;bottom:10px;z-index:99999;font-size:11px;font-weight:600;padding:5px 10px;border-radius:999px;background:var(--surface);color:var(--text-2);border:1px solid var(--border);box-shadow:0 2px 10px rgba(0,0,0,.2);max-width:78vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;opacity:.9;transition:opacity .4s}
   .sb-pill.ok{color:var(--green);border-color:var(--green)}
   .sb-pill.err{color:var(--red);border-color:var(--red)}
+  .sb-pill.hide{opacity:0;pointer-events:none}
   .sync-btn.ok{color:var(--green);border-color:var(--green)}
 
   .btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:6px 12px;border-radius:var(--radius);border:none;cursor:pointer;font-size:12.5px;font-weight:500;font-family:inherit;transition:background var(--t),color var(--t),transform var(--t);white-space:nowrap}
@@ -785,7 +786,7 @@
   /* ===== Graph view ===== */
   .graph-wrap{position:relative;width:100%;height:100%;min-height:60vh}
   #graph-canvas{display:block;touch-action:none;border-radius:var(--radius-lg);background:radial-gradient(120% 90% at 50% 40%,rgba(232,160,32,.04),transparent 70%)}
-  .graph-legend{position:absolute;bottom:8px;left:8px;display:flex;flex-wrap:wrap;gap:5px 8px;max-width:56%;pointer-events:none}
+  .graph-legend{position:absolute;bottom:8px;left:8px;display:flex;flex-wrap:wrap;gap:5px 8px;max-width:max(150px,calc(50% - 150px));pointer-events:none}
   .graph-legend .gl{display:inline-flex;align-items:center;gap:5px;font:inherit;font-size:10px;color:var(--text-2);background:color-mix(in srgb,var(--surface) 86%,transparent);padding:3px 8px;border-radius:20px;border:1px solid transparent}
   .graph-legend button.gl{pointer-events:auto;cursor:pointer}
   .graph-legend button.gl:hover{color:var(--text-1)}
@@ -1574,7 +1575,7 @@ function render(){
   if(!all.length){
     const hint=isArchiveView
       ?'Items you check off will appear here for future reference.'
-      :'Quick-add above, press ⌘N, or send <code>todo: your task</code> via Telegram';
+      :'Quick-add above, or press ⌘N to add something.';
     const icon=isArchiveView
       ?`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8h14v11a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1z"/><path d="M10 12h4"/></svg>`
       :`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 13l2.2-7.4A2 2 0 0 1 8.1 4h7.8a2 2 0 0 1 1.9 1.6L20 13v5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><path d="M4 13h4l1.5 2.5h5L16 13h4"/></svg>`;
@@ -3230,15 +3231,27 @@ var SB=null, SB_CFG=null, SB_CLIENT=Math.random().toString(36).slice(2), _sbAppl
 // The publishable key is meant to be public; the jbos_sync table runs with RLS disabled per JB's "no-login" choice.
 var SB_EMBED={url:'https://jdkfafvfczzgtzhtynjr.supabase.co',key:'sb_publishable_QFHs4u69thMisxqLi35Zjw_0AX4BkTT',space:'main'};
 function sbGetCfg(){return SB_EMBED;}
+var _pillT=null;
 function sbSetStatus(msg,ok){
   try{console.log('[sync]',msg);}catch(_){}
-  var p=document.getElementById('sb-pill');
-  if(p){p.textContent=(ok?'✓ ':'☁︎ ')+msg;p.className='sb-pill'+(ok?' ok':(/error|fail|locked|invalid|denied|violat/i.test(msg||'')?' err':''));}
-  var e=document.getElementById('sb-status');if(e){e.textContent=msg;e.style.color=ok?'var(--green)':'var(--text-3)';}
-  var l=document.getElementById('sync-btn-label');if(l)l.textContent=ok?'Cloud sync ✓':'Cloud sync';
+  var p=document.getElementById('sb-pill'); if(!p)return;
+  p.textContent=(ok?'✓ ':'☁︎ ')+msg;
+  p.className='sb-pill'+(ok?' ok':(/error|fail|locked|invalid|denied|violat|expired|wrong|offline/i.test(msg||'')?' err':''));
+  p.classList.remove('hide');                 // surface the pill on any status change
+  clearTimeout(_pillT);
+  if(ok)_pillT=setTimeout(function(){p.classList.add('hide');},2600); // once settled, fade it out of the way
 }
 function sbSpace(){return (SB_CFG&&SB_CFG.space)||'main';}
-function sbErr(m){ try{console.log('[sync] error:',m);}catch(_){} sbSetStatus('Blocked: '+(m||'unknown error')); }
+function sbErr(m){
+  try{console.log('[sync] error:',m);}catch(_){}
+  var s=String(m||'');
+  var friendly =
+    /jwt|token|expired/i.test(s) ? 'Session expired — sign in again to sync.' :
+    /row-level|permission|denied|not authorized|violat|401|403/i.test(s) ? 'Sign in to sync (your session may have ended).' :
+    /failed to fetch|networkerror|network request|offline/i.test(s) ? 'Offline — will sync when you reconnect.' :
+    'Sync hiccup — will retry.';
+  sbSetStatus(friendly);
+}
 // ---- Tombstones: deleting an item records id→delete-time so a union merge can't
 // resurrect it. A later edit/recreate (item ts > tombstone ts) wins, so re-using an id works. ----
 var TKEY='jbos_tomb_v1';
@@ -3324,7 +3337,7 @@ function sbPushStore(name){
     var st=sbStores()[name]; if(!st)return;
     try{ SB.from('jbos_sync').upsert({id:sbSpace()+':'+name,payload:st.load(),updated_at:new Date().toISOString(),client:SB_CLIENT})
       .then(function(res){if(res&&res.error){sbErr(res.error.message);}else{sbSetStatus('Saved to cloud ✓',true);}},
-            function(e){sbSetStatus('Sync: upload failed (offline?)');try{console.log('[sync] push rejected',e);}catch(_){}}); }catch(e){}
+            function(e){sbSetStatus('Offline — will sync when you reconnect.');try{console.log('[sync] push rejected',e);}catch(_){}}); }catch(e){}
   }, 1000);
 }
 function sbInit(){
