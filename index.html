@@ -51,12 +51,14 @@
   html,body{height:100%;font-family:'Geist',system-ui,-apple-system,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
   ::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border-2);border-radius:3px}::-webkit-scrollbar-thumb:hover{background:var(--text-3)}
   ::selection{background:var(--accent-dim);color:var(--accent)}
+  /* Subtle film-grain overlay for depth (sits under modals, never blocks clicks) */
+  body::before{content:"";position:fixed;inset:0;z-index:90;pointer-events:none;opacity:.028;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
   :focus-visible{outline:none;box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--accent-ring);border-radius:var(--radius)}
   .nav-count,.item-date,.attach-name,.cmd-chip,.detail-meta{font-variant-numeric:tabular-nums}
 
   .app{display:flex;height:100vh;height:100dvh;overflow:hidden}
   .sidebar{width:220px;min-width:220px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto}
-  .main{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg)}
+  .main{flex:1;display:flex;flex-direction:column;overflow:hidden;background:radial-gradient(900px 380px at 78% -8%,rgba(232,160,32,.045),transparent 70%),var(--bg)}
 
   .sb-logo{padding:20px 14px 14px;display:flex;align-items:center;gap:8px}
   .sb-logo-mark{width:22px;height:22px;background:var(--accent);border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#111;flex-shrink:0}
@@ -135,8 +137,8 @@
   .section-head-line{flex:1;height:1px;background:var(--border)}
 
   /* ITEM CARD with left category color bar */
-  .item{display:flex;align-items:flex-start;gap:0;border-radius:var(--radius-lg);background:var(--surface);border:1px solid var(--border);margin-bottom:5px;transition:background var(--t),border-color var(--t);cursor:default;overflow:hidden;position:relative}
-  .item:hover{background:var(--surface-hover);border-color:var(--border-2)}
+  .item{display:flex;align-items:flex-start;gap:0;border-radius:var(--radius-lg);background:var(--surface);border:1px solid var(--border);margin-bottom:5px;transition:background var(--t),border-color var(--t),box-shadow var(--t);cursor:default;overflow:hidden;position:relative}
+  .item:hover{background:var(--surface-hover);border-color:var(--border-2);box-shadow:0 4px 16px -10px rgba(0,0,0,.6)}
   .item.done{opacity:.6}
   .item.done:hover{opacity:.75}
   .item-bar{width:3px;min-width:3px;background:var(--item-cat-color,var(--border-2));flex-shrink:0;align-self:stretch}
@@ -360,8 +362,8 @@
   .dash-sub{font-size:13px;color:var(--text-2);margin-top:5px}
   .dash-sub .hl{color:var(--accent);font-weight:500}
   .dash-hero{display:grid;grid-template-columns:repeat(4,1fr);gap:13px;margin-bottom:6px}
-  .dcard{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:15px 16px;display:flex;flex-direction:column;transition:border-color var(--t),box-shadow var(--t);min-width:0}
-  .dcard:hover{border-color:var(--border-2)}
+  .dcard{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:15px 16px;display:flex;flex-direction:column;transition:border-color var(--t),box-shadow var(--t),transform var(--t);min-width:0}
+  .dcard:hover{border-color:var(--border-2);transform:translateY(-2px);box-shadow:0 10px 28px -16px rgba(0,0,0,.7)}
   .dcard-label{font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);margin-bottom:11px;display:flex;align-items:center;gap:6px}
   .dcard-label svg{opacity:.8}
   .dcard-cta{margin-top:auto;font-size:12px;color:var(--accent);background:none;border:none;cursor:pointer;font-family:inherit;padding:6px 0 0;text-align:left;width:fit-content}
