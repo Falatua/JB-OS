@@ -2238,7 +2238,6 @@ function renderView(){
    life-area with state rings (overdue/high), group toggles, search, zoom/fit,
    and a click-to-open details panel showing each node's connections. */
 var _graphGen=0, _G=null, _graphCleanup=[], _graphGroups=null, _graphColorMode='area', _graphPos=null, _graphCam=null;
-var TYPEGLYPH={task:'🗂️',idea:'💡',note:'🗒️',project:'📦'};
 function graphZoom(f){_G&&_G.zoom(f);}
 function graphFit(){_G&&_G.fit();}
 function graphSearch(v){_G&&_G.search(v);}
@@ -2252,7 +2251,6 @@ function graphIsolate(k){_G&&_G.iso&&_G.iso(k);}
 function graphSnapshot(){_G&&_G.snap&&_G.snap();}
 var GRAPH_GROUPS=[['item','Items','#9aa0a6'],['cat','Life areas','#e8a020'],['type','Types','#8a8f98'],['journal','Journal','#b07cc6'],['habit','Habits','#2dd4bf']];
 var TYPEC={task:'#5aa9e6',idea:'#e5b23a',note:'#9aa0a6',project:'#46d489'};
-var CATEMOJI={work:'💼',personal:'🧭',family:'👨‍👩‍👧',kids:'🧸',finance:'💰',tech:'💻',shopping:'🛍️',grocery:'🛒',errands:'🚗',lifestyle:'🌴',health:'🏋️',musubi:'🌺',general:'•'};
 function _hexA(h,a){h=String(h||'#888').replace('#','');if(h.length===3)h=h[0]+h[0]+h[1]+h[1]+h[2]+h[2];var n=parseInt(h,16);if(isNaN(n))return 'rgba(136,136,140,'+a+')';return 'rgba('+((n>>16)&255)+','+((n>>8)&255)+','+(n&255)+','+a+')';}
 function renderGraph(){
   setTitle('Graph');
@@ -2293,13 +2291,13 @@ function renderGraph(){
       nodes.push(n);byKey[key]=n;return n;
     }
     function edge(a,b){if(a&&b){edges.push([a,b]);a.deg++;b.deg++;}}
-    hub=node('hub','JB OS','hub','hub',ACC,16);hub.glyph='🧠';
+    hub=node('hub','JB OS','hub','hub',ACC,16);
     if(first){hub.x=W/2;hub.y=H/2;}
     var items=load().filter(function(x){return !x.archived;});
     var itemById={}; items.forEach(function(it){var c=it.category||'general';catUsed[c]=(catUsed[c]||0)+1;var t=it.type||'task';typeUsed[t]=(typeUsed[t]||0)+1;itemById[it.id]=it;});
-    Object.keys(catUsed).forEach(function(c){var cc=CATS[c]||CATS.general;var cn=node('cat:'+c,cc.label,'cat','cat',cc.color,9,{cat:c});cn.glyph=CATEMOJI[c]||'';edge(hub,cn);catNode[c]=cn;});
-    Object.keys(typeUsed).forEach(function(t){var tn=node('type:'+t,(TYPE_LABEL[t]||t)+'s','type','type',TYPEC[t]||'#8a8f98',8,{type:t});tn.glyph=TYPEGLYPH[t]||'';edge(hub,tn);typeNode[t]=tn;});
-    items.forEach(function(it){var c=it.category||'general',t=it.type||'task',cc=CATS[c]||CATS.general;var n=node('it:'+it.id,it.text||'Untitled','item','item',cc.color,it.priority==='high'?6:5,{id:it.id});n.od=!!(it.dueDate&&it.dueDate<todayK);n.hi=it.priority==='high';n.cl=catNode[c];n.catKey=c;n.typeKey=t;n.altColor=TYPEC[t]||'#8a8f98';n.glyph=it.emoji||'';n.recent=((it.updatedAt||it.createdAt||'').slice(0,10)===todayK);var stt=(typeof stepStats==='function')?stepStats(it):null;n.prog=(stt&&stt.total)?(stt.done/stt.total):null;edge(n,catNode[c]);if(typeNode[t])edge(n,typeNode[t]);});
+    Object.keys(catUsed).forEach(function(c){var cc=CATS[c]||CATS.general;var cn=node('cat:'+c,cc.label,'cat','cat',cc.color,9,{cat:c});edge(hub,cn);catNode[c]=cn;});
+    Object.keys(typeUsed).forEach(function(t){var tn=node('type:'+t,(TYPE_LABEL[t]||t)+'s','type','type',TYPEC[t]||'#8a8f98',8,{type:t});edge(hub,tn);typeNode[t]=tn;});
+    items.forEach(function(it){var c=it.category||'general',t=it.type||'task',cc=CATS[c]||CATS.general;var n=node('it:'+it.id,it.text||'Untitled','item','item',cc.color,it.priority==='high'?6:5,{id:it.id});n.od=!!(it.dueDate&&it.dueDate<todayK);n.hi=it.priority==='high';n.cl=catNode[c];n.catKey=c;n.typeKey=t;n.altColor=TYPEC[t]||'#8a8f98';n.recent=((it.updatedAt||it.createdAt||'').slice(0,10)===todayK);var stt=(typeof stepStats==='function')?stepStats(it):null;n.prog=(stt&&stt.total)?(stt.done/stt.total):null;edge(n,catNode[c]);if(typeNode[t])edge(n,typeNode[t]);});
     try{var entries=(jEntries?jEntries():[]).slice(0,14);if(entries.length){var jh=node('jhub','Journal','jhub','journal','#b07cc6',11);edge(hub,jh);entries.forEach(function(e){edge(node('j:'+e.id,e.date||'entry','journal','journal','#b07cc6',4,{jid:e.id}),jh);});}}catch(e){}
     try{var tmpl=(loadDaily().templates||[]).slice(0,20);if(tmpl.length){var hh=node('hhub','Habits','hhub','habit','#2dd4bf',11);edge(hub,hh);tmpl.forEach(function(t){edge(node('h:'+t.id,t.text||'habit','habit','habit','#2dd4bf',4),hh);});}}catch(e){}
     nodes.forEach(function(n){ if(n.kind==='cat'||n.kind==='type'||n.kind==='jhub'||n.kind==='hhub') n.r=Math.min(16,n.baseR+Math.sqrt(n.deg)*1.6); }); // size hubs by connectivity
@@ -2386,8 +2384,7 @@ function renderGraph(){
       else if(n.kind!=='item'&&n.kind!=='hub'){ctx.lineWidth=1.5/scale;ctx.strokeStyle='rgba(0,0,0,.30)';ctx.stroke();}
       if(!dim&&n.prog!=null&&n.prog>0){ctx.beginPath();ctx.arc(X,Y,R+2.6,-1.5708,-1.5708+n.prog*6.2832);ctx.strokeStyle=_hexA('#ffffff',0.9);ctx.lineWidth=2.2/scale;ctx.lineCap='round';ctx.stroke();ctx.lineCap='butt';} // step-progress arc
       if(!RM&&age<600){ctx.beginPath();ctx.arc(X,Y,R+(age/600)*26,0,6.2832);ctx.strokeStyle=_hexA(col,0.6*(1-age/600));ctx.lineWidth=2/scale;ctx.stroke();} // spawn burst
-      if(!dim&&R>=7&&!(n.kind==='hub'||n.kind==='item')&&!n.glyph){ctx.beginPath();ctx.arc(X-R*0.3,Y-R*0.3,R*0.34,0,6.2832);ctx.fillStyle='rgba(255,255,255,.22)';ctx.fill();}
-      if(n.glyph&&!dim){var fs=(n.kind==='hub')?R*1.05:R*1.9;if(scale*fs>=8){ctx.font=fs+"px 'Geist',system-ui,sans-serif";ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(n.glyph,X,Y+fs*0.04);}}});
+      if(!dim&&R>=7&&!(n.kind==='hub'||n.kind==='item')){ctx.beginPath();ctx.arc(X-R*0.3,Y-R*0.3,R*0.34,0,6.2832);ctx.fillStyle='rgba(255,255,255,.22)';ctx.fill();}});
     ctx.globalAlpha=1;ctx.textAlign='center';ctx.textBaseline='top';
     nodes.forEach(function(n){if(!visible(n))return;var big=(n.kind!=='item'&&n.kind!=='journal'&&n.kind!=='habit');var emph=(n===hover||n===selected);var show=big||emph||(hi&&hi[n.key]&&(scale>1.1||q));if(!show)return;ctx.globalAlpha=(hi&&!hi[n.key])?0.18:1;ctx.font=(n.kind==='hub'?'600 13px ':big?'600 11px ':'10px ')+"'Geist',system-ui,sans-serif";var t=n.label.length>26?n.label.slice(0,25)+'…':n.label,lx=bx(n),ly=by(n)+n.r+4;
       if(emph){var tw=ctx.measureText(t).width,ph2=13/scale;ctx.fillStyle='rgba(12,12,16,.72)';if(ctx.roundRect){ctx.beginPath();ctx.roundRect(lx-tw/2-5/scale,ly-2/scale,tw+10/scale,ph2+4/scale,5/scale);ctx.fill();}} // readable label pill
