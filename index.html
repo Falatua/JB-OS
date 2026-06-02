@@ -1444,8 +1444,8 @@ function setFilter(f, mode){
     dot.style.display='block';dot.style.background=cat.color;
     document.getElementById('page-title').lastChild.textContent=' '+cat.label;
   } else if(mode==='prio'){
-    const prioColors={high:'var(--red)',normal:'var(--text-2)',low:'var(--text-3)'};
-    const prioTitles={high:'High Priority',normal:'Normal Priority',low:'Low Priority'};
+    const prioColors={high:'var(--red)',in_progress:'var(--teal)',normal:'var(--text-2)',low:'var(--text-3)'};
+    const prioTitles={high:'High Priority',in_progress:'Work in Progress',normal:'Normal Priority',low:'Low Priority'};
     dot.style.display='block';dot.style.background=prioColors[f]||'var(--text-3)';
     document.getElementById('page-title').lastChild.textContent=' '+prioTitles[f];
   } else if(mode==='due'){
