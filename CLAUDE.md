@@ -148,12 +148,16 @@ Never push malformed JSON — it breaks the whole list render.
 
 ## 5. About JB (context for smarter filing)
 
-- **Location:** Westside Oʻahu, Hawai‘i. Local/island voice matters for Musubi.
+- **Location:** **Redondo Beach, CA** (South Bay LA) — JB's actual home base. This is what the
+  dashboard conditions widget tracks. (Westside Oʻahu / Hawaiʻi is **Musubi's** identity, not JB's home.)
 - **Partner:** Mackenzie ("Kenzie").
 - **Kids:** Gigi (daughter) and Archie (son). Archie appears in Musubi photo-shoot gear items.
-- **Business:** **Musubi Strong** — a local Hawai‘i apparel brand. Shopify store + Instagram
-  growth + original designs. Has its own tab and `musubi` category. Content directions on file:
-  use more real models, region-realistic mockups, "auntie's favorite tee", Throwback Thursdays.
+- **Business:** **Musubi Strong** — a Hawaiʻi / Pacific-Islander-rooted apparel brand, run by JB
+  from South Bay LA. Its cultural heart is **Westside Oʻahu / island + PI culture**, and it also
+  speaks to the **SoCal PI community** (Gardena/Torrance/Carson). The local/island voice matters
+  for all Musubi content — that's the brand's region, separate from where JB lives. Shopify store +
+  Instagram growth + original designs; own tab and `musubi` category. Content directions on file:
+  more real models, region-realistic (island) mockups, "auntie's favorite tee", Throwback Thursdays.
 - **Day job:** **AnswerLab** (writes reports / end-of-day updates).
 - **Side dev:** **Roman TD** (a tower-defense game he ships) and **JB OS** itself.
 - **Fitness:** hypertrophy / weight training; follows Mike Israetel / RP.
