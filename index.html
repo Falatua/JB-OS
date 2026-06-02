@@ -1167,7 +1167,7 @@ const TYPE_LABEL = {task:'Task',idea:'Idea',note:'Note',project:'Project'};
 const SRC_LABEL  = {telegram:'via Telegram',browser:'added manually',chat:'via chat'};
 
 function load(){try{return JSON.parse(localStorage.getItem(KEY))||[];}catch{return [];}}
-function save(d){localStorage.setItem(KEY,JSON.stringify(d));if(typeof sbPush==='function'&&!_sbApplying)sbPush();}
+function save(d){localStorage.setItem(KEY,JSON.stringify(d));if(typeof sbPushStore==='function'&&!_sbApplying)sbPushStore('todos');}
 
 let filter='all', filterMode='view', _booting=true, view='dashboard', sortBy='priority';
 
@@ -1876,9 +1876,9 @@ function dueClass(s){const today=dateKey(new Date());if(s<today)return 'overdue'
 /* ===== Routine (Daily / Monthly) data ===== */
 const DKEY='jbos_daily_v1', MKEY='jbos_monthly_v1';
 function loadDaily(){try{const o=JSON.parse(localStorage.getItem(DKEY));return o&&Array.isArray(o.templates)?o:{templates:[],log:{}};}catch{return{templates:[],log:{}};}}
-function saveDaily(o){localStorage.setItem(DKEY,JSON.stringify(o));}
+function saveDaily(o){localStorage.setItem(DKEY,JSON.stringify(o));if(typeof sbPushStore==='function'&&!_sbApplying)sbPushStore('daily');}
 function loadMonthly(){try{const o=JSON.parse(localStorage.getItem(MKEY));return o&&Array.isArray(o.templates)?o:{templates:[],log:{}};}catch{return{templates:[],log:{}};}}
-function saveMonthly(o){localStorage.setItem(MKEY,JSON.stringify(o));}
+function saveMonthly(o){localStorage.setItem(MKEY,JSON.stringify(o));if(typeof sbPushStore==='function'&&!_sbApplying)sbPushStore('monthly');}
 function rStore(scope){return scope==='daily'?loadDaily():loadMonthly();}
 function rSave(scope,o){scope==='daily'?saveDaily(o):saveMonthly(o);}
 function rPeriodKey(scope){return scope==='daily'?dateKey(new Date()):monthKey(new Date());}
@@ -2213,7 +2213,7 @@ const BUILTIN_DECKS=[
 ];
 
 function jLoad(){try{const o=JSON.parse(localStorage.getItem(JKEY));return o&&Array.isArray(o.prompts)&&Array.isArray(o.entries)?o:{prompts:[],entries:[]};}catch{return{prompts:[],entries:[]};}}
-function jSave(o){localStorage.setItem(JKEY,JSON.stringify(o));}
+function jSave(o){localStorage.setItem(JKEY,JSON.stringify(o));if(typeof sbPushStore==='function'&&!_sbApplying)sbPushStore('journal');}
 function jPrompts(){return jLoad().prompts;}
 function jEntries(){return jLoad().entries.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')||(b.createdAt||'').localeCompare(a.createdAt||''));}
 function jCat(c){return JCATS[c]||JCATS.freeform;}
@@ -2743,27 +2743,50 @@ fetchJournalSeeds();
    Hooks save() so every change to the task list pushes to a shared Supabase row (debounced),
    and a realtime subscription + boot pull merge changes from your other devices. Falls back to
    local-only silently if not configured or offline — never breaks the app. */
-var SB=null, SB_CFG=null, SB_CLIENT=Math.random().toString(36).slice(2), _sbPushT=null, _sbApplying=false;
+var SB=null, SB_CFG=null, SB_CLIENT=Math.random().toString(36).slice(2), _sbApplying=false, _sbT={};
 function sbGetCfg(){try{return JSON.parse(localStorage.getItem('jbos_sb')||'null');}catch(e){return null;}}
 function sbSetStatus(msg,ok){var e=document.getElementById('sb-status');if(e){e.textContent=msg;e.style.color=ok?'var(--green)':'var(--text-3)';}var l=document.getElementById('sync-btn-label');if(l)l.textContent=ok?'Cloud sync ✓':'Cloud sync';}
 function sbSpace(){return (SB_CFG&&SB_CFG.space)||'main';}
-function sbMergeIn(remoteItems){
-  if(!Array.isArray(remoteItems))return;
-  var local=load(), merged=[], seen={};
-  remoteItems.forEach(function(r){if(r&&r.id&&!seen[r.id]){merged.push(r);seen[r.id]=1;}}); // remote-authoritative for shared ids
-  local.forEach(function(l){if(l&&l.id&&!seen[l.id]){merged.push(l);seen[l.id]=1;}});         // keep local-only items
-  _sbApplying=true; save(merged); _sbApplying=false;
-  render(); updateCounts();
+// ---- per-store merge helpers (union by id; logs union by date; booleans OR) ----
+function _mergeById(remote,local){
+  var out=[],seen={};
+  (remote||[]).forEach(function(x){if(x&&x.id!=null&&!seen[x.id]){out.push(x);seen[x.id]=1;}}); // remote-authoritative for shared ids
+  (local||[]).forEach(function(x){if(x&&x.id!=null&&!seen[x.id]){out.push(x);seen[x.id]=1;}});   // keep local-only items
+  return out;
 }
-function sbPush(force){
+function _mergeRoutine(r,l){ // daily/monthly: {templates, log}
+  r=r||{};l=l||{}; var log={};
+  [r.log||{},l.log||{}].forEach(function(src){Object.keys(src).forEach(function(d){var a=log[d]||[];(src[d]||[]).forEach(function(id){if(a.indexOf(id)<0)a.push(id);});log[d]=a;});});
+  return {templates:_mergeById(r.templates,l.templates),log:log};
+}
+function _mergeJournal(r,l){r=r||{};l=l||{};return {prompts:_mergeById(r.prompts,l.prompts),entries:_mergeById(r.entries,l.entries)};}
+function _mergeMusubi(r,l){
+  r=r||{};l=l||{}; var checklist={};
+  [r.checklist||{},l.checklist||{}].forEach(function(src){Object.keys(src).forEach(function(d){checklist[d]=checklist[d]||{};Object.keys(src[d]||{}).forEach(function(t){if(src[d][t])checklist[d][t]=true;});});});
+  var del=[];(r.ideasDel||[]).concat(l.ideasDel||[]).forEach(function(id){if(del.indexOf(id)<0)del.push(id);});
+  var ideas=_mergeById(r.ideas,l.ideas).filter(function(x){return del.indexOf(x.id)<0;});
+  return {checklist:checklist,pipeline:_mergeById(r.pipeline,l.pipeline),perf:_mergeById(r.perf,l.perf),ideas:ideas,ideasDel:del,vibe:(r.vibe||l.vibe||'')};
+}
+function sbStores(){return {
+  todos:{load:load,save:save,merge:_mergeById},
+  daily:{load:loadDaily,save:saveDaily,merge:_mergeRoutine},
+  monthly:{load:loadMonthly,save:saveMonthly,merge:_mergeRoutine},
+  journal:{load:jLoad,save:jSave,merge:_mergeJournal},
+  musubi:{load:mzLoad,save:mzSave,merge:_mergeMusubi}
+};}
+function sbApplyStore(name,payload){
+  var st=sbStores()[name]; if(!st||payload==null)return;
+  var merged=st.merge(payload, st.load());
+  _sbApplying=true; st.save(merged); _sbApplying=false;
+}
+function sbPushStore(name){
   if(!SB)return;
-  clearTimeout(_sbPushT);
-  _sbPushT=setTimeout(function(){
-    try{
-      SB.from('jbos_sync').upsert({id:sbSpace(),payload:load(),updated_at:new Date().toISOString(),client:SB_CLIENT})
-        .then(function(res){ if(res&&res.error)sbSetStatus('Sync: push error — '+res.error.message); },function(){});
-    }catch(e){}
-  }, force?0:1200);
+  clearTimeout(_sbT[name]);
+  _sbT[name]=setTimeout(function(){
+    var st=sbStores()[name]; if(!st)return;
+    try{ SB.from('jbos_sync').upsert({id:sbSpace()+':'+name,payload:st.load(),updated_at:new Date().toISOString(),client:SB_CLIENT})
+      .then(function(res){if(res&&res.error)sbSetStatus('Sync: '+res.error.message);},function(){}); }catch(e){}
+  }, 1000);
 }
 function sbInit(){
   SB_CFG=sbGetCfg(); if(!SB_CFG||!SB_CFG.url||!SB_CFG.key)return;
@@ -2773,18 +2796,25 @@ function sbInit(){
   }
   try{ SB=window.supabase.createClient(SB_CFG.url, SB_CFG.key); }catch(e){ sbSetStatus('Sync: invalid URL/key'); SB=null; return; }
   var space=sbSpace();
-  SB.from('jbos_sync').select('payload').eq('id',space).maybeSingle().then(function(res){
+  SB.from('jbos_sync').select('id,payload').or('id.eq.'+space+',id.like.'+space+':%').then(function(res){
     if(res&&res.error){ sbSetStatus('Sync: '+res.error.message); return; }
-    if(res&&res.data&&res.data.payload)sbMergeIn(res.data.payload);
-    sbSetStatus('Connected — syncing across your devices.',true);
-    sbPush(true); // push merged state so remote gets any local-only items
+    var hadLegacy=false;
+    (res&&res.data||[]).forEach(function(row){
+      if(row.id===space){ hadLegacy=true; sbApplyStore('todos',row.payload); } // legacy single-row format → todos
+      else { sbApplyStore(row.id.slice(space.length+1), row.payload); }
+    });
+    render(); updateCounts();
+    sbSetStatus('Connected — everything syncs across your devices.',true);
+    Object.keys(sbStores()).forEach(function(n){sbPushStore(n);}); // push local-only data up
+    if(hadLegacy){try{SB.from('jbos_sync').delete().eq('id',space).then(function(){},function(){});}catch(e){}}
   },function(){ sbSetStatus('Sync: connection failed'); });
   try{
-    SB.channel('jbos-'+space)
-      .on('postgres_changes',{event:'*',schema:'public',table:'jbos_sync',filter:'id=eq.'+space},function(p){
-        var row=p&&p.new; if(!row||row.client===SB_CLIENT)return; // ignore our own echo
-        if(row.payload)sbMergeIn(row.payload);
-      }).subscribe();
+    SB.channel('jbos-'+space).on('postgres_changes',{event:'*',schema:'public',table:'jbos_sync'},function(p){
+      var row=p&&p.new; if(!row||row.client===SB_CLIENT)return; // ignore our own echo
+      var name=row.id===space?'todos':(row.id.indexOf(space+':')===0?row.id.slice(space.length+1):null);
+      if(!name||!sbStores()[name])return;
+      sbApplyStore(name,row.payload); render(); updateCounts();
+    }).subscribe();
   }catch(e){}
 }
 function openSync(){
@@ -2798,7 +2828,7 @@ function closeSync(){document.getElementById('sync-modal').classList.add('hidden
 function connectSync(){
   var url=(document.getElementById('sb-url').value||'').trim().replace(/\/+$/,'');
   var key=(document.getElementById('sb-key').value||'').trim();
-  var space=(document.getElementById('sb-space').value||'main').trim()||'main';
+  var space=((document.getElementById('sb-space').value||'main').trim().replace(/[^\w-]/g,''))||'main';
   if(!url||!key){sbSetStatus('Enter both the Project URL and anon key.');return;}
   localStorage.setItem('jbos_sb',JSON.stringify({url:url,key:key,space:space}));
   SB=null; sbSetStatus('Connecting…'); sbInit();
@@ -2945,7 +2975,7 @@ function mzLoad(){
   Object.keys(s.checklist).forEach(k=>{if(k<cut)delete s.checklist[k];});
   return s;
 }
-function mzSave(s){localStorage.setItem(MZKEY,JSON.stringify(s));}
+function mzSave(s){localStorage.setItem(MZKEY,JSON.stringify(s));if(typeof sbPushStore==='function'&&!_sbApplying)sbPushStore('musubi');}
 function mzPanelDaily(){
   const s=mzLoad(),k=dateKey(new Date()),st=s.checklist[k]||{};
   let total=0,done=0;Object.values(MZ_CHECK).forEach(b=>b.tasks.forEach(t=>{total++;if(st[t[0]])done++;}));
