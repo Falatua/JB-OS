@@ -559,6 +559,10 @@
   @media(hover:none){ .j-entry-edit{opacity:1} }
 
   .tabbar{display:none}
+  .a2hs{display:none;position:fixed;left:10px;right:10px;bottom:calc(72px + env(safe-area-inset-bottom,0px));z-index:85;align-items:center;gap:9px;background:var(--surface-modal);border:1px solid var(--border-2);border-radius:var(--radius-lg);padding:11px 13px;font-size:12.5px;line-height:1.4;color:var(--text);box-shadow:0 10px 28px rgba(0,0,0,.55)}
+  .a2hs.show{display:flex}
+  .a2hs b{color:var(--accent)}
+  .a2hs button{background:none;border:none;color:var(--text-3);font-size:15px;cursor:pointer;margin-left:auto;flex-shrink:0;padding:0 2px}
   @media(max-width:640px){
     .nav-hamburger{display:inline-flex}
     .tabbar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:80;background:color-mix(in srgb,var(--surface) 92%,transparent);backdrop-filter:saturate(140%) blur(12px);-webkit-backdrop-filter:saturate(140%) blur(12px);border-top:1px solid var(--border);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -944,6 +948,12 @@
   <button id="tab-journal" onclick="setView('journal')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3.5 2.5H10a1.5 1.5 0 0 1 1.5 1.5v9.5H5A1.5 1.5 0 0 1 3.5 12z"/><path d="M11.5 4H13v9.5M5.5 5.5h3M5.5 8h2"/></svg>Journal</button>
   <button id="tab-musubi" onclick="setView('musubi')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1.5c1.5 2 3 3.5 3 6a3 3 0 0 1-6 0c0-1.2.6-2.2 1.3-3"/></svg>Musubi</button>
 </nav>
+
+<div class="a2hs" id="a2hs" role="note">
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="var(--accent)" stroke-width="1.6" style="flex-shrink:0"><path d="M8 10V2M5 5l3-3 3 3M3 10v3h10v-3"/></svg>
+  <span>Install JB OS for the full app — tap <b>Share</b>, then <b>Add to Home Screen</b>.</span>
+  <button onclick="dismissA2HS()" aria-label="Dismiss">✕</button>
+</div>
 
 </div>
 
@@ -1441,8 +1451,9 @@ function itemHTML(item, isArchiveView, idx){
 }
 
 function updateTabBar(){
-  ['dashboard','list','daily','journal','musubi'].forEach(function(v){var e=document.getElementById('tab-'+v);if(e)e.classList.toggle('active',view===v);});
+  ['dashboard','list','daily','journal','musubi'].forEach(function(v){var e=document.getElementById('tab-'+v);if(e){var on=view===v;e.classList.toggle('active',on);if(on)e.setAttribute('aria-current','page');else e.removeAttribute('aria-current');}});
 }
+function dismissA2HS(){localStorage.setItem('jbos_a2hs','1');var e=document.getElementById('a2hs');if(e)e.classList.remove('show');}
 function render(){
   updateTabBar();
   if(view!=='list'){renderView();return;}
@@ -2796,6 +2807,7 @@ var SB=null, SB_CFG=null, SB_CLIENT=Math.random().toString(36).slice(2), _sbAppl
 function sbGetCfg(){try{return JSON.parse(localStorage.getItem('jbos_sb')||'null');}catch(e){return null;}}
 function sbSetStatus(msg,ok){var e=document.getElementById('sb-status');if(e){e.textContent=msg;e.style.color=ok?'var(--green)':'var(--text-3)';}var l=document.getElementById('sync-btn-label');if(l)l.textContent=ok?'Cloud sync ✓':'Cloud sync';}
 function sbSpace(){return (SB_CFG&&SB_CFG.space)||'main';}
+function sbErr(m){ if(/row-level|permission|jwt|not authorized|401|403/i.test(m||'')) sbSetStatus('Locked — sign in below to sync to your account.'); else sbSetStatus('Sync: '+(m||'error')); }
 // ---- per-store merge helpers (union by id; logs union by date; booleans OR) ----
 function _mergeById(remote,local){
   var out=[],seen={};
@@ -2834,7 +2846,7 @@ function sbPushStore(name){
   _sbT[name]=setTimeout(function(){
     var st=sbStores()[name]; if(!st)return;
     try{ SB.from('jbos_sync').upsert({id:sbSpace()+':'+name,payload:st.load(),updated_at:new Date().toISOString(),client:SB_CLIENT})
-      .then(function(res){if(res&&res.error)sbSetStatus('Sync: '+res.error.message);},function(){}); }catch(e){}
+      .then(function(res){if(res&&res.error)sbErr(res.error.message);},function(){}); }catch(e){}
   }, 1000);
 }
 function sbInit(){
@@ -2847,7 +2859,7 @@ function sbInit(){
   try{ SB.auth.getSession().then(function(r){sbAuthUI(r&&r.data&&r.data.session?r.data.session.user:null);}); SB.auth.onAuthStateChange(function(_e,s){sbAuthUI(s?s.user:null);}); }catch(e){}
   var space=sbSpace();
   SB.from('jbos_sync').select('id,payload').or('id.eq.'+space+',id.like.'+space+':%').then(function(res){
-    if(res&&res.error){ sbSetStatus('Sync: '+res.error.message); return; }
+    if(res&&res.error){ sbErr(res.error.message); return; }
     var hadLegacy=false;
     (res&&res.data||[]).forEach(function(row){
       if(row.id===space){ hadLegacy=true; sbApplyStore('todos',row.payload); } // legacy single-row format → todos
@@ -2927,6 +2939,12 @@ updateCounts();
 sbInit();
 /* Mark installed-app (standalone) mode for iOS/macOS-specific styling */
 if((window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone){document.documentElement.classList.add('standalone');}
+/* One-time "Add to Home Screen" hint on iOS Safari (not yet installed) */
+(function(){
+  var isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent||'');
+  var standalone=('standalone' in navigator&&navigator.standalone)||(window.matchMedia&&matchMedia('(display-mode: standalone)').matches);
+  if(isIOS&&!standalone&&!localStorage.getItem('jbos_a2hs')){var e=document.getElementById('a2hs');if(e)setTimeout(function(){e.classList.add('show');},1800);}
+})();
 tickReminders();
 setInterval(tickReminders,60000);
 document.addEventListener('visibilitychange',function(){if(!document.hidden)tickReminders();});
