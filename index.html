@@ -820,6 +820,13 @@
   .graph-info .gi-prog .prog-fill{height:100%;border-radius:3px;background:var(--accent)}
   .graph-info .gi-prog .prog-count{font-size:11px;color:var(--text-3);flex-shrink:0}
   .graph-info .gi-notes{font-size:12.5px;color:var(--text-2);line-height:1.45;margin-bottom:12px;max-height:84px;overflow:auto}
+  .graph-info .gi-conn{margin-bottom:11px}
+  .graph-info .gi-conn-h{font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--text-3);margin-bottom:6px}
+  .graph-info .gi-conn-list{display:flex;flex-wrap:wrap;gap:5px;max-height:104px;overflow:auto}
+  .graph-info .gi-link{display:inline-flex;align-items:center;gap:5px;font:inherit;font-size:11.5px;color:var(--text-2);background:color-mix(in srgb,var(--text-1) 7%,transparent);border:1px solid var(--border);border-radius:20px;padding:3px 9px;cursor:pointer;max-width:100%}
+  .graph-info .gi-link:hover{color:var(--text-1);background:color-mix(in srgb,var(--text-1) 13%,transparent)}
+  .graph-info .gi-ldot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+  .graph-info .gi-more{font-size:10.5px;color:var(--text-3);align-self:center;padding-left:2px}
   .graph-info .gi-actions{display:flex;gap:7px}
   .graph-info .gi-actions .btn{flex:1;font-size:12.5px;padding:7px 10px}
   /* Mini-map (top-left under toolbar) */
@@ -2236,6 +2243,7 @@ function graphCloseInfo(){_G&&_G.closeInfo();}
 function graphFocusSel(){_G&&_G.focus();}
 function graphOpenSel(){_G&&_G.openSel();}
 function graphColorMode(){_G&&_G.cmode();}
+function graphGoNode(k){_G&&_G.goNode&&_G.goNode(k);}
 var GRAPH_GROUPS=[['item','Items','#9aa0a6'],['cat','Life areas','#e8a020'],['type','Types','#8a8f98'],['journal','Journal','#b07cc6'],['habit','Habits','#2dd4bf']];
 var TYPEC={task:'#5aa9e6',idea:'#e5b23a',note:'#9aa0a6',project:'#46d489'};
 function _hexA(h,a){h=String(h||'#888').replace('#','');if(h.length===3)h=h[0]+h[0]+h[1]+h[1]+h[2]+h[2];var n=parseInt(h,16);if(isNaN(n))return 'rgba(136,136,140,'+a+')';return 'rgba('+((n>>16)&255)+','+((n>>8)&255)+','+(n&255)+','+a+')';}
@@ -2284,7 +2292,7 @@ function renderGraph(){
     items.forEach(function(it){var c=it.category||'general';catUsed[c]=(catUsed[c]||0)+1;var t=it.type||'task';typeUsed[t]=(typeUsed[t]||0)+1;});
     Object.keys(catUsed).forEach(function(c){var cc=CATS[c]||CATS.general;var cn=node('cat:'+c,cc.label,'cat','cat',cc.color,9,{cat:c});edge(hub,cn);catNode[c]=cn;});
     Object.keys(typeUsed).forEach(function(t){var tn=node('type:'+t,(TYPE_LABEL[t]||t)+'s','type','type',TYPEC[t]||'#8a8f98',8,{type:t});edge(hub,tn);typeNode[t]=tn;});
-    items.forEach(function(it){var c=it.category||'general',t=it.type||'task',cc=CATS[c]||CATS.general;var n=node('it:'+it.id,it.text||'Untitled','item','item',cc.color,it.priority==='high'?6:5,{id:it.id});n.od=!!(it.dueDate&&it.dueDate<todayK);n.hi=it.priority==='high';n.cl=catNode[c];n.altColor=TYPEC[t]||'#8a8f98';edge(n,catNode[c]);if(typeNode[t])edge(n,typeNode[t]);});
+    items.forEach(function(it){var c=it.category||'general',t=it.type||'task',cc=CATS[c]||CATS.general;var n=node('it:'+it.id,it.text||'Untitled','item','item',cc.color,it.priority==='high'?6:5,{id:it.id});n.od=!!(it.dueDate&&it.dueDate<todayK);n.hi=it.priority==='high';n.cl=catNode[c];n.altColor=TYPEC[t]||'#8a8f98';var stt=(typeof stepStats==='function')?stepStats(it):null;n.prog=(stt&&stt.total)?(stt.done/stt.total):null;edge(n,catNode[c]);if(typeNode[t])edge(n,typeNode[t]);});
     try{var entries=(jEntries?jEntries():[]).slice(0,14);if(entries.length){var jh=node('jhub','Journal','jhub','journal','#b07cc6',11);edge(hub,jh);entries.forEach(function(e){edge(node('j:'+e.id,e.date||'entry','journal','journal','#b07cc6',4,{jid:e.id}),jh);});}}catch(e){}
     try{var tmpl=(loadDaily().templates||[]).slice(0,20);if(tmpl.length){var hh=node('hhub','Habits','hhub','habit','#2dd4bf',11);edge(hub,hh);tmpl.forEach(function(t){edge(node('h:'+t.id,t.text||'habit','habit','habit','#2dd4bf',4),hh);});}}catch(e){}
     nodes.forEach(function(n){ if(n.kind==='cat'||n.kind==='type'||n.kind==='jhub'||n.kind==='hhub') n.r=Math.min(16,n.baseR+Math.sqrt(n.deg)*1.6); }); // size hubs by connectivity
@@ -2365,6 +2373,7 @@ function renderGraph(){
       if(n.od){ctx.lineWidth=2/scale;ctx.strokeStyle='#f87171';ctx.stroke();}
       else if(n.hi){ctx.lineWidth=1.6/scale;ctx.strokeStyle='rgba(255,255,255,.7)';ctx.stroke();}
       else if(n.kind!=='item'&&n.kind!=='hub'){ctx.lineWidth=1.5/scale;ctx.strokeStyle='rgba(0,0,0,.30)';ctx.stroke();}
+      if(!dim&&n.prog!=null&&n.prog>0){ctx.beginPath();ctx.arc(X,Y,R+2.6,-1.5708,-1.5708+n.prog*6.2832);ctx.strokeStyle=_hexA('#ffffff',0.9);ctx.lineWidth=2.2/scale;ctx.lineCap='round';ctx.stroke();ctx.lineCap='butt';} // step-progress arc
       if(!RM&&age<600){ctx.beginPath();ctx.arc(X,Y,R+(age/600)*26,0,6.2832);ctx.strokeStyle=_hexA(col,0.6*(1-age/600));ctx.lineWidth=2/scale;ctx.stroke();} // spawn burst
       if(!dim&&R>=7){ctx.beginPath();ctx.arc(X-R*0.3,Y-R*0.3,R*0.34,0,6.2832);ctx.fillStyle='rgba(255,255,255,.22)';ctx.fill();}});
     ctx.globalAlpha=1;ctx.textAlign='center';ctx.textBaseline='top';
@@ -2392,6 +2401,9 @@ function renderGraph(){
   function dbl(e){var p=pos(e);var n=hit(p.x,p.y);if(!n)return;if(n.kind==='hub'){focusNode=null;fitView(true);return;}focusNode=n;selectNode(n);var s={};var rel=[n];edges.forEach(function(ed){if(ed[0]===n)rel.push(ed[1]);if(ed[1]===n)rel.push(ed[0]);});frameTo(rel,120,2.2,true);}
   function act(n){if(!n)return;if(n.kind==='item')openDetail(n.ref.id);else if(n.kind==='cat'){setView('list');setFilter(n.ref.cat,'cat');}else if(n.kind==='type'){setView('list');setFilter(n.ref.type,'type');}else if(n.kind==='journal')openJournal(n.ref.jid);else if(n.kind==='jhub')setView('journal');else if(n.kind==='habit'||n.kind==='hhub')setView('daily');else if(n.kind==='hub'){focusNode=null;fitView();}}
   function selectNode(n){selected=n;showInfo(n);}
+  function connHTML(n){var ns=[];edges.forEach(function(e){if(e[0]===n)ns.push(e[1]);else if(e[1]===n)ns.push(e[0]);});if(!ns.length)return '';
+    var chips=ns.slice(0,10).map(function(m){var lab=m.label.length>22?m.label.slice(0,21)+'…':m.label;return '<button class="gi-link" onclick="graphGoNode(\''+String(m.key).replace(/'/g,"\\'")+'\')"><span class="gi-ldot" style="background:'+NC(m)+'"></span>'+esc(lab)+'</button>';}).join('');
+    return '<div class="gi-conn"><div class="gi-conn-h">Connections · '+ns.length+'</div><div class="gi-conn-list">'+chips+(ns.length>10?'<span class="gi-more">+'+(ns.length-10)+' more</span>':'')+'</div></div>';}
   function infoHTML(n){
     var x='<button class="gi-x" onclick="graphCloseInfo()" aria-label="Close">✕</button>';
     if(n.kind==='item'){var it=load().find(function(z){return z.id===n.ref.id;})||{};var cc=CATS[it.category||'general']||CATS.general;var st=(typeof stepStats==='function')?stepStats(it):null;
@@ -2399,13 +2411,14 @@ function renderGraph(){
         +'<div class="gi-badges"><span class="badge-cat" style="background:'+cc.dim+';color:'+cc.color+'">'+cc.label+'</span><span class="badge badge-'+(it.type||'task')+'">'+(TYPE_LABEL[it.type]||it.type||'Task')+'</span>'+(it.priority==='high'?'<span class="prio-high"><span class="prio-dot"></span>High</span>':'')+(it.dueDate?'<span class="due-chip '+dueClass(it.dueDate)+'">'+fmtDue(it.dueDate)+'</span>':'')+'</div>'
         +(st?'<div class="gi-prog"><div class="prog-track"><div class="prog-fill" style="width:'+st.pct+'%"></div></div><span class="prog-count">'+st.done+'/'+st.total+'</span></div>':'')
         +(it.notes?'<div class="gi-notes">'+esc(it.notes)+'</div>':'')
+        +connHTML(n)
         +'<div class="gi-actions"><button class="btn btn-primary" onclick="graphOpenSel()">Open ↗</button><button class="btn btn-ghost" onclick="graphFocusSel()">Focus connections</button></div>';
     }
     var deg=n.deg;
-    if(n.kind==='cat'){var c2=CATS[n.ref.cat]||CATS.general;return x+'<div class="gi-head"><span class="gi-dot" style="background:'+c2.color+'"></span><span class="gi-title">'+c2.label+'</span></div><div class="gi-sub">Life area · '+(catUsed[n.ref.cat]||0)+' item(s)</div><div class="gi-actions"><button class="btn btn-primary" onclick="graphOpenSel()">View list</button><button class="btn btn-ghost" onclick="graphFocusSel()">Focus</button></div>';}
-    if(n.kind==='type'){return x+'<div class="gi-head"><span class="gi-dot" style="background:'+n.color+'"></span><span class="gi-title">'+esc(n.label)+'</span></div><div class="gi-sub">Type · '+(typeUsed[n.ref.type]||0)+' item(s)</div><div class="gi-actions"><button class="btn btn-primary" onclick="graphOpenSel()">View list</button><button class="btn btn-ghost" onclick="graphFocusSel()">Focus</button></div>';}
-    if(n.kind==='journal'){return x+'<div class="gi-head"><span class="gi-dot" style="background:#b07cc6"></span><span class="gi-title">Journal entry</span></div><div class="gi-sub">'+esc(n.label)+'</div><div class="gi-actions"><button class="btn btn-primary" onclick="graphOpenSel()">Open entry</button><button class="btn btn-ghost" onclick="graphFocusSel()">Focus</button></div>';}
-    return x+'<div class="gi-head"><span class="gi-dot" style="background:'+n.color+'"></span><span class="gi-title">'+esc(n.label)+'</span></div><div class="gi-sub">'+deg+' connection(s)</div><div class="gi-actions"><button class="btn btn-primary" onclick="graphOpenSel()">Open</button><button class="btn btn-ghost" onclick="graphFocusSel()">Focus</button></div>';
+    if(n.kind==='cat'){var c2=CATS[n.ref.cat]||CATS.general;return x+'<div class="gi-head"><span class="gi-dot" style="background:'+c2.color+'"></span><span class="gi-title">'+c2.label+'</span></div><div class="gi-sub">Life area · '+(catUsed[n.ref.cat]||0)+' item(s)</div>'+connHTML(n)+'<div class="gi-actions"><button class="btn btn-primary" onclick="graphOpenSel()">View list</button><button class="btn btn-ghost" onclick="graphFocusSel()">Focus</button></div>';}
+    if(n.kind==='type'){return x+'<div class="gi-head"><span class="gi-dot" style="background:'+n.color+'"></span><span class="gi-title">'+esc(n.label)+'</span></div><div class="gi-sub">Type · '+(typeUsed[n.ref.type]||0)+' item(s)</div>'+connHTML(n)+'<div class="gi-actions"><button class="btn btn-primary" onclick="graphOpenSel()">View list</button><button class="btn btn-ghost" onclick="graphFocusSel()">Focus</button></div>';}
+    if(n.kind==='journal'){return x+'<div class="gi-head"><span class="gi-dot" style="background:#b07cc6"></span><span class="gi-title">Journal entry</span></div><div class="gi-sub">'+esc(n.label)+'</div>'+connHTML(n)+'<div class="gi-actions"><button class="btn btn-primary" onclick="graphOpenSel()">Open entry</button><button class="btn btn-ghost" onclick="graphFocusSel()">Focus</button></div>';}
+    return x+'<div class="gi-head"><span class="gi-dot" style="background:'+n.color+'"></span><span class="gi-title">'+esc(n.label)+'</span></div><div class="gi-sub">'+deg+' connection(s)</div>'+connHTML(n)+'<div class="gi-actions"><button class="btn btn-primary" onclick="graphOpenSel()">Open</button><button class="btn btn-ghost" onclick="graphFocusSel()">Focus</button></div>';
   }
   function showInfo(n){var el=document.getElementById('graph-info');if(!el)return;el.innerHTML=infoHTML(n);el.classList.remove('hidden');}
   function hideInfo(){var el=document.getElementById('graph-info');if(el)el.classList.add('hidden');focusNode=null;}
@@ -2419,7 +2432,7 @@ function renderGraph(){
   function miniPan(e){if(!mini._m)return;var r=mini.getBoundingClientRect();var pt=e.touches&&e.touches[0]?e.touches[0]:e;var mx=pt.clientX-r.left,my=pt.clientY-r.top;var m=mini._m;var wx=(mx-m.offx)/m.s,wy=(my-m.offy)/m.s;cam=null;ox=W/2-wx*scale;oy=H/2-wy*scale;if(e.cancelable)e.preventDefault();}
   if(mini){var miniDrag=false;mini.addEventListener('mousedown',function(e){miniDrag=true;miniPan(e);});var mm=function(e){if(miniDrag&&myGen===_graphGen)miniPan(e);},mu=function(){miniDrag=false;};window.addEventListener('mousemove',mm);window.addEventListener('mouseup',mu);_graphCleanup.push(function(){window.removeEventListener('mousemove',mm);window.removeEventListener('mouseup',mu);});mini.addEventListener('touchstart',miniPan,{passive:false});mini.addEventListener('touchmove',miniPan,{passive:false});}
   // Keyboard control while the graph is open (and not typing in the search box)
-  function gkey(e){if(myGen!==_graphGen||view!=='graph')return;var ae=document.activeElement;if(ae&&ae.id==='graph-search'){if(e.key==='Escape'){ae.blur();graphSearch('');ae.value='';}return;}
+  function gkey(e){if(myGen!==_graphGen||view!=='graph')return;var ae=document.activeElement;if(ae&&ae.id==='graph-search'){if(e.key==='Escape'){ae.blur();graphSearch('');ae.value='';}else if(e.key==='Enter'&&q){var first=nodes.filter(function(n){return visible(n)&&n.label.toLowerCase().indexOf(q)>=0;})[0];if(first){selected=first;showInfo(first);focusNode=first;var rel=[first];edges.forEach(function(ed){if(ed[0]===first)rel.push(ed[1]);if(ed[1]===first)rel.push(ed[0]);});frameTo(rel,120,2.2,true);ae.blur();}}return;}
     if(e.key==='+'||e.key==='='){_G&&_G.zoom(1.25);e.preventDefault();}
     else if(e.key==='-'||e.key==='_'){_G&&_G.zoom(0.8);e.preventDefault();}
     else if(e.key==='f'||e.key==='F'){_G&&_G.fit();e.preventDefault();}
@@ -2446,6 +2459,7 @@ function renderGraph(){
       closeInfo:function(){selected=null;hideInfo();},
       focus:function(){focusNode=selected;if(selected){var rel=[selected];edges.forEach(function(ed){if(ed[0]===selected)rel.push(ed[1]);if(ed[1]===selected)rel.push(ed[0]);});frameTo(rel,120,2.2,true);}},
       openSel:function(){act(selected);},
+      goNode:function(k){var nn=byKey[k];if(!nn)return;selected=nn;showInfo(nn);focusNode=nn;camTo(scale,W/2-nn.x*scale,H/2-nn.y*scale);}, // walk to a connected node
       // Live auto-update: rebuild the model from current data in place, keep positions, re-warm the sim
       rebuild:function(){build();renderGroups();renderLegend();renderStats();if(selected)showInfo(selected);else{var el=document.getElementById('graph-info');if(el)el.classList.add('hidden');}alpha=Math.max(alpha,0.5);}};
   loop();
