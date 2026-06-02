@@ -2622,31 +2622,39 @@ function _fmtT(h,m){var ap=h<12?'a':'p',hh=h%12;if(hh===0)hh=12;return hh+':'+(m
 function _addMin(h,m,d){var t=((h*60+m+d)%1440+1440)%1440;return {h:Math.floor(t/60),m:t%60};}
 function loadConditions(){
   var el=document.getElementById('cond-strip');if(!el)return;
-  var LAT=21.4469,LON=-158.1858; // Waiʻanae, Westside Oʻahu
+  var LAT=33.8492,LON=-118.3884,TZ='America%2FLos_Angeles',LABEL='Redondo Beach, CA'; // South Bay LA
   var cached=null;try{cached=JSON.parse(localStorage.getItem('jbos_cond')||'null');}catch(e){}
-  if(cached&&cached.html){el.innerHTML=cached.html;if(Date.now()-cached.ts<30*60*1000)return;}
-  var fc=fetch('https://api.open-meteo.com/v1/forecast?latitude='+LAT+'&longitude='+LON+'&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max&temperature_unit=fahrenheit&timezone=Pacific%2FHonolulu&forecast_days=1').then(function(r){return r.json();});
-  var mc=fetch('https://marine-api.open-meteo.com/v1/marine?latitude='+LAT+'&longitude='+LON+'&current=wave_height&timezone=Pacific%2FHonolulu').then(function(r){return r.json();}).catch(function(){return null;});
+  if(cached&&cached.html){el.innerHTML=cached.html;if(cached.loc===LABEL&&Date.now()-cached.ts<30*60*1000)return;}
+  var fc=fetch('https://api.open-meteo.com/v1/forecast?latitude='+LAT+'&longitude='+LON+'&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m&daily=temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone='+TZ+'&forecast_days=1').then(function(r){return r.json();});
+  var mc=fetch('https://marine-api.open-meteo.com/v1/marine?latitude='+LAT+'&longitude='+LON+'&current=wave_height,wave_period,sea_surface_temperature&timezone='+TZ).then(function(r){return r.json();}).catch(function(){return null;});
   Promise.all([fc,mc]).then(function(res){
     var d=res[0]||{},m=res[1],cur=d.current||{},day=d.daily||{},items=[];
     if(typeof cur.temperature_2m==='number'){
       var w=_wmo(cur.weather_code),hi=Math.round((day.temperature_2m_max||[])[0]),lo=Math.round((day.temperature_2m_min||[])[0]);
-      items.push('<span class="cond-item" title="'+w[1]+'">'+w[0]+' <b>'+Math.round(cur.temperature_2m)+'°</b>'+(isNaN(hi)?'':' <span class="cl">'+hi+'/'+lo+'</span>')+'</span>');
+      var feels=(typeof cur.apparent_temperature==='number'&&Math.abs(cur.apparent_temperature-cur.temperature_2m)>=2)?' <span class="cl">feels '+Math.round(cur.apparent_temperature)+'°</span>':'';
+      items.push('<span class="cond-item" title="'+w[1]+'">'+w[0]+' <b>'+Math.round(cur.temperature_2m)+'°</b>'+feels+(isNaN(hi)?'':' <span class="cl">'+hi+'/'+lo+'</span>')+'</span>');
     }
+    if(typeof cur.wind_speed_10m==='number')items.push('<span class="cond-item" title="Wind">💨 '+Math.round(cur.wind_speed_10m)+' mph</span>');
     var sr=(day.sunrise||[])[0],ss=(day.sunset||[])[0];
     if(sr&&ss){var a=_hm(sr),b=_hm(ss),g=_addMin(b.h,b.m,-60);
       items.push('<span class="cond-item">🌅 '+_fmtT(a.h,a.m)+'</span>');
       items.push('<span class="cond-item">🌇 '+_fmtT(b.h,b.m)+'</span>');
-      items.push('<span class="cond-item" title="Best light for Musubi shoots">📸 Golden '+_fmtT(g.h,g.m)+'–'+_fmtT(b.h,b.m)+'</span>');
+      items.push('<span class="cond-item" title="Best light for shoots">📸 Golden '+_fmtT(g.h,g.m)+'–'+_fmtT(b.h,b.m)+'</span>');
     }
     var uv=Math.round((day.uv_index_max||[])[0]);
     if(!isNaN(uv))items.push('<span class="cond-item" title="Max UV index today">☀️ UV '+uv+'</span>');
-    if(m&&m.current&&typeof m.current.wave_height==='number')
-      items.push('<span class="cond-item" title="Open-ocean swell">🌊 '+(m.current.wave_height*3.281).toFixed(1)+' ft</span>');
+    if(m&&m.current){
+      var mm=m.current;
+      if(typeof mm.wave_height==='number'){
+        var per=(typeof mm.wave_period==='number')?' / '+Math.round(mm.wave_period)+'s':'';
+        items.push('<span class="cond-item" title="Swell height / period">🌊 '+(mm.wave_height*3.281).toFixed(1)+' ft'+per+'</span>');
+      }
+      if(typeof mm.sea_surface_temperature==='number')items.push('<span class="cond-item" title="Water temp">🌡️ '+Math.round(mm.sea_surface_temperature*9/5+32)+'°</span>');
+    }
     if(!items.length){if(!el.innerHTML)el.style.display='none';return;}
-    var html=items.join('')+'<span class="cond-loc">Westside Oʻahu</span>';
+    var html=items.join('')+'<span class="cond-loc">'+LABEL+'</span>';
     el.innerHTML=html;
-    try{localStorage.setItem('jbos_cond',JSON.stringify({ts:Date.now(),html:html}));}catch(e){}
+    try{localStorage.setItem('jbos_cond',JSON.stringify({ts:Date.now(),loc:LABEL,html:html}));}catch(e){}
   }).catch(function(){if(!el.innerHTML)el.style.display='none';});
 }
 
@@ -2658,27 +2666,38 @@ function reminderBar(){
 function requestReminders(){
   if(!('Notification' in window))return;
   Notification.requestPermission().then(function(p){
-    if(p==='granted'){toast('Reminders on — JB OS will nudge you about due items');checkReminders(true);}
+    if(p==='granted'){toast('Reminders on — 5× a day (7a · 12p · 3:30p · 7:30p · 9p)');fireDueNotification('Reminders on ✓');}
     if(view==='dashboard')render();
   });
 }
-function checkReminders(force){
-  if(!('Notification' in window)||Notification.permission!=='granted')return;
+// Five reminder times a day (local). Phone push when the app is closed is handled
+// separately by the ntfy GitHub Action; this covers the laptop/web + open-PWA case.
+var REMIND_TIMES=['07:00','12:00','15:30','19:30','21:00'];
+function fireDueNotification(label){
   var todayK=dateKey(new Date());
-  if(!force&&localStorage.getItem('jbos_remind_last')===todayK)return; // nudge at most once/day
   var items=load().filter(function(x){return !x.archived;});
-  var overdue=items.filter(function(x){return x.dueDate&&x.dueDate<todayK;}).length;
-  var today=items.filter(function(x){return x.dueDate===todayK;}).length;
-  if(!overdue&&!today)return;
-  var parts=[];if(overdue)parts.push(overdue+' overdue');if(today)parts.push(today+' due today');
-  var body=parts.join(' · ');
-  localStorage.setItem('jbos_remind_last',todayK);
-  var opts={body:body,icon:'icon-192.png',badge:'icon-192.png',tag:'jbos-due'};
+  var overdue=items.filter(function(x){return x.dueDate&&x.dueDate<todayK;});
+  var today=items.filter(function(x){return x.dueDate===todayK;});
+  var parts=[];if(today.length)parts.push(today.length+' due today');if(overdue.length)parts.push(overdue.length+' overdue');
+  var names=today.concat(overdue).slice(0,3).map(function(x){return x.text;});
+  var body=(parts.length?parts.join(' · '):'Quick check on your tasks & habits')+(names.length?' — '+names.join(', '):'');
+  var opts={body:body,icon:'icon-192.png',badge:'icon-192.png',tag:'jbos-due',renotify:true};
   try{
     if(navigator.serviceWorker&&navigator.serviceWorker.ready)
-      navigator.serviceWorker.ready.then(function(reg){reg.showNotification('JB OS',opts);}).catch(function(){new Notification('JB OS',opts);});
-    else new Notification('JB OS',opts);
+      navigator.serviceWorker.ready.then(function(reg){reg.showNotification(label||'JB OS reminder',opts);}).catch(function(){new Notification(label||'JB OS reminder',opts);});
+    else new Notification(label||'JB OS reminder',opts);
   }catch(e){}
+}
+function tickReminders(){
+  if(!('Notification' in window)||Notification.permission!=='granted')return;
+  var now=new Date(),todayK=dateKey(now),hhmm=pad(now.getHours())+':'+pad(now.getMinutes());
+  var st;try{st=JSON.parse(localStorage.getItem('jbos_remind_slots')||'null');}catch(e){st=null;}
+  if(!st||st.date!==todayK)st={date:todayK,fired:[]};
+  var due=REMIND_TIMES.filter(function(t){return t<=hhmm&&st.fired.indexOf(t)<0;});
+  if(!due.length)return;
+  due.forEach(function(t){st.fired.push(t);}); // mark past-due slots so a catch-up only pings once
+  localStorage.setItem('jbos_remind_slots',JSON.stringify(st));
+  fireDueNotification();
 }
 
 /* Init */
@@ -2691,8 +2710,9 @@ fetchJournalSeeds();
 if(load().length)_booting=false;
 render();
 updateCounts();
-checkReminders();
-document.addEventListener('visibilitychange',function(){if(!document.hidden)checkReminders();});
+tickReminders();
+setInterval(tickReminders,60000);
+document.addEventListener('visibilitychange',function(){if(!document.hidden)tickReminders();});
 
 /* ===== PWA: service worker + install affordance ===== */
 if('serviceWorker' in navigator){

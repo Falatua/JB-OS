@@ -1,0 +1,28 @@
+name: Reminder pushes (phone)
+
+# Pushes reminders to your phone via ntfy 5× a day — works even when JB OS is closed.
+# Free. No-ops if the NTFY_TOPIC secret isn't set.
+# Times are Pacific (PDT, UTC-7). NOTE: GitHub cron is UTC and does NOT auto-adjust for
+# daylight saving — in PST (winter) these land 1 hour earlier. Also, scheduled runs are
+# best-effort and can be delayed a few minutes under load.
+on:
+  schedule:
+    - cron: "0 14 * * *"    # 7:00 AM PT
+    - cron: "0 19 * * *"    # 12:00 PM PT
+    - cron: "30 22 * * *"   # 3:30 PM PT
+    - cron: "30 2 * * *"    # 7:30 PM PT
+    - cron: "0 4 * * *"     # 9:00 PM PT
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Push reminder
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+        run: python3 .github/scripts/reminder_push.py
