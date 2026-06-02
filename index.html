@@ -740,6 +740,23 @@
   .toast-action:hover{text-decoration:underline}
   .sort-select{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:3px 8px;color:var(--text-2);font-size:11px;font-weight:500;font-family:inherit;outline:none;cursor:pointer;transition:border-color var(--t),color var(--t)}
   .sort-select:hover{color:var(--text);border-color:var(--border-2)}
+  /* ===== Command palette (⌘K) ===== */
+  #cmdk{align-items:flex-start;justify-content:center}
+  .cmdk-box{width:min(580px,94vw);margin-top:12vh;background:var(--surface-modal);border:1px solid var(--border-2);border-radius:14px;box-shadow:0 24px 70px rgba(0,0,0,.6);overflow:hidden;display:flex;flex-direction:column;max-height:76vh}
+  .cmdk-box input{width:100%;background:none;border:none;border-bottom:1px solid var(--border);padding:16px 18px;color:var(--text);font-size:15.5px;font-family:inherit;outline:none}
+  .cmdk-results{flex:1;overflow-y:auto;padding:6px;overscroll-behavior:contain}
+  .cmdk-cat{font-size:10px;text-transform:uppercase;letter-spacing:.09em;color:var(--text-3);padding:9px 12px 4px;font-weight:600}
+  .cmdk-item{display:flex;align-items:center;gap:11px;padding:9px 12px;border-radius:8px;cursor:pointer;font-size:13.5px;color:var(--text-2);scroll-margin:8px}
+  .cmdk-item.sel{background:var(--accent-dim);color:var(--text)}
+  .cmdk-item .ci-ic{width:20px;text-align:center;flex-shrink:0;font-size:15px}
+  .cmdk-item .ci-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .cmdk-item .ci-sub{margin-left:auto;font-size:10.5px;color:var(--text-3);flex-shrink:0;padding-left:8px}
+  .cmdk-foot{display:flex;gap:16px;padding:8px 14px;border-top:1px solid var(--border);font-size:10.5px;color:var(--text-3)}
+  .cmdk-foot kbd{background:var(--surface);border:1px solid var(--border-2);border-radius:4px;padding:0 4px;margin-right:3px;font-family:var(--mono);font-size:10px}
+  /* ===== Offline pill ===== */
+  .offline-pill{display:none;position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:140;background:var(--surface-modal);border:1px solid var(--border-2);color:var(--text-2);font-size:12px;padding:8px 14px;border-radius:20px;box-shadow:0 8px 24px rgba(0,0,0,.45)}
+  .offline-pill.show{display:block}
+  @media(max-width:640px){.offline-pill{bottom:calc(70px + env(safe-area-inset-bottom,0px))}}
 </style>
 </head>
 <body>
@@ -956,6 +973,15 @@
 </div>
 
 </div>
+
+<div class="backdrop hidden" id="cmdk" onclick="if(event.target.id==='cmdk')closeCmd()" role="dialog" aria-modal="true" aria-label="Command palette">
+  <div class="cmdk-box">
+    <input id="cmdk-input" placeholder="Search or jump to anything…" autocomplete="off" spellcheck="false" autocapitalize="off" oninput="renderCmd()" onkeydown="cmdKey(event)" aria-label="Command palette search">
+    <div class="cmdk-results" id="cmdk-results"></div>
+    <div class="cmdk-foot"><span><kbd>↑</kbd><kbd>↓</kbd> navigate</span><span><kbd>↵</kbd> open</span><span><kbd>esc</kbd> close</span></div>
+  </div>
+</div>
+<div class="offline-pill" id="offline-pill" role="status">Offline — changes save locally &amp; sync later</div>
 
 <div class="backdrop hidden" id="sync-modal" onclick="if(event.target.id==='sync-modal')closeSync()" role="dialog" aria-modal="true" aria-label="Cloud sync">
   <div class="modal">
@@ -1553,6 +1579,50 @@ function openModal(){
 }
 function closeModal(){document.getElementById('modal').classList.add('hidden');restoreFocus();}
 function closeModalOutside(e){if(e.target.id==='modal')closeModal();}
+
+/* ===== Command palette (⌘K / Ctrl-K) ===== */
+var _cmdSel=0, _cmdList=[];
+function cmdCommands(){
+  var c=[];
+  function add(cat,ic,label,sub,run){c.push({cat:cat,ic:ic,label:label,sub:sub,run:run});}
+  [['dashboard','🏠','Today'],['list','🗒️','All items'],['daily','🔁','Daily'],['monthly','📆','Monthly'],['calendar','📅','Calendar'],['journal','📔','Journal'],['musubi','🌺','Musubi']].forEach(function(v){add('Go to',v[1],v[2],'',function(){setView(v[0]);});});
+  add('Action','➕','New item','',function(){openModal();});
+  add('Action','📝','New journal entry','',function(){newJournalEntry();});
+  add('Action','☁️','Cloud sync settings','',function(){openSync();});
+  add('Action','🔔','Enable reminders','',function(){requestReminders();});
+  add('Action','⤓','Export data','',function(){exportJSON();});
+  add('Action','⤒','Import data','',function(){importJSON();});
+  [['overdue','Overdue'],['soon','Due soon']].forEach(function(d){add('Due','⏰',d[1],'',function(){setView('list');setFilter(d[0],'due');});});
+  [['high','High priority'],['normal','Normal priority'],['low','Low priority']].forEach(function(p){add('Priority','◆',p[1],'',function(){setView('list');setFilter(p[0],'prio');});});
+  Object.keys(CATS).forEach(function(k){add('Life area',guessEmoji('',k),CATS[k].label,'',function(){setView('list');setFilter(k,'cat');});});
+  [['task','Tasks'],['idea','Ideas'],['note','Notes'],['project','Projects']].forEach(function(t){add('Type','🏷️',t[1],'',function(){setView('list');setFilter(t[0],'type');});});
+  load().filter(function(x){return !x.archived;}).forEach(function(it){add('Items',(it.emoji||'•'),it.text||'Untitled',(CATS[it.category||'general']||CATS.general).label,function(){setView('list');openDetail(it.id);});});
+  return c;
+}
+function renderCmd(){
+  var q=(document.getElementById('cmdk-input').value||'').toLowerCase().trim();
+  var all=cmdCommands();
+  _cmdList=(q?all.filter(function(c){return (c.label+' '+c.cat+' '+(c.sub||'')).toLowerCase().indexOf(q)>=0;}):all.filter(function(c){return c.cat!=='Items';})).slice(0,50);
+  if(_cmdSel>=_cmdList.length)_cmdSel=0;
+  var html='',last=null;
+  _cmdList.forEach(function(c,i){
+    if(c.cat!==last){html+='<div class="cmdk-cat">'+esc(c.cat)+'</div>';last=c.cat;}
+    html+='<div class="cmdk-item'+(i===_cmdSel?' sel':'')+'" onclick="runCmd('+i+')" onmousemove="if(_cmdSel!=='+i+'){_cmdSel='+i+';cmdSel()}"><span class="ci-ic">'+c.ic+'</span><span class="ci-label">'+esc(c.label)+'</span>'+(c.sub?'<span class="ci-sub">'+esc(c.sub)+'</span>':'')+'</div>';
+  });
+  document.getElementById('cmdk-results').innerHTML=html||'<div class="cmdk-cat">No matches</div>';
+  cmdScroll();
+}
+function cmdSel(){var items=document.querySelectorAll('#cmdk-results .cmdk-item');items.forEach(function(el,i){el.classList.toggle('sel',i===_cmdSel);});cmdScroll();}
+function cmdScroll(){var s=document.querySelector('#cmdk-results .cmdk-item.sel');if(s)s.scrollIntoView({block:'nearest'});}
+function runCmd(i){var c=_cmdList[i];closeCmd();if(c&&c.run)setTimeout(c.run,0);}
+function cmdKey(e){
+  if(e.key==='ArrowDown'){e.preventDefault();_cmdSel=Math.min(_cmdSel+1,_cmdList.length-1);cmdSel();}
+  else if(e.key==='ArrowUp'){e.preventDefault();_cmdSel=Math.max(_cmdSel-1,0);cmdSel();}
+  else if(e.key==='Enter'){e.preventDefault();runCmd(_cmdSel);}
+  else if(e.key==='Escape'){e.preventDefault();closeCmd();}
+}
+function openCmd(){_cmdSel=0;var m=document.getElementById('cmdk');m.classList.remove('hidden');var inp=document.getElementById('cmdk-input');inp.value='';renderCmd();setTimeout(function(){inp.focus();},40);}
+function closeCmd(){document.getElementById('cmdk').classList.add('hidden');}
 function addFromModal(){
   const t=document.getElementById('m-title').value.trim();if(!t)return;
   addItem(t,document.getElementById('m-type').value,document.getElementById('m-notes').value,'browser',
@@ -1737,7 +1807,8 @@ function closeDetail(){document.getElementById('detail').classList.add('hidden')
 function closeDetailOutside(e){if(e.target.id==='detail')closeDetail();}
 
 document.addEventListener('keydown',e=>{
-  if(e.key==='Escape'){if(!document.getElementById('journal-modal').classList.contains('hidden')&&(!document.getElementById('j-question-menu').classList.contains('hidden')||!document.getElementById('j-template-menu').classList.contains('hidden'))){closeAllJMenus();return;}closeModal();closeDetail();closeJournal();closePrompts();closeRoutine();closeNav();}
+  if(e.key==='Escape'){if(!document.getElementById('journal-modal').classList.contains('hidden')&&(!document.getElementById('j-question-menu').classList.contains('hidden')||!document.getElementById('j-template-menu').classList.contains('hidden'))){closeAllJMenus();return;}closeModal();closeDetail();closeJournal();closePrompts();closeRoutine();closeNav();closeCmd();}
+  if((e.metaKey||e.ctrlKey)&&(e.key==='k'||e.key==='K')){e.preventDefault();openCmd();return;}
   if((e.metaKey||e.ctrlKey)&&e.key==='n'){e.preventDefault();view==='journal'?newJournalEntry():openModal();}
   if((e.metaKey||e.ctrlKey)&&e.key==='f'&&view==='list'){e.preventDefault();document.getElementById('search').focus();}
   if((e.key==='Enter'||e.key===' ')&&e.target&&e.target.classList&&e.target.classList.contains('nav-item')){e.preventDefault();e.target.click();}
@@ -2939,6 +3010,9 @@ updateCounts();
 sbInit();
 /* Mark installed-app (standalone) mode for iOS/macOS-specific styling */
 if((window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone){document.documentElement.classList.add('standalone');}
+/* Offline indicator */
+function updOnline(){var e=document.getElementById('offline-pill');if(e)e.classList.toggle('show',navigator.onLine===false);}
+window.addEventListener('online',updOnline);window.addEventListener('offline',updOnline);updOnline();
 /* One-time "Add to Home Screen" hint on iOS Safari (not yet installed) */
 (function(){
   var isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent||'');
