@@ -122,9 +122,9 @@
   /* Global frozen chrome: header + quick-add are grouped in .topchrome and given a distinct tone +
      divider + shadow so they read as app-level bars that persist across views, not page content. */
   .topchrome{background:var(--chrome);border-bottom:1px solid var(--border-2);box-shadow:0 10px 22px -16px rgba(0,0,0,.8);position:relative;z-index:5}
-  .header{padding:calc(18px + env(safe-area-inset-top,0px)) 24px 0;border-bottom:1px solid var(--border);background:transparent}
+  .header{padding:calc(18px + env(safe-area-inset-top,0px)) 24px 14px;border-bottom:none;background:transparent}
   .header-row{display:flex;align-items:center;gap:10px;margin-bottom:14px}
-  .page-title{font-size:20px;font-weight:700;letter-spacing:-.4px;color:var(--text);display:flex;align-items:center;gap:8px}
+  .page-title{font-size:20px;font-weight:700;letter-spacing:-.4px;color:var(--text);display:flex;align-items:center;gap:8px;white-space:nowrap}
   .page-title-dot{width:10px;height:10px;border-radius:50%;display:none}
   .header-actions{margin-left:auto;display:flex;gap:6px;align-items:center}
   .header-list-actions{display:inline-flex;gap:6px;align-items:center}
@@ -619,6 +619,8 @@
     /* Icon-only Import/Export on phones (aria-label keeps them named) so the New Item CTA isn't clipped */
     .header-actions .btn-ghost span{display:none}
     .header-actions .btn-ghost{padding:6px 9px}
+    .header-actions #newitem-btn span{display:none}
+    .header-actions #newitem-btn{padding:7px 10px}
   }
 
   /* ===== Musubi Strong module ===== */
@@ -1094,14 +1096,6 @@
       </div>
       <span class="page-title-count" id="pt-count">0</span>
       <div class="header-actions">
-        <button class="btn btn-ghost hdr-view" id="hdr-musubi" onclick="setView('musubi')" aria-label="Musubi">
-          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5.5 2.5L8 4l2.5-1.5L13 4.5l-1.5 2v6a.5.5 0 0 1-.5.5h-6a.5.5 0 0 1-.5-.5v-6L3 4.5z"/></svg>
-          <span>Musubi</span>
-        </button>
-        <button class="btn btn-ghost hdr-view" id="hdr-graph" onclick="setView('graph')" aria-label="Graph">
-          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="3" r="1.6"/><circle cx="3" cy="11" r="1.6"/><circle cx="13" cy="11" r="1.6"/><circle cx="8" cy="9" r="1.4"/><path d="M8 4.6V7.6M6.9 8.2L4 10M9.1 8.2L12 10"/></svg>
-          <span>Graph</span>
-        </button>
         <span class="header-list-actions">
           <button class="btn btn-ghost" id="capture-btn" onclick="openCapture()" aria-label="Capture a screenshot">
             <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 4l1-1.5h4L11 4h2.5a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z"/><circle cx="8" cy="8.5" r="2.5"/></svg>
@@ -1125,9 +1119,9 @@
               </button>
             </div>
           </div>
-          <button class="btn btn-primary" onclick="openModal()">
+          <button class="btn btn-primary" id="newitem-btn" onclick="primaryAdd()">
             <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8 2v12M2 8h12"/></svg>
-            <span>New Item</span>
+            <span id="newitem-label">New Item</span>
           </button>
         </span>
       </div>
@@ -1141,19 +1135,6 @@
     </div>
   </div>
 
-  <div class="add-area" id="add-area">
-    <div class="add-row">
-      <select class="add-select" id="quick-cat" aria-label="Category" style="max-width:110px"></select>
-      <select class="add-select" id="quick-type" aria-label="Type" style="max-width:90px">
-        <option value="task">Task</option>
-        <option value="idea">Idea</option>
-        <option value="note">Note</option>
-        <option value="project">Project</option>
-      </select>
-      <input class="add-input" id="quick-input" placeholder="Quick add — press Enter to save" onkeydown="quickAdd(event)" autocomplete="off" spellcheck="false" aria-label="Quick add item">
-      <button class="btn btn-primary" onclick="quickAdd({key:'Enter'})">Add</button>
-    </div>
-  </div>
   </div>
 
   <div class="list-area" id="list" role="list"></div>
@@ -1413,10 +1394,10 @@
     </div>
     <div style="font-size:11.5px;color:var(--text-3);line-height:1.5;margin-top:2px">Changes apply to this item on <strong id="rt-scope-word">every day</strong> going forward.</div>
     <div class="modal-actions">
-      <button class="btn btn-ghost" style="color:var(--red)" onclick="deleteRoutineFromModal()">Delete</button>
+      <button class="btn btn-ghost" id="rt-delete" style="color:var(--red)" onclick="deleteRoutineFromModal()">Delete</button>
       <div style="flex:1"></div>
       <button class="btn btn-ghost" onclick="closeRoutine()">Cancel</button>
-      <button class="btn btn-primary" onclick="saveRoutineEdit()">Save changes</button>
+      <button class="btn btn-primary" id="rt-save" onclick="saveRoutineEdit()">Save changes</button>
     </div>
   </div>
 </div>
@@ -2219,7 +2200,7 @@ function closeDetailOutside(e){if(e.target.id==='detail')closeDetail();}
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape'){if(!document.getElementById('journal-modal').classList.contains('hidden')&&(!document.getElementById('j-question-menu').classList.contains('hidden')||!document.getElementById('j-template-menu').classList.contains('hidden'))){closeAllJMenus();return;}closeModal();closeDetail();closeJournal();closePrompts();closeRoutine();closeNav();closeCmd();closeCapture();}
   if((e.metaKey||e.ctrlKey)&&(e.key==='k'||e.key==='K')){e.preventDefault();openCmd();return;}
-  if((e.metaKey||e.ctrlKey)&&e.key==='n'){e.preventDefault();view==='journal'?newJournalEntry():openModal();}
+  if((e.metaKey||e.ctrlKey)&&e.key==='n'){e.preventDefault();view==='journal'?newJournalEntry():primaryAdd();}
   if((e.metaKey||e.ctrlKey)&&e.key==='f'&&view==='list'){e.preventDefault();document.getElementById('search').focus();}
   if((e.key==='Enter'||e.key===' ')&&e.target&&e.target.classList&&e.target.classList.contains('nav-item')){e.preventDefault();e.target.click();}
 });
@@ -2609,20 +2590,26 @@ function openRoutineEdit(scope,id){
   document.getElementById('rt-notes').value=t.notes||'';
   document.getElementById('rt-cat').value=t.category||'general';
   document.getElementById('rt-priority').value=t.priority||'normal';
+  const del=document.getElementById('rt-delete'); if(del)del.style.display='';
+  const sv=document.getElementById('rt-save'); if(sv)sv.textContent='Save changes';
   document.getElementById('routine-modal').classList.remove('hidden');
   setTimeout(()=>document.getElementById('rt-text').focus(),50);
 }
 function saveRoutineEdit(){
   if(!_rtEdit)return;
-  const {scope,id}=_rtEdit;const store=rStore(scope);const t=store.templates.find(x=>x.id===id);if(!t){closeRoutine();return;}
+  const {scope,id}=_rtEdit;const store=rStore(scope);
   const text=document.getElementById('rt-text').value.trim();
   if(!text){toast('Give it a title first');return;}
-  t.text=text;
-  t.notes=document.getElementById('rt-notes').value.trim();
-  t.category=document.getElementById('rt-cat').value;
-  t.priority=document.getElementById('rt-priority').value;
+  const notes=document.getElementById('rt-notes').value.trim();
+  const cat=document.getElementById('rt-cat').value;
+  const prio=document.getElementById('rt-priority').value;
+  if(id==null){ // new habit/monthly item
+    store.templates.push({id:uid(),text,notes,category:cat,priority:prio,type:'task',emoji:guessEmoji(text,cat),userEdited:true,createdAt:new Date().toISOString()});
+    rSave(scope,store);render();updateCounts();closeRoutine();toast('Added to '+scope+' checklist');return;
+  }
+  const t=store.templates.find(x=>x.id===id);if(!t){closeRoutine();return;}
+  t.text=text; t.notes=notes; t.category=cat; t.priority=prio;
   t.userEdited=true; // protects this item from being overwritten by the seed file on reload
-  // emoji is preserved as-is (seed/auto set); only the fields above are user-editable here
   rSave(scope,store);render();updateCounts();closeRoutine();
   toast('Saved — applies going forward');
 }
@@ -2668,18 +2655,34 @@ function searchKey(e){
 }
 function _hlSearch(items){for(var i=0;i<items.length;i++)items[i].classList.toggle('sr-active',i===_searchSel);if(_searchSel>=0)items[_searchSel].scrollIntoView({block:'nearest'});}
 function applyViewChrome(v){
-  const sw=document.getElementById('search-wrap'), aa=document.getElementById('add-area'), qt=document.getElementById('quick-type'), qi=document.getElementById('quick-input');
-  if(v==='list'){sw.style.display='';aa.style.display='';qt.style.display='';qi.placeholder='Quick add — press Enter to save';}
-  else if(v==='daily'){sw.style.display='none';aa.style.display='';qt.style.display='none';qi.placeholder='Add a daily habit (e.g. Stretch 10 min) — Enter to save';}
-  else if(v==='monthly'){sw.style.display='none';aa.style.display='';qt.style.display='none';qi.placeholder='Add a monthly item — Enter to save';}
-  else if(v==='calendar'){sw.style.display='none';aa.style.display='none';}
-  else if(v==='journal'){sw.style.display='none';aa.style.display='none';}
-  else if(v==='dashboard'){sw.style.display='none';aa.style.display='none';}
-  else if(v==='musubi'){sw.style.display='none';aa.style.display='none';}
-  else if(v==='graph'){sw.style.display='none';aa.style.display='none';}
-  sw.style.display=''; sw.classList.toggle('solo', aa.style.display==='none'); // global search stays available on every view
-  // Task action buttons (Import/Export/New Item) only apply to the list views; hide elsewhere
+  const sw=document.getElementById('search-wrap');
+  sw.style.display=''; sw.classList.add('solo'); // global search on every view; full rounded card now the quick-add bar is gone
+  // Capture / Data / New Item apply to item views; hide on journal/musubi/graph
   const la=document.querySelector('.header-list-actions');if(la)la.style.display=(v==='journal'||v==='musubi'||v==='graph')?'none':'';
+  // The single add button adapts to the page it's on
+  const nl=document.getElementById('newitem-label');
+  if(nl)nl.textContent=(v==='daily')?'New habit':(v==='monthly')?'New monthly':'New Item';
+}
+// One context-aware add: a habit on Daily/Monthly, otherwise the full item modal (which already
+// pre-fills life-area/type/priority from the current filter).
+function primaryAdd(){
+  if(view==='daily')return openRoutineNew('daily');
+  if(view==='monthly')return openRoutineNew('monthly');
+  openModal();
+}
+function openRoutineNew(scope){
+  _rtEdit={scope,id:null}; _lastFocus=document.activeElement;
+  buildCatOptions('rt-cat');
+  document.getElementById('rt-modal-title').textContent=scope==='daily'?'New daily item':'New monthly item';
+  document.getElementById('rt-scope-word').textContent=scope==='daily'?'every day':'every month';
+  document.getElementById('rt-text').value='';
+  document.getElementById('rt-notes').value='';
+  document.getElementById('rt-cat').value='general';
+  document.getElementById('rt-priority').value='normal';
+  const del=document.getElementById('rt-delete'); if(del)del.style.display='none';
+  const sv=document.getElementById('rt-save'); if(sv)sv.textContent='Add';
+  document.getElementById('routine-modal').classList.remove('hidden');
+  setTimeout(()=>document.getElementById('rt-text').focus(),50);
 }
 function setView(v){
   closeNav();
@@ -3518,18 +3521,6 @@ function renderDashboard(){
     +'<div class="dstat-sub">'+entries.length+' entr'+(entries.length===1?'y':'ies')+' · '+(journaledToday?'journaled today':'not yet today')+'</div>'
     +'<button class="dcard-cta" onclick="newJournalEntry()">Write today →</button></div>';
 
-  // habit heatmap (last 17 weeks)
-  const weeks=17,start=new Date(now);start.setHours(0,0,0,0);
-  const dow=(start.getDay()+6)%7;start.setDate(start.getDate()-((weeks-1)*7)-dow);
-  let heatCols='';
-  for(let w=0;w<weeks;w++){let col='';for(let r=0;r<7;r++){const d=new Date(start);d.setDate(start.getDate()+w*7+r);d.setHours(0,0,0,0);
-    if(d>now){col+='<div class="dheat-cell" style="background:transparent"></div>';continue;}
-    const k=dateKey(d),cnt=(daily.log[k]||[]).length,ratio=dTotal?Math.min(cnt/dTotal,1):(cnt>0?1:0);
-    col+='<div class="dheat-cell" style="background:'+heatColor(ratio)+';'+(k===todayK?'outline:1.5px solid var(--accent);outline-offset:1px':'')+'" title="'+k+': '+cnt+' done"></div>';}
-    heatCols+='<div class="dheat-col">'+col+'</div>';}
-  const heatCard='<div class="dcard"><div class="dcard-label">Habit consistency · last 17 weeks</div><div class="dheat">'+heatCols+'</div>'
-    +'<div class="dheat-foot">Less <span class="dheat-swatch" style="background:var(--surface-hover)"></span><span class="dheat-swatch" style="background:#5c4216"></span><span class="dheat-swatch" style="background:#9a6e1d"></span><span class="dheat-swatch" style="background:#cf8b1f"></span><span class="dheat-swatch" style="background:#e8a020"></span> More</div></div>';
-
   // tasks by category donut
   const byCat={};active.forEach(i=>{const c=i.category||'general';byCat[c]=(byCat[c]||0)+1;});
   const catE=Object.entries(byCat).sort((a,b)=>b[1]-a[1]),top=catE.slice(0,5),otherN=catE.slice(5).reduce((a,e)=>a+e[1],0);
@@ -3602,7 +3593,6 @@ function renderDashboard(){
     +'<div class="dins-row" style="grid-template-columns:1fr">'+reviewCard+'</div>'
     +'<div class="dins-row" style="margin-top:13px">'+completedCard+'</div>'
     +'<div class="dins-row" style="margin-top:13px">'+catCard+compCard+'</div>'
-    +'<div class="dins-row" style="grid-template-columns:1fr;margin-top:13px">'+heatCard+'</div>'
     +'<div class="dash-sec">Reflections</div>'+reflectSection
     +'</div>';
   loadConditions();
