@@ -35,6 +35,7 @@
     --border:#232329;
     --border-2:#34343c;
     --text:#ededf2;
+    --text-1:#ededf2; /* alias used by the Graph view's UI chrome (search, toolbar, info panel) */
     --text-2:#8a8a97;
     --text-3:#83838d;
     --accent:#e8a020;
@@ -813,7 +814,7 @@
   @media(max-width:640px){.offline-pill{bottom:calc(70px + env(safe-area-inset-bottom,0px))}}
   /* ===== Graph view ===== */
   .graph-wrap{position:relative;width:100%;height:100%;min-height:60vh}
-  #graph-canvas{display:block;touch-action:none;border-radius:var(--radius-lg);background:radial-gradient(120% 90% at 50% 40%,rgba(232,160,32,.04),transparent 70%)}
+  #graph-canvas{display:block;touch-action:none;border-radius:var(--radius-lg);background:radial-gradient(120% 90% at 50% 38%,rgba(150,160,190,.035),transparent 72%)}
   .graph-legend{position:absolute;bottom:8px;left:8px;display:flex;flex-wrap:wrap;gap:5px 8px;max-width:max(150px,calc(50% - 150px));pointer-events:none}
   .graph-legend .gl{display:inline-flex;align-items:center;gap:5px;font:inherit;font-size:10px;color:var(--text-2);background:color-mix(in srgb,var(--surface) 86%,transparent);padding:3px 8px;border-radius:20px;border:1px solid transparent}
   .graph-legend button.gl{pointer-events:auto;cursor:pointer}
@@ -878,6 +879,18 @@
   .graph-tip b{display:block;color:var(--text-1);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .graph-tip span{color:var(--text-3);font-size:10.5px}
   @media(max-width:560px){.graph-info{left:8px;right:8px;top:auto;bottom:8px;width:auto}.graph-legend{display:none}.graph-hint{display:none}#graph-mini{display:none}.graph-tip{display:none}.graph-stats{bottom:8px}}
+  /* ===== Drag to reorder / recategorize ===== */
+  .item-grip{display:flex;align-items:center;justify-content:center;align-self:stretch;width:18px;margin-right:-2px;color:var(--text-3);cursor:grab;opacity:0;transition:opacity var(--t),color var(--t);touch-action:none;flex-shrink:0;-webkit-tap-highlight-color:transparent}
+  .item:hover .item-grip{opacity:.5}
+  .item-grip:hover{opacity:1;color:var(--text-2)}
+  .item-grip:active{cursor:grabbing}
+  @media(hover:none){.item-grip{opacity:.38}}
+  .item.dragging{opacity:.35}
+  .drag-ghost{position:fixed;left:0;top:0;z-index:9999;pointer-events:none;box-shadow:var(--shadow-pop);border-radius:var(--radius-lg);opacity:.96;transform:translate(-50%,-50%);will-change:transform;background:var(--surface)}
+  .drag-ph{height:0;border-top:2px dashed var(--accent);border-radius:2px;margin:3px 2px;box-shadow:0 0 10px var(--accent-ring);animation:phIn .12s ease}
+  @keyframes phIn{from{opacity:0}to{opacity:1}}
+  .nav-item.drop-target{background:var(--accent-dim);box-shadow:inset 0 0 0 1px var(--accent);color:var(--accent)}
+  .nav-item.drop-target .cat-dot{box-shadow:0 0 0 3px var(--accent-dim)}
 </style>
 </head>
 <body>
@@ -1370,7 +1383,7 @@ function buildCatOptions(selId){
 function buildCatNav(){
   const el=document.getElementById('cat-nav');
   el.innerHTML=Object.entries(CATS).map(([k,v])=>`
-    <div class="nav-item" id="nav-cat-${k}" onclick="setFilter('${k}','cat')" role="button" tabindex="0"
+    <div class="nav-item" id="nav-cat-${k}" data-cat="${k}" onclick="setFilter('${k}','cat')" role="button" tabindex="0"
          style="--cat-color:${v.color};--cat-dim:${v.dim}">
       <span class="cat-dot" style="background:${v.color}"></span>
       ${v.label} <span class="nav-count" id="cnt-cat-${k}">0</span>
@@ -1475,12 +1488,13 @@ function applySort(items){
     case 'newest': return arr.sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||''));
     case 'oldest': return arr.sort((a,b)=>(a.createdAt||'').localeCompare(b.createdAt||''));
     case 'az':     return arr.sort((a,b)=>(a.text||'').localeCompare(b.text||''));
+    case 'manual': return arr.sort((a,b)=>((a.order==null?1e9:a.order)-(b.order==null?1e9:b.order))||(a.createdAt||'').localeCompare(b.createdAt||''));
     default:       return sortByPriority(arr);
   }
 }
 function setSort(v){sortBy=v;render();}
 function sortControlHTML(){
-  const opts=[['priority','Priority'],['due','Due date'],['newest','Newest'],['oldest','Oldest'],['az','A–Z']];
+  const opts=[['priority','Priority'],['due','Due date'],['newest','Newest'],['oldest','Oldest'],['az','A–Z'],['manual','My order']];
   return '<select class="sort-select" aria-label="Sort items by" onchange="setSort(this.value)" onclick="event.stopPropagation()">'
     +opts.map(o=>'<option value="'+o[0]+'"'+(sortBy===o[0]?' selected':'')+'>Sort: '+o[1]+'</option>').join('')+'</select>';
 }
@@ -1588,6 +1602,7 @@ function itemHTML(item, isArchiveView, idx){
   return`<div class="item" id="item-${item.id}" role="listitem" style="--item-cat-color:${cat.color};--i:${Math.min(idx||0,18)};${opacity}">
     <div class="item-bar"></div>
     <div class="item-inner">
+      ${isArchiveView?'':`<div class="item-grip" data-grip="${item.id}" title="Drag to reorder, or onto a Life Area to recategorize" aria-hidden="true"><svg width="10" height="16" viewBox="0 0 10 16" fill="currentColor"><circle cx="3" cy="4" r="1.15"/><circle cx="7" cy="4" r="1.15"/><circle cx="3" cy="8" r="1.15"/><circle cx="7" cy="8" r="1.15"/><circle cx="3" cy="12" r="1.15"/><circle cx="7" cy="12" r="1.15"/></svg></div>`}
       ${checkEl}
       <div class="item-body" onclick="openDetail('${item.id}')" role="button" tabindex="0" aria-label="Open details: ${esc(item.text||'')}" onkeydown="if(event.key==='Enter'){openDetail('${item.id}');event.preventDefault()}" title="Click to open & edit details">
         <div class="item-text" style="${isArchiveView?'text-decoration:line-through;color:var(--text-3)':''}"><span class="item-emoji">${item.emoji||guessEmoji(item.text||'',item.category)}</span> ${esc(item.text||'Untitled')}</div>
@@ -1599,6 +1614,89 @@ function itemHTML(item, isArchiveView, idx){
     </div>
   </div>`;
 }
+
+/* ===== Drag to reorder (within the list) + drag onto a Life Area to recategorize =====
+   Pointer-based so it works with mouse AND touch. Dragging starts only from the grip handle,
+   so taps on the checkbox / body / delete still behave normally. */
+(function(){
+  var d=null; // active drag: {id, el, sx, sy, started, ghost, ph, overCat}
+  function clearTargets(){ if(d){ if(d.overCat){d.overCat.classList.remove('drop-target');d.overCat=null;} if(d.ph&&d.ph.parentNode)d.ph.parentNode.removeChild(d.ph); } }
+  function begin(){
+    d.started=true;
+    var r=d.el.getBoundingClientRect();
+    var g=d.el.cloneNode(true); g.classList.add('drag-ghost'); g.style.width=r.width+'px';
+    document.body.appendChild(g); d.ghost=g;
+    d.el.classList.add('dragging');
+    d.ph=document.createElement('div'); d.ph.className='drag-ph';
+  }
+  function onDown(e){
+    if(e.button!=null&&e.button>0)return;
+    var grip=e.target.closest&&e.target.closest('.item-grip'); if(!grip)return;
+    var id=grip.getAttribute('data-grip'); var el=document.getElementById('item-'+id); if(!el)return;
+    d={id:id,el:el,sx:e.clientX,sy:e.clientY,started:false,ghost:null,ph:null,overCat:null};
+    e.preventDefault();
+    document.addEventListener('pointermove',onMove,{passive:false});
+    document.addEventListener('pointerup',onUp);
+    document.addEventListener('pointercancel',onUp);
+  }
+  function onMove(e){
+    if(!d)return;
+    if(!d.started){ if(Math.abs(e.clientX-d.sx)<4&&Math.abs(e.clientY-d.sy)<4)return; begin(); }
+    if(d.ghost)d.ghost.style.transform='translate('+e.clientX+'px,'+e.clientY+'px) translate(-50%,-50%)';
+    if(e.cancelable)e.preventDefault();
+    var under=document.elementFromPoint(e.clientX,e.clientY);
+    var navCat=under&&under.closest?under.closest('#cat-nav .nav-item'):null;
+    if(navCat){ if(d.overCat!==navCat){ if(d.overCat)d.overCat.classList.remove('drop-target'); d.overCat=navCat; navCat.classList.add('drop-target'); } if(d.ph&&d.ph.parentNode)d.ph.parentNode.removeChild(d.ph); return; }
+    if(d.overCat){d.overCat.classList.remove('drop-target');d.overCat=null;}
+    var list=document.getElementById('list'); if(!list)return;
+    var items=[].slice.call(list.querySelectorAll('.item')).filter(function(x){return x!==d.el;});
+    var tgt=null,before=false;
+    for(var i=0;i<items.length;i++){var b=items[i].getBoundingClientRect();if(e.clientY<b.top+b.height/2){tgt=items[i];before=true;break;}}
+    if(!tgt&&items.length){tgt=items[items.length-1];before=false;}
+    if(tgt)tgt.parentNode.insertBefore(d.ph, before?tgt:tgt.nextSibling);
+  }
+  function onUp(){
+    document.removeEventListener('pointermove',onMove,{passive:false});
+    document.removeEventListener('pointerup',onUp);
+    document.removeEventListener('pointercancel',onUp);
+    if(!d)return; var cur=d; d=null;
+    if(cur.ghost&&cur.ghost.parentNode)cur.ghost.parentNode.removeChild(cur.ghost);
+    cur.el.classList.remove('dragging');
+    if(!cur.started){ if(cur.overCat)cur.overCat.classList.remove('drop-target'); return; }
+    if(cur.overCat){
+      var cat=cur.overCat.getAttribute('data-cat'); cur.overCat.classList.remove('drop-target');
+      if(cur.ph&&cur.ph.parentNode)cur.ph.parentNode.removeChild(cur.ph);
+      if(cat)assignCategory(cur.id,cat);
+      return;
+    }
+    var targetId=null;
+    if(cur.ph&&cur.ph.parentNode){ var s=cur.ph.nextElementSibling; while(s&&!s.classList.contains('item'))s=s.nextElementSibling; targetId=s?s.id.replace('item-',''):null; cur.ph.parentNode.removeChild(cur.ph); }
+    commitReorder(cur.id,targetId);
+  }
+  function assignCategory(id,cat){
+    var arr=load(); var it=arr.find(function(x){return x.id===id;}); if(!it||it.category===cat)return;
+    it.category=cat; it.userEdited=true; it.updatedAt=new Date().toISOString();
+    save(arr); render(); updateCounts();
+    if(typeof toast==='function')toast('Moved to '+(((CATS[cat]||{}).label)||cat));
+  }
+  function commitReorder(id,targetId){
+    var all=load();
+    // Bake the currently-displayed order into `order` first, so flipping to "My order" doesn't reshuffle
+    var view=applySort(all.filter(function(x){return !x.archived;}));
+    var pos={}; view.forEach(function(x,i){pos[x.id]=i;});
+    all.forEach(function(x){ if(pos[x.id]==null)pos[x.id]=1e6; });
+    all.sort(function(a,b){return pos[a.id]-pos[b.id];});
+    var from=-1; for(var i=0;i<all.length;i++){if(all[i].id===id){from=i;break;}} if(from<0)return;
+    var moved=all.splice(from,1)[0];
+    var to=all.length; if(targetId){for(var j=0;j<all.length;j++){if(all[j].id===targetId){to=j;break;}}}
+    all.splice(to,0,moved);
+    all.forEach(function(x,i){x.order=i;});
+    var switched=(sortBy!=='manual'); sortBy='manual';
+    save(all); render(); updateCounts();
+    if(typeof toast==='function')toast(switched?'Reordered — sorting by “My order”':'Reordered');
+  }
+  document.addEventListener('pointerdown',onDown);
+})();
 
 function updateTabBar(){
   ['dashboard','list','daily','journal','musubi'].forEach(function(v){var e=document.getElementById('tab-'+v);if(e){var on=view===v;e.classList.toggle('active',on);if(on)e.setAttribute('aria-current','page');else e.removeAttribute('aria-current');}});
@@ -2000,22 +2098,41 @@ function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').repl
 // Ordered most-specific first; mirrors JB's fixed category set. Returns 'general' if nothing fits.
 function guessCategory(text,notes){
   const s=((text||'')+' '+(notes||'')).toLowerCase();
-  const map=[
-    [/\barchie\b|\bgigi\b|\bbaby\b|diaper|nursery|stroller|\bpump\b|onesie|\bcrib\b|toddler|\bkids?\b/,'kids'],
-    [/mackenzie|kenzie|\bdad\b|\bmom\b|\bwife\b|partner|in-?laws?|\bfamily\b|anniversary/,'family'],
-    [/musubi|shopify|instagram|\big\b|\btee\b|t-?shirt|\bshirt\b|apparel|hoodie|\bmerch\b|throwback|auntie|\bisland\b|hawaii|hawaiian|oahu|polynesian|\bbrand\b/,'musubi'],
-    [/answerlab|end-of-day|\beod\b|stakeholder|usability|research study|\bheber\b|freelance|client deck|\bdeck\b/,'work'],
-    [/\bcode\b|coding|\bapp\b|\bapi\b|\bai\b|claude|chatgpt|\broms?\b|emulat|\bserver\b|\bvps\b|github|\brepo\b|roman td|deploy|website|web app|automation|\bscript\b|supabase|obsidian|second brain/,'tech'],
-    [/\bbill\b|\btaxe?s?\b|invoice|\brent\b|mortgage|invest|stocks?|portfolio|\bbank\b|payment|\bpay\b|budget|insurance|refund|venmo|paypal/,'finance'],
-    [/\bgym\b|workout|work out|\blift\b|hypertrophy|israetel|\btrain\b|cardio|\brun\b|\bdiet\b|protein|macros|doctor|dentist|appointment|checkup|therapy|\bsleep\b|stretch|mobility|\bmeds?\b|vitamin|supplement/,'health'],
-    [/grocer|\bmilk\b|\beggs?\b|\bbread\b|tuna|\bahi\b|poke|chicken|\bbeef\b|\brice\b|\bsnacks?\b|produce|\bfruit\b|veggie|trader joe|\bfood\b/,'grocery'],
-    [/errand|\bcoins?\b|key fob|\bfob\b|post office|\bdmv\b|pick ?up|drop ?off|dry clean|car wash|oil change/,'errands'],
-    [/\bbuy\b|\border\b|\bshop\b|purchase|amazon|\bcart\b|\bgear\b|accessor/,'shopping'],
-    [/\bgame\b|gaming|\bmovie\b|\bshow\b|\bhobby\b|vacation|\btrip\b|\btravel\b|concert|\bsurf\b|\bbeach\b|leisure/,'lifestyle'],
-    [/haircut|barber|relationship|\badmin\b|password|reflect|self-?care/,'personal']
+  // Weighted scoring, not first-match: every signal adds weight and the highest total wins.
+  // Strong identity/brand cues (weight 3) outscore generic verbs (weight 1), so
+  // "order Archie a onesie" → kids (not shopping) and "ship Musubi tees" → musubi (not shopping).
+  // Ties favour the earlier (more specific) category via SIG order. [regex, category, weight]
+  const SIG=[
+    // strong identity / proper nouns
+    [/\bmusubi\b|musubistrong|throwback thursday|auntie'?s favou?rite/,'musubi',3],
+    [/answerlab|\bheber\b/,'work',3],
+    [/\barchie\b|\bgigi\b/,'kids',3],
+    [/mackenzie|kenzie/,'family',3],
+    [/roman ?td|jb ?os|obsidian|\bclaude\b|\bsupabase\b|\bmanus\b/,'tech',3],
+    [/israetel|\brp\b|hypertrophy/,'health',3],
+    // domain words
+    [/shopify|instagram|\big\b|\btee\b|t-?shirt|\bshirt\b|apparel|hoodie|\bmerch\b|\bdrop\b|pop-?up|\bbooth\b|\bvendor\b|\bcollab\b|\bdesigns?\b|photo ?shoot|mockup|\bisland\b|hawaii|hawaiian|\boahu\b|polynesian|\bpacific\b|\bbrand\b|throwback|auntie/,'musubi',2],
+    [/end-of-day|\beod\b|stakeholder|usability|research study|client deck|\bdeck\b|freelance|\bclient\b/,'work',2],
+    [/\bbaby\b|diaper|nursery|stroller|\bpump\b|onesie|\bcrib\b|toddler|\bkids?\b|bottle|formula/,'kids',2],
+    [/\bdad\b|\bmom\b|\bwife\b|partner|in-?laws?|\bfamily\b|anniversary|\bvisit\b/,'family',2],
+    [/\bcode\b|coding|\bapp\b|\bapi\b|\bai\b|chatgpt|\broms?\b|emulat|\bserver\b|\bvps\b|github|\brepo\b|deploy|website|web app|automation|\bscript\b|second brain|\bagent\b|\bmcp\b|telegram|pages/,'tech',2],
+    [/\bbill\b|\btaxe?s?\b|invoice|\brent\b|mortgage|invest|stocks?|portfolio|\bbank\b|payment|budget|insurance|refund|venmo|paypal|subscription|\brenew/,'finance',2],
+    [/\bgym\b|workout|work ?out|\blift\b|\btrain(ing)?\b|cardio|\bdiet\b|protein|macros|doctor|dentist|appointment|checkup|therapy|\bsleep\b|stretch|mobility|\bmeds?\b|vitamin|supplement|deload|mesocycle|\bwalk\b|\bsteps?\b/,'health',2],
+    [/grocer|\bmilk\b|\beggs?\b|\bbread\b|tuna|\bahi\b|poke|chicken|\bbeef\b|\brice\b|\bsnacks?\b|produce|\bfruit\b|veggie|trader joe|\bfood\b/,'grocery',2],
+    [/errand|\bcoins?\b|key fob|\bfob\b|post office|\bdmv\b|dry clean|car wash|oil change|\breturn\b|drop ?off/,'errands',2],
+    [/\bgame\b|gaming|\bmovie\b|\bshow\b|\bhobby\b|vacation|\btrip\b|\btravel\b|concert|\bsurf\b|\bbeach\b|leisure/,'lifestyle',2],
+    [/haircut|barber|relationship|\badmin\b|password|reflect|self-?care|journal/,'personal',2],
+    // generic verbs / weak cues
+    [/\bbuy\b|\border\b|\bshop\b|purchase|amazon|\bcart\b|\bgear\b|accessor/,'shopping',1],
+    [/\brun\b/,'health',1],
+    [/\bpay\b/,'finance',1],
+    [/\bcall\b|\bemail\b|pick ?up/,'errands',1]
   ];
-  for(let i=0;i<map.length;i++){if(map[i][0].test(s))return map[i][1];}
-  return 'general';
+  const score={};
+  for(const sig of SIG){ if(sig[0].test(s)) score[sig[1]]=(score[sig[1]]||0)+sig[2]; }
+  let best=null,bestScore=0;
+  for(const sig of SIG){ const v=score[sig[1]]||0; if(v>bestScore){bestScore=v;best=sig[1];} }
+  return best||'general';
 }
 function guessEmoji(text,category){
   const s=(text||'').toLowerCase();
@@ -2352,7 +2469,7 @@ function graphGoNode(k){_G&&_G.goNode&&_G.goNode(k);}
 function graphIsolate(k){_G&&_G.iso&&_G.iso(k);}
 function graphSnapshot(){_G&&_G.snap&&_G.snap();}
 var GRAPH_GROUPS=[['item','Items','#9aa0a6'],['cat','Life areas','#e8a020'],['type','Types','#8a8f98'],['journal','Journal','#b07cc6'],['habit','Habits','#2dd4bf']];
-var TYPEC={task:'#5aa9e6',idea:'#e5b23a',note:'#9aa0a6',project:'#46d489'};
+var TYPEC={task:'#6f93bf',idea:'#cda94e',note:'#9aa0a6',project:'#5bb188'};
 function _hexA(h,a){h=String(h||'#888').replace('#','');if(h.length===3)h=h[0]+h[0]+h[1]+h[1]+h[2]+h[2];var n=parseInt(h,16);if(isNaN(n))return 'rgba(136,136,140,'+a+')';return 'rgba('+((n>>16)&255)+','+((n>>8)&255)+','+(n&255)+','+a+')';}
 function renderGraph(){
   setTitle('Graph');
@@ -2433,8 +2550,8 @@ function renderGraph(){
   function frameTo(list,pad,maxS,smooth){if(!list.length)return;var bx0=boxOf(list),gw=bx0.c-bx0.a||1,gh=bx0.d-bx0.b||1;var s=Math.max(0.3,Math.min(maxS||2.4,Math.min((W-pad)/gw,(H-pad)/gh)));var nx=W/2-(bx0.a+gw/2)*s,ny=H/2-(bx0.b+gh/2)*s;if(smooth)camTo(s,nx,ny);else{scale=s;ox=nx;oy=ny;}}
   function fitView(smooth){var vis=nodes.filter(visible);frameTo(vis,70,2.4,smooth);}
   // --- Ambient starfield (screen-space, parallax) for depth ---
-  var stars=[];for(var si=0;si<46;si++)stars.push({x:Math.random(),y:Math.random(),z:0.3+Math.random()*0.7,ph:Math.random()*6.28});
-  function drawStars(){ctx.setTransform(dpr,0,0,dpr,0,0);for(var i=0;i<stars.length;i++){var s=stars[i];var drift=RM?0:_now*0.000004*s.z,wob=RM?0:Math.sin(_now*0.0003+s.ph)*4;var x=((s.x+drift)%1)*W,y=s.y*H+wob;var tw=RM?0.12:0.12+0.10*(0.5+0.5*Math.sin(_now*0.0011+s.ph*3));ctx.beginPath();ctx.arc(x,y,s.z*1.3,0,6.2832);ctx.fillStyle='rgba(180,190,220,'+tw+')';ctx.fill();}}
+  var stars=[];for(var si=0;si<22;si++)stars.push({x:Math.random(),y:Math.random(),z:0.3+Math.random()*0.7,ph:Math.random()*6.28});
+  function drawStars(){ctx.setTransform(dpr,0,0,dpr,0,0);for(var i=0;i<stars.length;i++){var s=stars[i];var drift=RM?0:_now*0.000004*s.z,wob=RM?0:Math.sin(_now*0.0003+s.ph)*4;var x=((s.x+drift)%1)*W,y=s.y*H+wob;var tw=RM?0.05:0.045+0.045*(0.5+0.5*Math.sin(_now*0.0011+s.ph*3));ctx.beginPath();ctx.arc(x,y,s.z*1.2,0,6.2832);ctx.fillStyle='rgba(150,160,190,'+tw+')';ctx.fill();}}
   // --- Curved edge geometry + traveling neural pulses ---
   function ctrl(ax,ay,bx2,by2){var mx=(ax+bx2)/2,my=(ay+by2)/2,dx=bx2-ax,dy=by2-ay,len=Math.hypot(dx,dy)||1;var bend=Math.min(len*0.13,26);return {x:mx+(-dy/len)*bend,y:my+(dx/len)*bend};}
   function quad(ax,ay,cx,cy,bx2,by2,t){var u=1-t;return {x:u*u*ax+2*u*t*cx+t*t*bx2,y:u*u*ay+2*u*t*cy+t*t*by2};}
@@ -2474,22 +2591,36 @@ function renderGraph(){
       var pulse=RM?0.5:0.5+0.5*Math.sin(_now*0.0038+n.ph);
       var age=n.born?(_now-n.born):1e9, grow=(RM||age>=600)?1:(0.4+0.6*(1-Math.pow(1-age/600,2))), R=n.r*grow;
       if(!dim&&(n===selected||n.od||n.kind==='hub')){var aur=n.od?'#f87171':(n===selected?ACC:col);
-        ctx.beginPath();ctx.arc(X,Y,R+5+pulse*5,0,6.2832);ctx.fillStyle=_hexA(aur,0.08+pulse*0.12);ctx.fill();}
-      if(!dim&&n.recent&&n!==selected){ctx.beginPath();ctx.arc(X,Y,R+4+pulse*3,0,6.2832);ctx.strokeStyle=_hexA('#7CFFB2',0.3+pulse*0.4);ctx.lineWidth=1.4/scale;ctx.stroke();} // touched today
-      if(!RM&&!dim&&n===selected){for(var sk=0;sk<2;sk++){var st2=((_now*0.0007+sk*0.5)%1);ctx.beginPath();ctx.arc(X,Y,R+st2*30,0,6.2832);ctx.strokeStyle=_hexA(ACC,0.5*(1-st2));ctx.lineWidth=1.5/scale;ctx.stroke();}} // sonar ping
-      if(glow&&!dim){ctx.shadowColor=col;ctx.shadowBlur=(n.kind==='hub'?22:n.kind==='item'?6:13);}
-      ctx.beginPath();ctx.arc(X,Y,R,0,6.2832);ctx.fillStyle=col;ctx.fill();ctx.shadowBlur=0;
+        ctx.beginPath();ctx.arc(X,Y,R+4+pulse*4,0,6.2832);ctx.fillStyle=_hexA(aur,0.05+pulse*0.07);ctx.fill();}
+      if(!dim&&n.recent&&n!==selected){ctx.beginPath();ctx.arc(X,Y,R+4+pulse*3,0,6.2832);ctx.strokeStyle=_hexA('#7CFFB2',0.18+pulse*0.18);ctx.lineWidth=1.3/scale;ctx.stroke();} // touched today
+      if(!RM&&!dim&&n===selected){var st2=((_now*0.0006)%1);ctx.beginPath();ctx.arc(X,Y,R+st2*24,0,6.2832);ctx.strokeStyle=_hexA(ACC,0.26*(1-st2));ctx.lineWidth=1.3/scale;ctx.stroke();} // sonar ping (single, quiet)
+      if(glow&&!dim){ctx.shadowColor=col;ctx.shadowBlur=(n.kind==='hub'?9:n.kind==='item'?0:5);}
+      ctx.beginPath();ctx.arc(X,Y,R,0,6.2832);ctx.fillStyle=(!dim&&n.kind==='item')?_hexA(col,0.88):col;ctx.fill();ctx.shadowBlur=0;
       if(n.kind==='hub'){ctx.beginPath();ctx.arc(X,Y,R+3.5,0,6.2832);ctx.strokeStyle=_hexA('#ffffff',0.5);ctx.lineWidth=1.4/scale;ctx.stroke();} // core ring
       if(n.od){ctx.lineWidth=2/scale;ctx.strokeStyle='#f87171';ctx.stroke();}
       else if(n.hi){ctx.lineWidth=1.6/scale;ctx.strokeStyle='rgba(255,255,255,.7)';ctx.stroke();}
       else if(n.kind!=='item'&&n.kind!=='hub'){ctx.lineWidth=1.5/scale;ctx.strokeStyle='rgba(0,0,0,.30)';ctx.stroke();}
       if(!dim&&n.prog!=null&&n.prog>0){ctx.beginPath();ctx.arc(X,Y,R+2.6,-1.5708,-1.5708+n.prog*6.2832);ctx.strokeStyle=_hexA('#ffffff',0.9);ctx.lineWidth=2.2/scale;ctx.lineCap='round';ctx.stroke();ctx.lineCap='butt';} // step-progress arc
-      if(!RM&&age<600){ctx.beginPath();ctx.arc(X,Y,R+(age/600)*26,0,6.2832);ctx.strokeStyle=_hexA(col,0.6*(1-age/600));ctx.lineWidth=2/scale;ctx.stroke();} // spawn burst
+      if(!RM&&age<600){ctx.beginPath();ctx.arc(X,Y,R+(age/600)*24,0,6.2832);ctx.strokeStyle=_hexA(col,0.4*(1-age/600));ctx.lineWidth=1.8/scale;ctx.stroke();} // spawn burst
       if(!dim&&R>=7&&!(n.kind==='hub'||n.kind==='item')){ctx.beginPath();ctx.arc(X-R*0.3,Y-R*0.3,R*0.34,0,6.2832);ctx.fillStyle='rgba(255,255,255,.22)';ctx.fill();}});
     ctx.globalAlpha=1;ctx.textAlign='center';ctx.textBaseline='top';
-    nodes.forEach(function(n){if(!visible(n))return;var big=(n.kind!=='item'&&n.kind!=='journal'&&n.kind!=='habit');var emph=(n===hover||n===selected);var show=big||emph||(hi&&hi[n.key]&&(scale>1.1||q));if(!show)return;ctx.globalAlpha=(hi&&!hi[n.key])?0.18:1;ctx.font=(n.kind==='hub'?'600 11px ':big?'600 10px ':'9px ')+"'Geist',system-ui,sans-serif";var t=n.label.length>26?n.label.slice(0,25)+'…':n.label,lx=bx(n),ly=by(n)+n.r+4;
-      if(emph){var tw=ctx.measureText(t).width,ph2=13/scale;ctx.fillStyle='rgba(12,12,16,.72)';if(ctx.roundRect){ctx.beginPath();ctx.roundRect(lx-tw/2-5/scale,ly-2/scale,tw+10/scale,ph2+4/scale,5/scale);ctx.fill();}} // readable label pill
-      ctx.fillStyle=big||emph?'#fff':'rgba(230,230,235,.92)';ctx.fillText(t,lx,ly);});
+    // Collision-aware labels: claim space in priority order (hubs/structure → emphasised → items) so
+    // text never stacks on top of itself. This is the core "no overlapping text on mobile" fix —
+    // crowded leaf labels simply yield to whatever already owns that spot.
+    var placed=[];
+    function _ov(r){for(var i=0;i<placed.length;i++){var p=placed[i];if(r.x<p.x+p.w&&r.x+r.w>p.x&&r.y<p.y+p.h&&r.y+r.h>p.y)return true;}return false;}
+    function labelFor(n){var big=(n.kind!=='item'&&n.kind!=='journal'&&n.kind!=='habit');var emph=(n===hover||n===selected);var show=big||emph||(hi&&hi[n.key]&&(scale>1.1||q));if(!show)return;
+      ctx.font=(n.kind==='hub'?'600 11px ':big?'600 10px ':'9px ')+"'Geist',system-ui,sans-serif";
+      var t=n.label.length>26?n.label.slice(0,25)+'…':n.label,lx=bx(n),ly=by(n)+n.r+4;
+      var tw=ctx.measureText(t).width,fh=(n.kind==='hub'?11:big?10:9)+2;
+      var rect={x:lx-tw/2-2,y:ly-1,w:tw+4,h:fh+2};
+      if(n.kind!=='hub'&&!emph&&_ov(rect))return; // hubs + the actively-touched node always win; the rest defer
+      placed.push(rect);
+      ctx.globalAlpha=(hi&&!hi[n.key])?0.18:1;
+      if(emph){var ph2=13/scale;ctx.fillStyle='rgba(12,12,16,.72)';if(ctx.roundRect){ctx.beginPath();ctx.roundRect(lx-tw/2-5/scale,ly-2/scale,tw+10/scale,ph2+4/scale,5/scale);ctx.fill();}} // readable label pill
+      ctx.fillStyle=big||emph?'#fff':'rgba(230,230,235,.92)';ctx.fillText(t,lx,ly);}
+    nodes.forEach(function(n){if(visible(n)&&((n.kind!=='item'&&n.kind!=='journal'&&n.kind!=='habit')||n===hover||n===selected))labelFor(n);}); // structure + emphasis first
+    nodes.forEach(function(n){if(visible(n)&&(n.kind==='item'||n.kind==='journal'||n.kind==='habit')&&n!==hover&&n!==selected)labelFor(n);}); // leaves fill remaining gaps
     ctx.globalAlpha=1;ctx.restore();
     if(nodes.length<=1){ctx.setTransform(dpr,0,0,dpr,0,0);ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='rgba(230,230,235,.5)';ctx.font="500 14px 'Geist',system-ui,sans-serif";ctx.fillText('Add a task, note, or habit and watch your graph come alive.',W/2,H/2+44);}
     drawMini();
