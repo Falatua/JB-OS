@@ -2897,11 +2897,11 @@ function renderGraph(){
   fitCanvas(); build();
   function visible(n){return n.kind==='hub'||groups[n.group]!==false;}
   function step(){
-    var kRep=3200,kSpr=0.02,grav=0.014;
-    for(var i=0;i<nodes.length;i++){var a=nodes[i];for(var j=i+1;j<nodes.length;j++){var b=nodes[j];var dx=a.x-b.x,dy=a.y-b.y,d2=dx*dx+dy*dy||0.01,d=Math.sqrt(d2),f=Math.min(kRep/d2,52),fx=dx/d*f,fy=dy/d*f;a.vx+=fx;a.vy+=fy;b.vx-=fx;b.vy-=fy;}}
-    edges.forEach(function(e){var a=e[0],b=e[1],dx=b.x-a.x,dy=b.y-a.y,d=Math.sqrt(dx*dx+dy*dy)||0.01;var leaf=(a.kind==='item'||b.kind==='item'||a.kind==='journal'||b.kind==='journal'||a.kind==='habit'||b.kind==='habit');var f=kSpr*(d-(leaf?66:104)),fx=dx/d*f,fy=dy/d*f;a.vx+=fx;a.vy+=fy;b.vx-=fx;b.vy-=fy;});
+    var kRep=5600,kSpr=0.02,grav=0.011;
+    for(var i=0;i<nodes.length;i++){var a=nodes[i];for(var j=i+1;j<nodes.length;j++){var b=nodes[j];var dx=a.x-b.x,dy=a.y-b.y,d2=dx*dx+dy*dy||0.01,d=Math.sqrt(d2),f=Math.min(kRep/d2,90),fx=dx/d*f,fy=dy/d*f;a.vx+=fx;a.vy+=fy;b.vx-=fx;b.vy-=fy;}}
+    edges.forEach(function(e){var a=e[0],b=e[1],dx=b.x-a.x,dy=b.y-a.y,d=Math.sqrt(dx*dx+dy*dy)||0.01;var leaf=(a.kind==='item'||b.kind==='item'||a.kind==='journal'||b.kind==='journal'||a.kind==='habit'||b.kind==='habit');var f=kSpr*(d-(leaf?94:156)),fx=dx/d*f,fy=dy/d*f;a.vx+=fx;a.vy+=fy;b.vx-=fx;b.vy-=fy;});
     nodes.forEach(function(n){if(n===drag)return;
-      if(n.cl){n.vx+=(n.cl.x-n.x)*0.011;n.vy+=(n.cl.y-n.y)*0.011;} // cluster items around their life-area → readable neighborhoods
+      if(n.cl){n.vx+=(n.cl.x-n.x)*0.0095;n.vy+=(n.cl.y-n.y)*0.0095;} // cluster items around their life-area → readable neighborhoods
       n.vx+=(W/2-n.x)*grav;n.vy+=(H/2-n.y)*grav;n.vx*=0.82;n.vy*=0.82;n.x+=n.vx*alpha;n.y+=n.vy*alpha;});
     alpha*=0.986;
   }
