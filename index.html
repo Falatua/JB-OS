@@ -1194,9 +1194,7 @@
         <label for="m-type">Type</label>
         <select id="m-type">
           <option value="task">Task</option>
-          <option value="idea">Idea</option>
           <option value="note">Note</option>
-          <option value="project">Project</option>
         </select>
       </div>
       <div class="field">
@@ -1241,9 +1239,7 @@
         <span class="prop-label"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2.5" y="2.5" width="11" height="11" rx="2.5"/><path d="M5.5 8l1.8 1.8L10.5 6"/></svg> Type</span>
         <select id="d-type">
           <option value="task">Task</option>
-          <option value="idea">Idea</option>
           <option value="note">Note</option>
-          <option value="project">Project</option>
         </select>
       </div>
       <div class="prop-row">
@@ -1428,6 +1424,9 @@ const CATS = {
 };
 
 const TYPE_LABEL = {task:'Task',idea:'Idea',note:'Note',project:'Project'};
+// Types are now just Task (actionable) and Note (reference). Legacy idea/project items fold in:
+// idea -> note, project -> task. Used for display + dropdowns; items convert for real when edited/saved.
+function normType(t){return t==='idea'?'note':t==='project'?'task':((t==='task'||t==='note')?t:'task');}
 const SRC_LABEL  = {telegram:'via Telegram',browser:'added manually',chat:'via chat',screenshot:'via screenshot'};
 
 function load(){try{return JSON.parse(localStorage.getItem(KEY))||[];}catch{return [];}}
@@ -1680,7 +1679,7 @@ function toggleItemStep(id,idx){
 
 function itemHTML(item, isArchiveView, idx){
   const cat=CATS[item.category||'general']||CATS.general;
-  const typeBadge=`<span class="badge badge-${item.type}">${TYPE_LABEL[item.type]||item.type}</span>`;
+  const typeBadge=`<span class="badge badge-${normType(item.type)}">${TYPE_LABEL[normType(item.type)]}</span>`;
   const catBadge=`<span class="badge-cat" style="background:${cat.dim};color:${cat.color}">${cat.label}</span>`;
   const prio=priorityBadgeHTML(item.priority);
   const srcLabel=SRC_LABEL[item.source]||(item.source||'added manually');
@@ -1909,7 +1908,7 @@ function openModal(){
   // Pre-fill Life Area / Type / Priority from the current filter so a New Item
   // defaults to the area you're viewing (e.g. in Personal → Personal, in High → High).
   const mc=document.getElementById('m-cat'); if(mc)mc.value=(filterMode==='cat'&&CATS[filter])?filter:'general';
-  const mt=document.getElementById('m-type'); if(mt)mt.value=(filterMode==='type')?filter:'task';
+  const mt=document.getElementById('m-type'); if(mt)mt.value=(filterMode==='type')?normType(filter):'task';
   const mp=document.getElementById('m-priority'); if(mp)mp.value=(filterMode==='prio'&&PRIORITY_IDS.includes(filter))?filter:'normal';
   document.getElementById('modal').classList.remove('hidden');
   setTimeout(()=>document.getElementById('m-title').focus(),50);
@@ -1981,7 +1980,7 @@ function openDetail(id){
   document.getElementById('d-description').value=it.description||it.notes||'';
   document.getElementById('d-status').value=it.archived?'done':'active';
   document.getElementById('d-cat').value=it.category||'general';
-  document.getElementById('d-type').value=it.type||'task';
+  document.getElementById('d-type').value=normType(it.type);
   document.getElementById('d-priority').value=it.priority||'normal';
   document.getElementById('d-duedate').value=it.dueDate||'';
   _dVideo=it.video||''; renderDetailVideo();
@@ -2881,7 +2880,7 @@ function renderGraph(){
     var x='<button class="gi-x" onclick="graphCloseInfo()" aria-label="Close">✕</button>';
     if(n.kind==='item'){var it=load().find(function(z){return z.id===n.ref.id;})||{};var cc=CATS[it.category||'general']||CATS.general;var st=(typeof stepStats==='function')?stepStats(it):null;
       return x+'<div class="gi-head"><span class="gi-emoji">'+(it.emoji||'•')+'</span><span class="gi-title">'+esc(it.text||'Untitled')+'</span></div>'
-        +'<div class="gi-badges"><span class="badge-cat" style="background:'+cc.dim+';color:'+cc.color+'">'+cc.label+'</span><span class="badge badge-'+(it.type||'task')+'">'+(TYPE_LABEL[it.type]||it.type||'Task')+'</span>'+priorityBadgeHTML(it.priority)+(it.dueDate?'<span class="due-chip '+dueClass(it.dueDate)+'">'+fmtDue(it.dueDate)+'</span>':'')+'</div>'
+        +'<div class="gi-badges"><span class="badge-cat" style="background:'+cc.dim+';color:'+cc.color+'">'+cc.label+'</span><span class="badge badge-'+normType(it.type)+'">'+TYPE_LABEL[normType(it.type)]+'</span>'+priorityBadgeHTML(it.priority)+(it.dueDate?'<span class="due-chip '+dueClass(it.dueDate)+'">'+fmtDue(it.dueDate)+'</span>':'')+'</div>'
         +(st?'<div class="gi-prog"><div class="prog-track"><div class="prog-fill" style="width:'+st.pct+'%"></div></div><span class="prog-count">'+st.done+'/'+st.total+'</span></div>':'')
         +(it.notes?'<div class="gi-notes">'+esc(it.notes)+'</div>':'')
         +connHTML(n)
