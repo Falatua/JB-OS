@@ -1,8 +1,9 @@
-// JB OS — Screenshot Capture Edge Function
-// Reads an iOS screenshot with Claude Haiku 4.5 (vision) and routes it to a Note (default) or
-// Task inside JB OS. Holds the Anthropic key server-side (never in the client). Two callers:
-//   • In-app web client  -> Supabase JWT in Authorization header, persist:false (client saves the item)
-//   • iOS "Save to JB OS" Shortcut -> x-jbos-token header, persist:true (this function writes the item)
+// JB OS — AI Edge Function (Screenshot Capture + Brain Dump)
+// Holds the Anthropic key server-side (never in the client). Three callers / modes:
+//   • Screenshot, web client -> Supabase JWT, body {image}, persist:false (client saves the item)
+//   • Screenshot, iOS Shortcut -> x-jbos-token header, body {image}, persist:true (function writes it)
+//   • Brain dump, web client -> Supabase JWT, body {text} -> returns {items:[...]} to preview & save
+// All modes share the same Haiku model + the $1.00/day cost cap (main:ss_budget).
 //
 // Deploy:  supabase functions deploy analyze-screenshot --no-verify-jwt
 // Secrets: supabase secrets set ANTHROPIC_API_KEY=...   JBOS_SHORTCUT_TOKEN=...
@@ -52,6 +53,73 @@ const json = (body: unknown, status = 200) =>
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
 const todayKey = () => new Date().toISOString().slice(0, 10);
 
+// ===== Brain-dump: split one plain-text ramble into multiple clean items =====
+const DUMP_PROMPT = (today: string) => `You are the capture assistant inside JB OS, a personal productivity OS. The user brain-dumps several things at once in plain language (often messy or voice-dictated). Split it into discrete items.
+
+RULES:
+- Split ONLY genuinely separate things. If it's clearly one thing, return one item. Don't over-split a single multi-clause thought.
+- TYPE: "task" if it's actionable (something to do — pay, order, call, buy, fix, schedule), "note" if it's reference/info/an idea/an event to remember ("dad's in town", "idea for...").
+- CATEGORY: the single best fit from exactly this set: ${CATEGORIES}. musubi = the Musubi Strong apparel brand; tech = coding/AI/devices; grocery = food; shopping = non-food goods; errands = run-around-town chores. Use general only as a last resort.
+- PRIORITY: "high" ONLY if money is at stake, there's a hard deadline, or it blocks something; otherwise "normal".
+- DUEDATE: resolve any time phrase ("today","tomorrow","Friday","next week","the 9th","Jun 9-11") to an absolute YYYY-MM-DD using today=${today}. For a range, use the START date. If no date is implied, null.
+- NOTES: a SHORT extra detail ONLY if the user gave more than the title needs — no padding, never restate the title. Usually "".
+- TITLE: clean, short, scannable.
+
+Respond with ONLY valid JSON — no preamble, no markdown fences:
+{"items":[{"title":"...","type":"task|note","category":"<one of the set>","priority":"normal|high","dueDate":"YYYY-MM-DD or null","notes":"short or empty"}]}`;
+
+async function brainDump(text: string, admin: any, ANTHROPIC_KEY: string) {
+  const today = todayKey();
+  // shared daily cost cap
+  const budgetId = `${SPACE}:ss_budget`;
+  const { data: bRow } = await admin.from("jbos_sync").select("payload").eq("id", budgetId).maybeSingle();
+  let budget = (bRow?.payload as { date?: string; spend?: number }) || { date: today, spend: 0 };
+  if (budget.date !== today) budget = { date: today, spend: 0 };
+  if ((budget.spend || 0) + PRECALL_GUARD > DAILY_CAP) return json({ error: "cap", budget: { spend: budget.spend || 0, cap: DAILY_CAP } });
+
+  let items: any[] = [];
+  let usage = { input_tokens: 0, output_tokens: 0 };
+  try {
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-api-key": ANTHROPIC_KEY, "anthropic-version": "2023-06-01" },
+      body: JSON.stringify({
+        model: MODEL,
+        max_tokens: 1500,
+        system: DUMP_PROMPT(today),
+        messages: [{ role: "user", content: String(text).slice(0, 4000) }],
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) { console.error("anthropic-dump", data); return json({ error: "ai", budget: { spend: budget.spend || 0, cap: DAILY_CAP } }); }
+    usage = data.usage || usage;
+    const t = (data.content?.[0]?.text || "").trim().replace(/^```(?:json)?/i, "").replace(/```$/, "").trim();
+    const parsed = JSON.parse(t);
+    items = Array.isArray(parsed.items) ? parsed.items : (Array.isArray(parsed) ? parsed : []);
+  } catch (e) {
+    console.error("dump-parse", e);
+    return json({ error: "ai" });
+  }
+
+  // record cost
+  const cost = usage.input_tokens * IN_COST + usage.output_tokens * OUT_COST;
+  budget = { date: today, spend: +((budget.spend || 0) + cost).toFixed(6) };
+  await admin.from("jbos_sync").upsert({ id: budgetId, payload: budget, updated_at: new Date().toISOString() });
+
+  // sanitize/normalize each item
+  const cats = CATEGORIES.split(" | ");
+  const clean = items.slice(0, 30).map((it: any) => ({
+    title: String(it.title || "").slice(0, 120).trim(),
+    type: it.type === "task" ? "task" : "note",
+    category: cats.includes(it.category) ? it.category : "general",
+    priority: it.priority === "high" ? "high" : "normal",
+    dueDate: (typeof it.dueDate === "string" && /^\d{4}-\d{2}-\d{2}$/.test(it.dueDate)) ? it.dueDate : null,
+    notes: String(it.notes || "").slice(0, 300).trim(),
+  })).filter((it: any) => it.title);
+
+  return json({ items: clean, budget: { spend: budget.spend, cap: DAILY_CAP } });
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   if (req.method !== "POST") return json({ error: "method" }, 405);
@@ -79,8 +147,12 @@ Deno.serve(async (req) => {
   }
   if (!authed) return json({ error: "auth" }, 401);
 
-  let payload: { image?: string; persist?: boolean; source_hint?: string };
+  let payload: { image?: string; persist?: boolean; source_hint?: string; text?: string };
   try { payload = await req.json(); } catch { return json({ error: "bad-json" }, 200); }
+
+  // ===== Brain-dump mode: split a plain-text ramble into multiple items =====
+  if (payload.text && !payload.image) return await brainDump(payload.text, admin, ANTHROPIC_KEY!);
+
   const image = (payload.image || "").replace(/^data:[^,]+,/, "");
   if (!image) return json({ error: "no-image" }, 200);
 

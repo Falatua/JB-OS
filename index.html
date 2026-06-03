@@ -909,6 +909,24 @@
   .dbk-chip b{color:var(--text);font-weight:650;font-variant-numeric:tabular-nums}
   .dbk-dot{width:7px;height:7px;border-radius:50%;background:var(--c,var(--text-3));flex-shrink:0}
 
+  /* ===== Brain dump ===== */
+  .bd-text{width:100%;background:var(--surface);border:1px solid var(--border-2);border-radius:var(--radius);padding:11px 12px;color:var(--text);font:inherit;font-size:14px;line-height:1.5;outline:none;resize:vertical;min-height:96px;transition:border-color var(--t)}
+  .bd-text:focus{border-color:var(--accent)}
+  .bd-actions{display:flex;align-items:center;gap:10px;margin-top:10px}
+  .bd-hint{font-size:11.5px;color:var(--text-3);flex:1;min-width:0}
+  .bd-hint .capture-spin{margin-right:6px}
+  #bd-preview{margin-top:12px;display:flex;flex-direction:column;gap:7px;max-height:300px;overflow-y:auto}
+  #bd-preview:empty{display:none}
+  .bd-item{border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);padding:9px 10px}
+  .bd-title{width:100%;background:none;border:none;outline:none;color:var(--text);font:inherit;font-size:13.5px;font-weight:500;padding:1px 0}
+  .bd-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:6px}
+  .bd-meta select{background:var(--surface-hover);border:1px solid var(--border);border-radius:6px;padding:3px 6px;color:var(--text-2);font:inherit;font-size:11px;outline:none;cursor:pointer}
+  .bd-meta select:focus{border-color:var(--accent);color:var(--text)}
+  .bd-chip{font-size:10.5px;color:var(--text-3);background:var(--surface-hover);border:1px solid var(--border);padding:2px 7px;border-radius:20px;white-space:nowrap}
+  .bd-chip.prio{color:var(--red);border-color:color-mix(in srgb,var(--red) 35%,var(--border))}
+  .bd-del{margin-left:auto;background:none;border:none;color:var(--text-3);cursor:pointer;font-size:13px;padding:2px 6px;border-radius:5px;line-height:1}
+  .bd-del:hover{background:var(--surface-hover);color:var(--red)}
+
   /* ===== Drag to reorder / recategorize ===== */
   .item-grip{display:flex;align-items:center;justify-content:center;align-self:stretch;width:18px;margin-right:-2px;color:var(--text-3);cursor:grab;opacity:0;transition:opacity var(--t),color var(--t);touch-action:none;flex-shrink:0;-webkit-tap-highlight-color:transparent}
   .item:hover .item-grip{opacity:.5}
@@ -952,7 +970,7 @@
   .cap-row .cap-ok{color:var(--green);font-weight:700;font-size:16px;line-height:1.1;flex-shrink:0}
   .capture-foot{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
   .capture-foot .btn{min-width:104px;justify-content:center}
-  @media(max-width:560px){.header-actions #capture-btn span{display:none}.header-actions #capture-btn{padding:6px 9px}}
+  @media(max-width:560px){.header-actions #capture-btn span,.header-actions #braindump-btn span{display:none}.header-actions #capture-btn,.header-actions #braindump-btn{padding:6px 9px}}
 </style>
 </head>
 <body>
@@ -1084,6 +1102,10 @@
       <span class="page-title-count" id="pt-count">0</span>
       <div class="header-actions">
         <span class="header-list-actions">
+          <button class="btn btn-ghost" id="braindump-btn" onclick="openBrainDump()" aria-label="Brain dump">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M8 2.2c-2 0-3.4 1.3-3.4 3 0 .4-.3.6-.6.9-.7.6-1 1.4-1 2.2 0 .9.5 1.6 1.2 2 .1 1.4 1.2 2.5 2.6 2.5M8 2.2c2 0 3.4 1.3 3.4 3 0 .4.3.6.6.9.7.6 1 1.4 1 2.2 0 .9-.5 1.6-1.2 2-.1 1.4-1.2 2.5-2.6 2.5M8 2.2v11.5"/></svg>
+            <span>Brain dump</span>
+          </button>
           <button class="btn btn-ghost" id="capture-btn" onclick="openCapture()" aria-label="Capture a screenshot">
             <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 4l1-1.5h4L11 4h2.5a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z"/><circle cx="8" cy="8.5" r="2.5"/></svg>
             <span>Capture</span>
@@ -1402,6 +1424,20 @@
   </div>
 </div>
 
+<div class="backdrop hidden" id="braindump-modal" onclick="closeBrainDumpOutside(event)" role="dialog" aria-modal="true" aria-label="Brain dump">
+  <div class="modal capture-modal">
+    <div class="capture-head"><span>🧠 Brain dump</span><button class="gi-x" onclick="closeBrainDump()" aria-label="Close">✕</button></div>
+    <textarea id="bd-text" class="bd-text" rows="4" placeholder="Dump everything on your mind — type, or tap the mic on your keyboard and just talk. Claude splits it into clean items." spellcheck="true"></textarea>
+    <div class="bd-actions">
+      <span class="bd-hint" id="bd-status">One thought per line or one long ramble — both work.</span>
+      <button class="btn btn-primary" id="bd-run" onclick="runBrainDump()">Dump</button>
+    </div>
+    <div id="bd-preview"></div>
+    <div class="capture-budget" id="bd-budget"></div>
+    <div class="capture-foot"><button class="btn btn-ghost" onclick="closeBrainDump()">Cancel</button><button class="btn btn-primary" id="bd-save" style="display:none" onclick="saveDumpItems()">Save all</button></div>
+  </div>
+</div>
+
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
@@ -1427,7 +1463,7 @@ const TYPE_LABEL = {task:'Task',idea:'Idea',note:'Note',project:'Project'};
 // Types are now just Task (actionable) and Note (reference). Legacy idea/project items fold in:
 // idea -> note, project -> task. Used for display + dropdowns; items convert for real when edited/saved.
 function normType(t){return t==='idea'?'note':t==='project'?'task':((t==='task'||t==='note')?t:'task');}
-const SRC_LABEL  = {telegram:'via Telegram',browser:'added manually',chat:'via chat',screenshot:'via screenshot'};
+const SRC_LABEL  = {telegram:'via Telegram',browser:'added manually',chat:'via chat',screenshot:'via screenshot',braindump:'via brain dump'};
 
 function load(){try{return JSON.parse(localStorage.getItem(KEY))||[];}catch{return [];}}
 function save(d){localStorage.setItem(KEY,JSON.stringify(d));if(typeof sbPushStore==='function'&&!_sbApplying)sbPushStore('todos');}
@@ -1683,7 +1719,7 @@ function itemHTML(item, isArchiveView, idx){
   const catBadge=`<span class="badge-cat" style="background:${cat.dim};color:${cat.color}">${cat.label}</span>`;
   const prio=priorityBadgeHTML(item.priority);
   const srcLabel=SRC_LABEL[item.source]||(item.source||'added manually');
-  const srcIcon=item.source==='telegram'?'↗':item.source==='screenshot'?'📸':'·';
+  const srcIcon=item.source==='telegram'?'↗':item.source==='screenshot'?'📸':item.source==='braindump'?'🧠':'·';
   const src=`<span class="item-src">${srcIcon} ${esc(srcLabel)}</span>`;
   const sub=item.description?item.description:item.notes;
   const notes=sub?`<div class="item-sub">${esc(sub)}</div>`:'';
@@ -2174,7 +2210,7 @@ function closeDetail(){document.getElementById('detail').classList.add('hidden')
 function closeDetailOutside(e){if(e.target.id==='detail')closeDetail();}
 
 document.addEventListener('keydown',e=>{
-  if(e.key==='Escape'){if(!document.getElementById('journal-modal').classList.contains('hidden')&&(!document.getElementById('j-question-menu').classList.contains('hidden')||!document.getElementById('j-template-menu').classList.contains('hidden'))){closeAllJMenus();return;}closeModal();closeDetail();closeJournal();closePrompts();closeRoutine();closeNav();closeCmd();closeCapture();}
+  if(e.key==='Escape'){if(!document.getElementById('journal-modal').classList.contains('hidden')&&(!document.getElementById('j-question-menu').classList.contains('hidden')||!document.getElementById('j-template-menu').classList.contains('hidden'))){closeAllJMenus();return;}closeModal();closeDetail();closeJournal();closePrompts();closeRoutine();closeNav();closeCmd();closeCapture();closeBrainDump();}
   if((e.metaKey||e.ctrlKey)&&(e.key==='k'||e.key==='K')){e.preventDefault();openCmd();return;}
   if((e.metaKey||e.ctrlKey)&&e.key==='n'){e.preventDefault();view==='journal'?newJournalEntry():primaryAdd();}
   if((e.metaKey||e.ctrlKey)&&e.key==='f'&&view==='list'){e.preventDefault();document.getElementById('search').focus();}
@@ -2384,6 +2420,84 @@ function logCapture(r,errMsg){
   log.insertBefore(row,log.firstChild);
 }
 function renderCaptureBudget(b){const el=document.getElementById('capture-budget');if(!el||!b)return;const cap=b.cap||1,spend=b.spend||0,pct=Math.min(100,Math.round(spend/cap*100)),col=spend>=cap*0.95?'var(--red)':spend>=cap*0.75?'var(--yellow)':'var(--green)';el.innerHTML='Today: $'+spend.toFixed(2)+' of $'+cap.toFixed(2)+' used<div class="cb-bar"><div class="cb-fill" style="width:'+pct+'%;background:'+col+'"></div></div>';}
+
+/* ===== Brain Dump =====
+   Type or dictate a ramble -> same Edge Function (text mode) -> Claude splits it into items ->
+   editable preview -> Save all. Reuses the screenshot AI plumbing + cost cap. */
+let _bdBusy=false;
+function openBrainDump(){
+  if(!SB||!_sbAuthed){toast('Sign in first to use brain dump.');return;}
+  const m=document.getElementById('braindump-modal'); if(!m)return;
+  document.getElementById('bd-text').value='';
+  document.getElementById('bd-preview').innerHTML='';
+  document.getElementById('bd-budget').innerHTML='';
+  document.getElementById('bd-status').textContent='One thought per line or one long ramble — both work.';
+  document.getElementById('bd-save').style.display='none';
+  m.classList.remove('hidden');
+  setTimeout(()=>{try{document.getElementById('bd-text').focus();}catch(e){}},60);
+}
+function closeBrainDump(){const m=document.getElementById('braindump-modal'); if(m)m.classList.add('hidden');}
+function closeBrainDumpOutside(e){if(e.target.id==='braindump-modal')closeBrainDump();}
+async function runBrainDump(){
+  if(_bdBusy)return;
+  const text=document.getElementById('bd-text').value.trim();
+  if(!text){toast('Type or dictate something first');return;}
+  if(!SB||!_sbAuthed){toast('Sign in first to use brain dump.');return;}
+  _bdBusy=true;
+  const run=document.getElementById('bd-run'), status=document.getElementById('bd-status');
+  run.disabled=true; status.innerHTML='<span class="capture-spin"></span>Reading your dump…';
+  document.getElementById('bd-preview').innerHTML='';
+  document.getElementById('bd-save').style.display='none';
+  try{
+    const {data,error}=await SB.functions.invoke('analyze-screenshot',{body:{text}});
+    if(error){status.textContent='Could not reach the analyzer. Check your connection and try again.';}
+    else if(data&&data.error){status.textContent=data.error==='cap'?'Daily $1.00 limit reached — resets at midnight.':'Analysis failed — try again.';if(data.budget)renderBdBudget(data.budget);}
+    else if(!data||!Array.isArray(data.items)||!data.items.length){status.textContent='Could not pull any items from that — try rephrasing.';}
+    else{status.textContent='Found '+data.items.length+' item'+(data.items.length>1?'s':'')+' — review, then Save all.';renderDumpPreview(data.items);if(data.budget)renderBdBudget(data.budget);}
+  }catch(e){status.textContent='Something went wrong. Try again.';}
+  run.disabled=false; _bdBusy=false;
+}
+function renderDumpPreview(items){
+  const wrap=document.getElementById('bd-preview');
+  const catOpts=Object.entries(CATS).map(([k,v])=>'<option value="'+k+'">'+esc(v.label)+'</option>').join('');
+  wrap.innerHTML=items.map(it=>{
+    const due=it.dueDate?'<span class="bd-chip">📅 '+esc(fmtDue(it.dueDate))+'</span>':'';
+    const prio=it.priority==='high'?'<span class="bd-chip prio">● High</span>':'';
+    return '<div class="bd-item" data-due="'+esc(it.dueDate||'')+'" data-prio="'+(it.priority==='high'?'high':'normal')+'" data-notes="'+esc(it.notes||'')+'">'
+      +'<input class="bd-title" value="'+esc(it.title||'')+'" aria-label="Item title">'
+      +'<div class="bd-meta">'
+        +'<select class="bd-type" aria-label="Type"><option value="task"'+(it.type==='task'?' selected':'')+'>Task</option><option value="note"'+(it.type!=='task'?' selected':'')+'>Note</option></select>'
+        +'<select class="bd-cat" aria-label="Life area">'+catOpts+'</select>'
+        +due+prio
+        +'<button class="bd-del" onclick="this.closest(\'.bd-item\').remove();bdSync()" title="Remove" aria-label="Remove">✕</button>'
+      +'</div></div>';
+  }).join('');
+  // set each category select to its parsed value (fallback general)
+  [...wrap.querySelectorAll('.bd-item')].forEach((row,i)=>{row.querySelector('.bd-cat').value=CATS[items[i].category]?items[i].category:'general';});
+  bdSync();
+}
+function bdSync(){const n=document.querySelectorAll('#bd-preview .bd-item').length;const s=document.getElementById('bd-save');if(s){s.textContent='Save all'+(n?' ('+n+')':'');s.style.display=n?'':'none';}}
+function saveDumpItems(){
+  const rows=[...document.querySelectorAll('#bd-preview .bd-item')];
+  if(!rows.length){closeBrainDump();return;}
+  const arr=load(), now=new Date().toISOString(); let firstId=null, saved=0;
+  rows.forEach(row=>{
+    const title=row.querySelector('.bd-title').value.trim(); if(!title)return;
+    const type=row.querySelector('.bd-type').value==='task'?'task':'note';
+    let category=row.querySelector('.bd-cat').value; if(!CATS[category])category=guessCategory(title);
+    const priority=row.getAttribute('data-prio')==='high'?'high':'normal';
+    const dueDate=row.getAttribute('data-due')||'';
+    const notes=row.getAttribute('data-notes')||'';
+    const item={id:uid(),text:title,notes:'',description:notes,type,priority,source:'braindump',category,
+      emoji:guessEmoji(title,category),links:[],attachments:[],done:false,archived:false,createdAt:now,updatedAt:now};
+    if(dueDate)item.dueDate=dueDate;
+    arr.unshift(item); if(!firstId)firstId=item.id; saved++;
+  });
+  save(arr); render(); updateCounts();
+  const opener=firstId; closeBrainDump();
+  if(saved)toast('Saved '+saved+' item'+(saved>1?'s':'')+' to your list','Open',()=>{setView('list');setBucket('all');if(opener)openDetail(opener);});
+}
+function renderBdBudget(b){const el=document.getElementById('bd-budget');if(!el||!b)return;const cap=b.cap||1,spend=b.spend||0,pct=Math.min(100,Math.round(spend/cap*100)),col=spend>=cap*0.95?'var(--red)':spend>=cap*0.75?'var(--yellow)':'var(--green)';el.innerHTML='Today: $'+spend.toFixed(2)+' of $'+cap.toFixed(2)+' used<div class="cb-bar"><div class="cb-fill" style="width:'+pct+'%;background:'+col+'"></div></div>';}
 
 function toast(msg,actionLabel,actionFn){
   const el=document.getElementById('toast');
