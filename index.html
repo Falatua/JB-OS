@@ -487,6 +487,32 @@
   @media(max-width:920px){.dash-hero{grid-template-columns:repeat(2,1fr)}.dins{grid-template-columns:1fr}.dins-row{grid-template-columns:1fr}}
   @media(max-width:560px){.dash-hero{grid-template-columns:1fr}}
 
+  /* ===== Dashboard entry cards: Graph preview + Musubi banner (sole entry points) ===== */
+  .dgraph{cursor:pointer}
+  .dgraph-svg{width:100%;aspect-ratio:320/128;height:auto;display:block;margin:2px 0 6px;border-radius:var(--radius);background:radial-gradient(120% 90% at 50% 42%,color-mix(in srgb,var(--accent) 7%,transparent),transparent 70%)}
+  .dgraph-line{stroke:color-mix(in srgb,var(--text-1) 15%,transparent);stroke-width:1}
+  .dgraph-stat{font-size:12px;color:var(--text-3);line-height:1.5}
+  .dgraph-stat b{color:var(--text-2);font-weight:600}
+
+  .dmz{--r:#C8443A;--g:#E5B23A;--t2:#2E8090;--cr:#F2EAD8;position:relative;overflow:hidden;cursor:pointer;border:1px solid var(--border);border-radius:var(--radius-lg);background:linear-gradient(120deg,rgba(200,68,58,.14),rgba(30,77,92,.10) 58%,transparent);padding:17px 20px;margin-top:13px;transition:border-color var(--t),transform var(--t),box-shadow var(--t)}
+  .dmz:hover{border-color:var(--g);transform:translateY(-2px);box-shadow:0 14px 38px -18px rgba(0,0,0,.85)}
+  .dmz::after{content:'';position:absolute;top:-44%;right:-5%;width:240px;height:240px;border-radius:50%;background:radial-gradient(circle,rgba(229,178,58,.13),transparent 68%);pointer-events:none}
+  .dmz-top{display:flex;align-items:center;gap:11px;margin-bottom:15px;flex-wrap:wrap;position:relative;z-index:1}
+  .dmz-badge{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;background:var(--r);color:#fff;padding:4px 10px;border-radius:3px}
+  .dmz-title{font-size:16px;font-weight:700;color:var(--cr);letter-spacing:.02em}
+  .dmz-ig{margin-left:auto;font-family:var(--mono);font-size:10.5px;color:var(--g);letter-spacing:.05em}
+  .dmz-body{display:grid;grid-template-columns:auto 1fr auto;gap:24px;align-items:center;position:relative;z-index:1}
+  .dmz-stats{display:flex;gap:24px}
+  .dmz-stat .v{font-size:24px;font-weight:700;color:var(--cr);line-height:1}
+  .dmz-stat .v span{color:var(--g);font-size:14px;font-weight:600}
+  .dmz-stat .l{font-family:var(--mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-3);margin-top:6px}
+  .dmz-teaser{min-width:0;border-left:1px solid color-mix(in srgb,var(--cr) 14%,transparent);padding-left:22px}
+  .dmz-teaser .th{font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--g);margin-bottom:6px}
+  .dmz-teaser .ti{font-size:13px;color:var(--text-2);line-height:1.5;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .dmz-cta{font-family:var(--mono);font-size:11px;letter-spacing:.05em;color:var(--cr);white-space:nowrap;align-self:center}
+  .dmz:hover .dmz-cta{color:var(--g)}
+  @media(max-width:760px){.dmz-body{grid-template-columns:1fr;gap:15px}.dmz-stats{gap:28px}.dmz-teaser{border-left:none;padding-left:0;border-top:1px solid color-mix(in srgb,var(--cr) 12%,transparent);padding-top:14px}.dmz-cta{align-self:flex-start}}
+
   /* ===== Journal (distinct calm / editorial surface) ===== */
   .journal-wrap{max-width:700px;margin:0 auto;padding:8px 0 48px}
   .journal-head{display:flex;align-items:center;gap:14px;margin:4px 0 8px}
@@ -1154,7 +1180,6 @@
   <button id="tab-list" onclick="setView('list')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 4h8M6 8h8M6 12h6"/><circle cx="3" cy="4" r="1" fill="currentColor" stroke="none"/><circle cx="3" cy="8" r="1" fill="currentColor" stroke="none"/><circle cx="3" cy="12" r="1" fill="currentColor" stroke="none"/></svg>List</button>
   <button id="tab-daily" onclick="setView('daily')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="3"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3 3l1.4 1.4M11.6 11.6L13 13M13 3l-1.4 1.4M4.4 11.6L3 13"/></svg>Daily</button>
   <button id="tab-journal" onclick="setView('journal')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3.5 2.5H10a1.5 1.5 0 0 1 1.5 1.5v9.5H5A1.5 1.5 0 0 1 3.5 12z"/><path d="M11.5 4H13v9.5M5.5 5.5h3M5.5 8h2"/></svg>Journal</button>
-  <button id="tab-musubi" onclick="setView('musubi')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1.5c1.5 2 3 3.5 3 6a3 3 0 0 1-6 0c0-1.2.6-2.2 1.3-3"/></svg>Musubi</button>
 </nav>
 
 <div class="a2hs" id="a2hs" role="note">
@@ -1854,7 +1879,7 @@ function itemHTML(item, isArchiveView, idx){
 })();
 
 function updateTabBar(){
-  ['dashboard','list','daily','journal','musubi'].forEach(function(v){var e=document.getElementById('tab-'+v);if(e){var on=view===v;e.classList.toggle('active',on);if(on)e.setAttribute('aria-current','page');else e.removeAttribute('aria-current');}});
+  ['dashboard','list','daily','journal'].forEach(function(v){var e=document.getElementById('tab-'+v);if(e){var on=view===v;e.classList.toggle('active',on);if(on)e.setAttribute('aria-current','page');else e.removeAttribute('aria-current');}});
 }
 function dismissA2HS(){localStorage.setItem('jbos_a2hs','1');var e=document.getElementById('a2hs');if(e)e.classList.remove('show');}
 function render(){
@@ -3644,16 +3669,57 @@ function renderDashboard(){
   var reviewCard='<div class="dcard"><div class="dcard-label"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2.5" y="2.5" width="11" height="11" rx="1.5"/><path d="M5.5 8l1.5 1.5L10.5 6"/></svg>This week in review</div><div class="rv-row">'+rv.join('')+'</div></div>';
   // Completed breakdown — today + this week, split by type and by life area
   var completedCard='<div class="dcard"><div class="dcard-label"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 8l2 2 4-4"/><path d="M8 12l2 2 4-9"/></svg>Completed</div><div class="dbk-grid">'+doneColHTML(doneToday,'today',doneTodayItems)+doneColHTML(doneWk.length,'this week',doneWk)+'</div></div>';
+
+  // ---- Graph preview — the sole entry point into the relationship graph (fills the space beside Completed) ----
+  var gCats=Object.keys(active.reduce(function(m,i){m[i.category||'general']=1;return m;},{}));
+  var graphCard;
+  (function(){
+    var cx=160,cy=64,R=44,cols=gCats.slice(0,7).map(function(c){return CATS[c]||CATS.general;}),k=cols.length||1;
+    var linesSvg='',nodesSvg='';
+    cols.forEach(function(cc,i){
+      var ang=(-Math.PI/2)+(i*2*Math.PI/k),x=cx+Math.cos(ang)*R,y=cy+Math.sin(ang)*R*0.82;
+      linesSvg+='<line class="dgraph-line" x1="'+cx+'" y1="'+cy+'" x2="'+x.toFixed(1)+'" y2="'+y.toFixed(1)+'"/>';
+      for(var j=0;j<3;j++){var a2=ang+(j-1)*0.44,rr=17+j*4,lx=x+Math.cos(a2)*rr,ly=y+Math.sin(a2)*rr;
+        if(lx>7&&lx<313&&ly>7&&ly<121){linesSvg+='<line class="dgraph-line" x1="'+x.toFixed(1)+'" y1="'+y.toFixed(1)+'" x2="'+lx.toFixed(1)+'" y2="'+ly.toFixed(1)+'" style="opacity:.45"/>';nodesSvg+='<circle cx="'+lx.toFixed(1)+'" cy="'+ly.toFixed(1)+'" r="2.4" fill="'+cc.color+'" opacity=".8"/>';}}
+      nodesSvg+='<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="5.5" fill="'+cc.color+'"/>';
+    });
+    var hubC='<circle cx="'+cx+'" cy="'+cy+'" r="14" fill="none" stroke="var(--accent)" stroke-opacity=".18" stroke-width="2"/><circle cx="'+cx+'" cy="'+cy+'" r="8" fill="var(--accent)"/>';
+    graphCard='<div class="dcard dgraph dcard-click" role="button" tabindex="0" title="Open the relationship graph" onclick="setView(\'graph\')" onkeydown="if(event.key===\'Enter\')setView(\'graph\')">'
+      +'<div class="dcard-label"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="3.5" cy="8" r="2"/><circle cx="12.5" cy="4" r="2"/><circle cx="12.5" cy="12" r="2"/><path d="M5.3 7.1l5.4-2.5M5.3 8.9l5.4 2.5"/></svg>Graph</div>'
+      +'<svg class="dgraph-svg" viewBox="0 0 320 128" preserveAspectRatio="xMidYMid meet" aria-hidden="true">'+linesSvg+nodesSvg+hubC+'</svg>'
+      +'<div class="dgraph-stat"><b>'+active.length+'</b> item'+(active.length===1?'':'s')+' mapped across <b>'+gCats.length+'</b> area'+(gCats.length===1?'':'s')+'</div>'
+      +'<button class="dcard-cta" onclick="event.stopPropagation();setView(\'graph\')">Open graph →</button></div>';
+  })();
+
+  // ---- Musubi banner — full-width priority row, sole entry point into Musubi Strong ----
+  var musubiCard='';
+  (function(){
+    var mz=(typeof mzLoad==='function')?mzLoad():{},mzSt=(mz.checklist||{})[todayK]||{},mzTot=0,mzDone=0;
+    try{Object.values(MZ_CHECK).forEach(function(b){b.tasks.forEach(function(t){mzTot++;if(mzSt[t[0]])mzDone++;});});}catch(e){}
+    var ideas=(mz.ideas||[]).filter(function(x){return !x.done;}),pipe=(mz.pipeline||[]),topIdea=ideas[0];
+    var teaser=topIdea?('“'+(topIdea.text||topIdea.title||'New content idea')+'”'):'Throwback Thursdays · auntie’s-favorite tee · region-real island mockups';
+    musubiCard='<div class="dmz" role="button" tabindex="0" title="Open Musubi Strong" onclick="setView(\'musubi\')" onkeydown="if(event.key===\'Enter\')setView(\'musubi\')">'
+      +'<div class="dmz-top"><span class="dmz-badge">Musubi Strong</span><span class="dmz-title">IG Growth System</span><span class="dmz-ig">@MusubiStrong</span></div>'
+      +'<div class="dmz-body"><div class="dmz-stats">'
+        +'<div class="dmz-stat"><div class="v">'+mzDone+'<span>/'+mzTot+'</span></div><div class="l">Today’s non-negotiables</div></div>'
+        +'<div class="dmz-stat"><div class="v">'+ideas.length+'</div><div class="l">Content ideas</div></div>'
+        +'<div class="dmz-stat"><div class="v">'+pipe.length+'</div><div class="l">In pipeline</div></div>'
+      +'</div>'
+      +'<div class="dmz-teaser"><div class="th">'+(topIdea?'Next up':'On brand')+'</div><div class="ti">'+esc(teaser)+'</div></div>'
+      +'<div class="dmz-cta">Open Musubi →</div></div></div>';
+  })();
+
   document.getElementById('list').innerHTML='<div class="dash-wrap">'
     +'<div class="dash-greet"><div class="dash-hello">'+timeGreeting()+', JB</div><div class="dash-sub">'+now.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})+' &nbsp;·&nbsp; '+highlight+'</div></div>'
     +'<div class="cond" id="cond-strip"></div>'
     +reminderBar()
     +'<div class="dash-hero">'+habitCard+tasksCard+journalCard+'</div>'
+    +musubiCard
     +'<div class="dash-sec">Now</div>'
     +'<div class="dins-row">'+focusCard+upCard+'</div>'
     +'<div class="dash-sec">Week in review</div>'
     +'<div class="dins-row" style="grid-template-columns:1fr">'+reviewCard+'</div>'
-    +'<div class="dins-row" style="margin-top:13px">'+completedCard+'</div>'
+    +'<div class="dins-row" style="margin-top:13px">'+completedCard+graphCard+'</div>'
     +'<div class="dins-row" style="margin-top:13px">'+catCard+compCard+'</div>'
     +'<div class="dash-sec">Reflections</div>'+reflectSection
     +'</div>';
@@ -4009,7 +4075,9 @@ function sbAuthUI(user){
 }
 
 if(load().length)_booting=false;
-render();
+// Defer the first render one tick so every top-level const (incl. the Musubi MZ_* data
+// the dashboard now previews) is initialized before renderDashboard runs — avoids a TDZ crash.
+setTimeout(function(){render();},0);
 updateCounts();
 sbInit();
 /* Mark installed-app (standalone) mode for iOS/macOS-specific styling */
