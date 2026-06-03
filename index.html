@@ -71,7 +71,7 @@
   html,body{overscroll-behavior:none}                        /* kill pull-to-refresh + rubber-band */
   button,a,.nav-item,.cb,.step-cb,.mz-tab,.item-actions,.tab,.dmood-face{touch-action:manipulation}  /* no 300ms delay / double-tap zoom */
   /* suppress long-press callout + text selection on chrome, but keep content selectable */
-  .btn,.nav-item,.badge,.badge-cat,.badge-task,.badge-idea,.badge-note,.badge-project,.prio-high,.mz-tab,.cb,.step-cb,.sync-btn,.install-btn,.section-head,.sb-label,.sb-logo,.page-title,.nav-icon,.item-actions,.cond,.remind-bar,.dcard-label,.rv-item{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+  .btn,.nav-item,.badge,.badge-cat,.badge-task,.badge-idea,.badge-note,.badge-project,.prio-high,.prio-in-progress,.mz-tab,.cb,.step-cb,.sync-btn,.install-btn,.section-head,.sb-label,.sb-logo,.page-title,.nav-icon,.item-actions,.cond,.remind-bar,.dcard-label,.rv-item{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
   input,textarea{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
   @media(hover:none){input,textarea,select,.add-input,.add-select{font-size:16px !important}}  /* stop iOS focus-zoom */
   /* macOS / desktop installed app: use the title bar (window-controls-overlay) */
@@ -218,6 +218,7 @@
   .item-date{font-size:11px;color:var(--text-3)}
   .item-src{font-size:11px;color:var(--text-3);display:flex;align-items:center;gap:3px}
   .prio-high{display:inline-flex;align-items:center;gap:3px;font-size:11px;color:var(--red)}
+  .prio-in-progress{display:inline-flex;align-items:center;gap:3px;font-size:11px;color:var(--teal)}
   .prio-dot{width:5px;height:5px;border-radius:50%;background:currentColor;display:inline-block}
 
   .item-actions{display:flex;gap:2px;opacity:0;transition:opacity var(--t);margin-top:1px;flex-shrink:0}
@@ -1028,6 +1029,10 @@
       <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="5" fill="var(--text-3)" stroke="none" opacity=".35"/></svg>
       Low <span class="nav-count" id="cnt-prio-low">0</span>
     </div>
+    <div class="nav-item" id="nav-prio-in_progress" onclick="setFilter('in_progress','prio')" role="button" tabindex="0">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="5" fill="var(--teal)" stroke="none" opacity=".85"/></svg>
+      <span style="color:var(--teal)">Work in progress</span> <span class="nav-count" id="cnt-prio-in_progress">0</span>
+    </div>
   </div>
 
   <div class="sb-divider"></div>
@@ -1193,9 +1198,10 @@
       <div class="field">
         <label for="m-priority">Priority</label>
         <select id="m-priority">
-          <option value="normal">Normal</option>
           <option value="high">High</option>
+          <option value="normal" selected>Normal</option>
           <option value="low">Low</option>
+          <option value="in_progress">Work in progress</option>
         </select>
       </div>
     </div>
@@ -1242,6 +1248,7 @@
           <option value="high">High</option>
           <option value="normal">Normal</option>
           <option value="low">Low</option>
+          <option value="in_progress">Work in progress</option>
         </select>
       </div>
       <div class="prop-row">
@@ -1364,6 +1371,7 @@
           <option value="high">High</option>
           <option value="normal">Normal</option>
           <option value="low">Low</option>
+          <option value="in_progress">Work in progress</option>
         </select>
       </div>
     </div>
@@ -1414,6 +1422,7 @@ function buildCatOptions(selId){
   const sel=document.getElementById(selId);
   if(!sel)return;
   sel.innerHTML=Object.entries(CATS).map(([k,v])=>`<option value="${k}">${v.label}</option>`).join('');
+  if(CATS.general)sel.value='general';
 }
 
 function buildCatNav(){
@@ -1430,7 +1439,9 @@ function addItem(text, type='task', notes='', source='browser', priority='normal
   if(!text.trim())return;
   // Auto-organize: when no specific life area was chosen, infer one from the title + notes
   // so new items don't pile up under "General". (guessEmoji then picks a fitting emoji.)
-  if(!category||category==='general')category=guessCategory(text,notes);
+  const autoOrganize=!category||category==='general';
+  if(autoOrganize&&type==='task')type=guessType(text,notes);
+  if(autoOrganize)category=guessCategory(text,notes);
   const items=load();
   const now=new Date().toISOString();
   items.unshift({id:uid(),text:text.trim(),notes:notes.trim(),type,priority,source,category,done:false,
@@ -1485,8 +1496,8 @@ function setFilter(f, mode){
     dot.style.display='block';dot.style.background=cat.color;
     document.getElementById('page-title').lastChild.textContent=' '+cat.label;
   } else if(mode==='prio'){
-    const prioColors={high:'var(--red)',normal:'var(--text-2)',low:'var(--text-3)'};
-    const prioTitles={high:'High Priority',normal:'Normal Priority',low:'Low Priority'};
+    const prioColors={high:'var(--red)',in_progress:'var(--teal)',normal:'var(--text-2)',low:'var(--text-3)'};
+    const prioTitles={high:'High Priority',in_progress:'Work in Progress',normal:'Normal Priority',low:'Low Priority'};
     dot.style.display='block';dot.style.background=prioColors[f]||'var(--text-3)';
     document.getElementById('page-title').lastChild.textContent=' '+prioTitles[f];
   } else if(mode==='due'){
@@ -1501,15 +1512,29 @@ function setFilter(f, mode){
   }
   // Sync the quick-add controls so new items default to the area you're viewing
   const qCat=document.getElementById('quick-cat');
-  if(qCat&&mode==='cat'&&cat)qCat.value=f;
+  if(qCat)qCat.value=(mode==='cat'&&cat)?f:'general';
   const qType=document.getElementById('quick-type');
-  if(qType&&mode==='type')qType.value=f;
+  if(qType)qType.value=(mode==='type')?f:'task';
   render();
 }
 
-const PRIO_ORDER={high:0,normal:1,low:2};
+const PRIORITIES=[
+  {id:'high',label:'High',order:0,cls:'prio-high'},
+  {id:'in_progress',label:'Work in progress',order:1,cls:'prio-in-progress'},
+  {id:'normal',label:'Normal',order:2,cls:''},
+  {id:'low',label:'Low',order:3,cls:''}
+];
+const PRIORITY_IDS=PRIORITIES.map(p=>p.id);
+const PRIO_ORDER=Object.fromEntries(PRIORITIES.map(p=>[p.id,p.order]));
+function priorityInfo(priority){
+  return PRIORITIES.find(p=>p.id===(priority||'normal'))||PRIORITIES[2];
+}
+function priorityBadgeHTML(priority){
+  const p=priorityInfo(priority);
+  return p.cls?`<span class="${p.cls}"><span class="prio-dot"></span>${p.label}</span>`:'';
+}
 function sortByPriority(arr){
-  return arr.slice().sort((a,b)=>(PRIO_ORDER[a.priority]??1)-(PRIO_ORDER[b.priority]??1));
+  return arr.slice().sort((a,b)=>(PRIO_ORDER[a.priority]??2)-(PRIO_ORDER[b.priority]??2));
 }
 // List sort: respects the sort dropdown (default = priority)
 function applySort(items){
@@ -1517,9 +1542,9 @@ function applySort(items){
   switch(sortBy){
     case 'due':
       return arr.sort((a,b)=>{
-        if(a.dueDate&&b.dueDate)return a.dueDate.localeCompare(b.dueDate)||(PRIO_ORDER[a.priority]??1)-(PRIO_ORDER[b.priority]??1);
+        if(a.dueDate&&b.dueDate)return a.dueDate.localeCompare(b.dueDate)||(PRIO_ORDER[a.priority]??2)-(PRIO_ORDER[b.priority]??2);
         if(a.dueDate)return -1; if(b.dueDate)return 1;
-        return (PRIO_ORDER[a.priority]??1)-(PRIO_ORDER[b.priority]??1);
+        return (PRIO_ORDER[a.priority]??2)-(PRIO_ORDER[b.priority]??2);
       });
     case 'newest': return arr.sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||''));
     case 'oldest': return arr.sort((a,b)=>(a.createdAt||'').localeCompare(b.createdAt||''));
@@ -1636,7 +1661,7 @@ function itemHTML(item, isArchiveView, idx){
   const cat=CATS[item.category||'general']||CATS.general;
   const typeBadge=`<span class="badge badge-${item.type}">${TYPE_LABEL[item.type]||item.type}</span>`;
   const catBadge=`<span class="badge-cat" style="background:${cat.dim};color:${cat.color}">${cat.label}</span>`;
-  const prio=item.priority==='high'?`<span class="prio-high"><span class="prio-dot"></span>High</span>`:'';
+  const prio=priorityBadgeHTML(item.priority);
   const src=`<span class="item-src">${item.source==='telegram'?'↗':'·'} ${SRC_LABEL[item.source]||item.source}</span>`;
   const sub=item.description?item.description:item.notes;
   const notes=sub?`<div class="item-sub">${esc(sub)}</div>`:'';
@@ -1837,7 +1862,7 @@ function updateCounts(){
     const e=document.getElementById('cnt-cat-'+k);
     if(e)e.textContent=active.filter(x=>(x.category||'general')===k).length;
   });
-  ['high','normal','low'].forEach(p=>{
+  PRIORITY_IDS.forEach(p=>{
     const e=document.getElementById('cnt-prio-'+p);
     if(e)e.textContent=active.filter(x=>(x.priority||'normal')===p).length;
   });
@@ -1861,7 +1886,7 @@ function quickAdd(e){
   const type=document.getElementById('quick-type').value;
   const cat=document.getElementById('quick-cat').value;
   // If viewing a priority area, new items inherit that priority; otherwise default to normal
-  const prio=(filterMode==='prio'&&['high','normal','low'].includes(filter))?filter:'normal';
+  const prio=(filterMode==='prio'&&PRIORITY_IDS.includes(filter))?filter:'normal';
   addItem(text,type,'','browser',prio,cat);
   inp.value='';
 }
@@ -1872,9 +1897,9 @@ function openModal(){
   _lastFocus=document.activeElement;
   // Pre-fill Life Area / Type / Priority from the current filter so a New Item
   // defaults to the area you're viewing (e.g. in Personal → Personal, in High → High).
-  const mc=document.getElementById('m-cat'); if(mc&&filterMode==='cat'&&CATS[filter])mc.value=filter;
-  const mt=document.getElementById('m-type'); if(mt&&filterMode==='type')mt.value=filter;
-  const mp=document.getElementById('m-priority'); if(mp&&filterMode==='prio'&&['high','normal','low'].includes(filter))mp.value=filter;
+  const mc=document.getElementById('m-cat'); if(mc)mc.value=(filterMode==='cat'&&CATS[filter])?filter:'general';
+  const mt=document.getElementById('m-type'); if(mt)mt.value=(filterMode==='type')?filter:'task';
+  const mp=document.getElementById('m-priority'); if(mp)mp.value=(filterMode==='prio'&&PRIORITY_IDS.includes(filter))?filter:'normal';
   document.getElementById('modal').classList.remove('hidden');
   setTimeout(()=>document.getElementById('m-title').focus(),50);
 }
@@ -1894,7 +1919,7 @@ function cmdCommands(){
   add('Action','⤓','Export data','',function(){exportJSON();});
   add('Action','⤒','Import data','',function(){importJSON();});
   [['overdue','Overdue'],['soon','Due soon']].forEach(function(d){add('Due','⏰',d[1],'',function(){setView('list');setFilter(d[0],'due');});});
-  [['high','High priority'],['normal','Normal priority'],['low','Low priority']].forEach(function(p){add('Priority','◆',p[1],'',function(){setView('list');setFilter(p[0],'prio');});});
+  PRIORITIES.forEach(function(p){add('Priority','◆',p.id==='in_progress'?p.label:p.label+' priority','',function(){setView('list');setFilter(p.id,'prio');});});
   Object.keys(CATS).forEach(function(k){add('Life area',guessEmoji('',k),CATS[k].label,'',function(){setView('list');setFilter(k,'cat');});});
   [['task','Tasks'],['idea','Ideas'],['note','Notes'],['project','Projects']].forEach(function(t){add('Type','🏷️',t[1],'',function(){setView('list');setFilter(t[0],'type');});});
   load().filter(function(x){return !x.archived;}).forEach(function(it){add('Items',(it.emoji||'•'),it.text||'Untitled',(CATS[it.category||'general']||CATS.general).label,function(){setView('list');openDetail(it.id);});});
@@ -1969,7 +1994,8 @@ function renderDetailBadges(){
   const status=document.getElementById('d-status').value;
   const parts=[`<span class="badge-cat" style="background:${cat.dim};color:${cat.color}">${cat.label}</span>`,
     `<span class="badge badge-${type}">${TYPE_LABEL[type]||type}</span>`];
-  if(prio==='high')parts.push(`<span class="prio-high"><span class="prio-dot"></span>High</span>`);
+  const prioBadge=priorityBadgeHTML(prio);
+  if(prioBadge)parts.push(prioBadge);
   if(status==='done')parts.push(`<span class="badge" style="background:var(--green-dim);color:var(--green)">Done</span>`);
   document.getElementById('d-badges').innerHTML=parts.join('');
   document.getElementById('d-title').classList.toggle('done-title', status==='done');
@@ -2172,6 +2198,27 @@ function importJSON(){
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 
 /* Pick a fitting emoji for any item (used across all views; stored on add, guessed at render as fallback) */
+// Infer whether a default/general item is an actionable to-do or a reference note.
+// Explicit Idea/Note/Project selections still win; this only refines the default Task path.
+function guessType(text,notes){
+  const s=((text||'')+' '+(notes||'')).toLowerCase().trim();
+  if(!s)return 'task';
+  const taskPatterns=[
+    /\blook\s+into\b|\bresearch\b|\binvestigate\b|\bcheck\s+(out|on|into)\b|\bfigure\s+out\b|\bfind\s+out\b|\blearn\b|\bcompare\b/,
+    /\bbuy\b|\border\b|\bpurchase\b|\bpay\b|\bschedule\b|\bbook\b|\bmake\b|\bcreate\b|\bbuild\b|\bfix\b|\bupdate\b|\bset\s+up\b|\bsetup\b|\binstall\b|\bdownload\b/,
+    /\bcall\b|\btext\b|\bemail\b|\breply\b|\bfollow\s*up\b|\bask\b|\bsend\b|\bsubmit\b|\brenew\b|\bcancel\b|\breturn\b|\bpick\s*up\b|\bdrop\s*off\b/,
+    /\btodo\b|\bto-do\b|\btask\b|\bremind\b|\bneed\s+to\b|\bshould\b|\bremember\s+to\b/
+  ];
+  for(let i=0;i<taskPatterns.length;i++){if(taskPatterns[i].test(s))return 'task';}
+  const notePatterns=[
+    /\b(in|into|coming\s+to)\s+town\b|\bvisiting\b|\bvisit\b|\barriv(e|es|ing)\b|\bleav(e|es|ing)\b|\bstaying\b/,
+    /\bheads?\s*up\b|\bfyi\b|\bnote\b|\breference\b|\binfo\b|\bremember\b|\bcontext\b/,
+    /\b(birthday|anniversary|appointment|event|trip|travel|flight)\b/,
+    /\b(jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)\.?\s+\d{1,2}\b|\b\d{1,2}[/-]\d{1,2}\b|\b\d{1,2}\s*(am|pm)\b/
+  ];
+  for(let i=0;i<notePatterns.length;i++){if(notePatterns[i].test(s))return 'note';}
+  return 'task';
+}
 // Infer a life area from the title + notes so items don't pile up in "General".
 // Ordered most-specific first; mirrors JB's fixed category set. Returns 'general' if nothing fits.
 function guessCategory(text,notes){
@@ -2313,12 +2360,13 @@ function toast(msg,actionLabel,actionFn){
       const catRemap={errands:'errands',shopping:'shopping',tech:'tech'};
       const fresh=serverItems
         .filter(x=>!localIds.has(x.id) && !_tombed(x,tomb))
-        .map(x=>({
-          ...x,
-          category: catRemap[x.category]||x.category||'general',
-          source: x.source||'telegram',
-          type: x.type||'task',
-        }));
+        .map(x=>{
+          const rawCat=catRemap[x.category]||x.category||'general';
+          const autoOrganize=!x.category||rawCat==='general';
+          const nextType=x.type||(autoOrganize?guessType(x.text,x.notes||x.description):'task');
+          const nextCat=autoOrganize?guessCategory(x.text,x.notes||x.description):rawCat;
+          return {...x,category:nextCat,source:x.source||'telegram',type:nextType};
+        });
       // For existing items: sync server field edits (dueDate, priority, etc.) unless the user edited it in-app, and pick up server done-state
       let changed=fresh.length>0;
       const merged=[...fresh,...local.map(loc=>{
@@ -2580,7 +2628,7 @@ function renderGraph(){
     nodes=[];edges=[];byKey={};catUsed={};typeUsed={};catNode={};typeNode={};
     function node(key,label,kind,group,color,r,ref){
       if(byKey[key])return byKey[key];
-      var n={key:key,label:label,kind:kind,group:group,color:color,baseR:r,r:r,ref:ref||null,deg:0,od:false,hi:false,x:0,y:0,vx:0,vy:0,ph:Math.random()*6.2832};
+      var n={key:key,label:label,kind:kind,group:group,color:color,baseR:r,r:r,ref:ref||null,deg:0,od:false,hi:false,wip:false,x:0,y:0,vx:0,vy:0,ph:Math.random()*6.2832};
       var p=(prev&&prev[key])||(_graphPos&&_graphPos[key]); // restore from current model or a prior mount → stable layout
       if(p){n.x=p.x;n.y=p.y;n.vx=p.vx||0;n.vy=p.vy||0;if(p.ph!=null)n.ph=p.ph;n.born=p.born;}
       else if(first){var a=Math.random()*6.2832,rad=Math.min(W,H)*0.32*(0.4+Math.random()*0.6);n.x=W/2+Math.cos(a)*rad;n.y=H/2+Math.sin(a)*rad;}
@@ -2594,7 +2642,7 @@ function renderGraph(){
     var itemById={}; items.forEach(function(it){var c=it.category||'general';catUsed[c]=(catUsed[c]||0)+1;var t=it.type||'task';typeUsed[t]=(typeUsed[t]||0)+1;itemById[it.id]=it;});
     Object.keys(catUsed).forEach(function(c){var cc=CATS[c]||CATS.general;var cn=node('cat:'+c,cc.label,'cat','cat',cc.color,9,{cat:c});edge(hub,cn);catNode[c]=cn;});
     Object.keys(typeUsed).forEach(function(t){var tn=node('type:'+t,(TYPE_LABEL[t]||t)+'s','type','type',TYPEC[t]||'#8a8f98',8,{type:t});edge(hub,tn);typeNode[t]=tn;});
-    items.forEach(function(it){var c=it.category||'general',t=it.type||'task',cc=CATS[c]||CATS.general;var n=node('it:'+it.id,it.text||'Untitled','item','item',cc.color,it.priority==='high'?6:5,{id:it.id});n.od=!!(it.dueDate&&it.dueDate<todayK);n.hi=it.priority==='high';n.cl=catNode[c];n.catKey=c;n.typeKey=t;n.altColor=TYPEC[t]||'#8a8f98';n.recent=((it.updatedAt||it.createdAt||'').slice(0,10)===todayK);var stt=(typeof stepStats==='function')?stepStats(it):null;n.prog=(stt&&stt.total)?(stt.done/stt.total):null;edge(n,catNode[c]);if(typeNode[t])edge(n,typeNode[t]);});
+    items.forEach(function(it){var c=it.category||'general',t=it.type||'task',cc=CATS[c]||CATS.general,pi=priorityInfo(it.priority);var n=node('it:'+it.id,it.text||'Untitled','item','item',cc.color,pi.id==='high'?6:(pi.id==='in_progress'?5.7:5),{id:it.id});n.od=!!(it.dueDate&&it.dueDate<todayK);n.hi=pi.id==='high';n.wip=pi.id==='in_progress';n.cl=catNode[c];n.catKey=c;n.typeKey=t;n.altColor=TYPEC[t]||'#8a8f98';n.recent=((it.updatedAt||it.createdAt||'').slice(0,10)===todayK);var stt=(typeof stepStats==='function')?stepStats(it):null;n.prog=(stt&&stt.total)?(stt.done/stt.total):null;edge(n,catNode[c]);if(typeNode[t])edge(n,typeNode[t]);});
     try{var entries=(jEntries?jEntries():[]).slice(0,14);if(entries.length){var jh=node('jhub','Journal','jhub','journal','#b07cc6',11);edge(hub,jh);entries.forEach(function(e){edge(node('j:'+e.id,e.date||'entry','journal','journal','#b07cc6',4,{jid:e.id}),jh);});}}catch(e){}
     try{var tmpl=(loadDaily().templates||[]).slice(0,20);if(tmpl.length){var hh=node('hhub','Habits','hhub','habit','#2dd4bf',11);edge(hub,hh);tmpl.forEach(function(t){edge(node('h:'+t.id,t.text||'habit','habit','habit','#2dd4bf',4),hh);});}}catch(e){}
     nodes.forEach(function(n){ if(n.kind==='cat'||n.kind==='type'||n.kind==='jhub'||n.kind==='hhub') n.r=Math.min(16,n.baseR+Math.sqrt(n.deg)*1.6); }); // size hubs by connectivity
@@ -2707,7 +2755,7 @@ function renderGraph(){
   function loop(){if(view!=='graph'||myGen!==_graphGen||!document.getElementById('graph-canvas')){if(typeof saveState==='function')saveState();_G=null;return;}_now=performance.now();camStep();if(alpha>0.02||drag)step();draw();if((++_saveTick%45)===0&&!drag&&!panning)saveState();requestAnimationFrame(loop);}
   function pos(e){var r=canvas.getBoundingClientRect();var p=e.touches&&e.touches[0]?e.touches[0]:(e.changedTouches&&e.changedTouches[0]?e.changedTouches[0]:e);return {x:p.clientX-r.left,y:p.clientY-r.top};}
   var tip=document.getElementById('graph-tip');
-  function showTip(n,sx,sy){if(!tip)return;if(!n||n===selected){tip.classList.remove('on');return;}var sub=n.kind==='cat'?'Life area':n.kind==='type'?'Type':n.kind==='hub'?'Hub':n.kind==='journal'||n.kind==='jhub'?'Journal':n.kind==='habit'||n.kind==='hhub'?'Habit':(n.od?'Overdue':n.hi?'High priority':'Item');tip.innerHTML='<b>'+esc(n.label)+'</b><span>'+sub+' · '+n.deg+' link'+(n.deg===1?'':'s')+'</span>';tip.style.left=Math.min(W-150,sx+14)+'px';tip.style.top=(sy+14)+'px';tip.style.borderColor=_hexA(NC(n),0.6);tip.classList.add('on');}
+  function showTip(n,sx,sy){if(!tip)return;if(!n||n===selected){tip.classList.remove('on');return;}var sub=n.kind==='cat'?'Life area':n.kind==='type'?'Type':n.kind==='hub'?'Hub':n.kind==='journal'||n.kind==='jhub'?'Journal':n.kind==='habit'||n.kind==='hhub'?'Habit':(n.od?'Overdue':n.hi?'High priority':n.wip?'Work in progress':'Item');tip.innerHTML='<b>'+esc(n.label)+'</b><span>'+sub+' · '+n.deg+' link'+(n.deg===1?'':'s')+'</span>';tip.style.left=Math.min(W-150,sx+14)+'px';tip.style.top=(sy+14)+'px';tip.style.borderColor=_hexA(NC(n),0.6);tip.classList.add('on');}
   function down(e){cam=null;if(e.touches&&e.touches.length===2){var a=e.touches[0],b=e.touches[1];pinch={d:Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY),s:scale};return;}var p=pos(e);var n=hit(p.x,p.y);moved=false;last=p;if(n)drag=n;else panning=true;}
   function move(e){
     if(pinch&&e.touches&&e.touches.length===2){var a=e.touches[0],b=e.touches[1],nd=Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY);var r=canvas.getBoundingClientRect();var cx=(a.clientX+b.clientX)/2-r.left,cy=(a.clientY+b.clientY)/2-r.top;var ns=Math.max(0.3,Math.min(3.2,pinch.s*(nd/pinch.d)));var wx=(cx-ox)/scale,wy=(cy-oy)/scale;scale=ns;ox=cx-wx*scale;oy=cy-wy*scale;if(e.cancelable)e.preventDefault();return;}
@@ -2727,7 +2775,7 @@ function renderGraph(){
     var x='<button class="gi-x" onclick="graphCloseInfo()" aria-label="Close">✕</button>';
     if(n.kind==='item'){var it=load().find(function(z){return z.id===n.ref.id;})||{};var cc=CATS[it.category||'general']||CATS.general;var st=(typeof stepStats==='function')?stepStats(it):null;
       return x+'<div class="gi-head"><span class="gi-emoji">'+(it.emoji||'•')+'</span><span class="gi-title">'+esc(it.text||'Untitled')+'</span></div>'
-        +'<div class="gi-badges"><span class="badge-cat" style="background:'+cc.dim+';color:'+cc.color+'">'+cc.label+'</span><span class="badge badge-'+(it.type||'task')+'">'+(TYPE_LABEL[it.type]||it.type||'Task')+'</span>'+(it.priority==='high'?'<span class="prio-high"><span class="prio-dot"></span>High</span>':'')+(it.dueDate?'<span class="due-chip '+dueClass(it.dueDate)+'">'+fmtDue(it.dueDate)+'</span>':'')+'</div>'
+        +'<div class="gi-badges"><span class="badge-cat" style="background:'+cc.dim+';color:'+cc.color+'">'+cc.label+'</span><span class="badge badge-'+(it.type||'task')+'">'+(TYPE_LABEL[it.type]||it.type||'Task')+'</span>'+priorityBadgeHTML(it.priority)+(it.dueDate?'<span class="due-chip '+dueClass(it.dueDate)+'">'+fmtDue(it.dueDate)+'</span>':'')+'</div>'
         +(st?'<div class="gi-prog"><div class="prog-track"><div class="prog-fill" style="width:'+st.pct+'%"></div></div><span class="prog-count">'+st.done+'/'+st.total+'</span></div>':'')
         +(it.notes?'<div class="gi-notes">'+esc(it.notes)+'</div>':'')
         +connHTML(n)
@@ -2828,7 +2876,7 @@ function renderRoutine(scope){
   }
   const tpl=store.templates.slice().sort((a,b)=>{
     const da=done.has(a.id),db=done.has(b.id); if(da!==db)return da?1:-1;
-    const pa=PRIO_ORDER[a.priority]??1,pb=PRIO_ORDER[b.priority]??1; if(pa!==pb)return pa-pb;
+    const pa=PRIO_ORDER[a.priority]??2,pb=PRIO_ORDER[b.priority]??2; if(pa!==pb)return pa-pb;
     return (a.createdAt||'').localeCompare(b.createdAt||'');
   });
   const total=store.templates.length, n=done.size, pct=Math.round(n/total*100);
@@ -3371,7 +3419,7 @@ function renderDashboard(){
   }));
   const focusHTML=focusItems.length?focusItems.slice(0,7).map(({i,tag})=>{
     const cat=CATS[i.category||'general']||CATS.general;
-    const tagHTML=tag==='overdue'?'<span class="due-chip overdue">'+fmtDue(i.dueDate)+'</span>':tag==='today'?'<span class="due-chip soon">today</span>':'<span class="prio-high"><span class="prio-dot"></span>High</span>';
+    const tagHTML=tag==='overdue'?'<span class="due-chip overdue">'+fmtDue(i.dueDate)+'</span>':tag==='today'?'<span class="due-chip soon">today</span>':priorityBadgeHTML(tag);
     return '<div class="dfocus" onclick="openDetail(\''+i.id+'\')"><div class="cb" onclick="event.stopPropagation();toggleDone(\''+i.id+'\')" role="checkbox" aria-checked="false" aria-label="Mark done: '+esc(i.text||'')+'" tabindex="0" onkeydown="if(event.key===\' \'||event.key===\'Enter\'){event.stopPropagation();toggleDone(\''+i.id+'\');event.preventDefault()}"><svg class="cb-check" width="9" height="9" viewBox="0 0 10 10" fill="none" stroke="#111" stroke-width="2.2"><path d="M1.5 5l2.8 2.8 4.2-5"/></svg></div>'
       +'<div class="dfocus-body"><div class="dfocus-text"><span class="item-emoji">'+(i.emoji||guessEmoji(i.text||'',i.category))+'</span> '+esc(i.text||'')+'</div><div class="dfocus-meta"><span class="badge-cat" style="background:'+cat.dim+';color:'+cat.color+'">'+cat.label+'</span>'+tagHTML+'</div></div></div>';
   }).join(''):'<div class="dempty">No high-priority items. Nice and clear.</div>';
