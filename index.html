@@ -32,6 +32,7 @@
     --surface:#141418;
     --surface-hover:#1b1b21;
     --surface-modal:#1c1c22;
+    --chrome:#101015; /* frozen top chrome — a tone between page bg and card surface so global bars read as distinct */
     --border:#232329;
     --border-2:#34343c;
     --text:#ededf2;
@@ -118,7 +119,10 @@
   .sb-footer{margin-top:auto;padding:12px 8px;border-top:1px solid var(--border)}
   .sb-footer-text{font-size:11px;color:var(--text-3);line-height:1.6}
 
-  .header{padding:calc(18px + env(safe-area-inset-top,0px)) 24px 0;border-bottom:1px solid var(--border);background:var(--bg)}
+  /* Global frozen chrome: header + quick-add are grouped in .topchrome and given a distinct tone +
+     divider + shadow so they read as app-level bars that persist across views, not page content. */
+  .topchrome{background:var(--chrome);border-bottom:1px solid var(--border-2);box-shadow:0 10px 22px -16px rgba(0,0,0,.8);position:relative;z-index:5}
+  .header{padding:calc(18px + env(safe-area-inset-top,0px)) 24px 0;border-bottom:1px solid var(--border);background:transparent}
   .header-row{display:flex;align-items:center;gap:10px;margin-bottom:14px}
   .page-title{font-size:20px;font-weight:700;letter-spacing:-.4px;color:var(--text);display:flex;align-items:center;gap:8px}
   .page-title-dot{width:10px;height:10px;border-radius:50%;display:none}
@@ -158,7 +162,7 @@
   .sr-cat{flex-shrink:0;font-size:10.5px;font-weight:600;padding:1px 7px;border-radius:20px;white-space:nowrap}
   .sr-empty{padding:12px 10px;font-size:12.5px;color:var(--text-3);text-align:center}
 
-  .add-area{padding:12px 24px;border-bottom:1px solid var(--border);background:var(--bg)}
+  .add-area{padding:12px 24px;background:transparent}
   .add-row{display:flex;gap:6px;align-items:stretch}
   .add-select{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:0 8px;color:var(--text-2);font-size:12px;font-weight:500;font-family:inherit;outline:none;cursor:pointer;transition:border-color var(--t);height:36px}
   .add-select:focus{border-color:var(--accent);color:var(--text)}
@@ -424,7 +428,7 @@
   .dash-hello{font-size:25px;font-weight:700;letter-spacing:-.5px;color:var(--text)}
   .dash-sub{font-size:13px;color:var(--text-2);margin-top:5px}
   .dash-sub .hl{color:var(--accent);font-weight:500}
-  .dash-hero{display:grid;grid-template-columns:repeat(4,1fr);gap:13px;margin-bottom:6px}
+  .dash-hero{display:grid;grid-template-columns:repeat(3,1fr);gap:13px;margin-bottom:6px}
   .dcard{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:15px 16px;display:flex;flex-direction:column;transition:border-color var(--t),box-shadow var(--t),transform var(--t);min-width:0}
   .dcard:hover{border-color:var(--border-2);transform:translateY(-2px);box-shadow:0 10px 28px -16px rgba(0,0,0,.7)}
   .dcard-click{cursor:pointer}
@@ -879,6 +883,42 @@
   .graph-tip b{display:block;color:var(--text-1);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .graph-tip span{color:var(--text-3);font-size:10.5px}
   @media(max-width:560px){.graph-info{left:8px;right:8px;top:auto;bottom:8px;width:auto}.graph-legend{display:none}.graph-hint{display:none}#graph-mini{display:none}.graph-tip{display:none}.graph-stats{bottom:8px}}
+  /* ===== Tasks / Notes segmented control ===== */
+  .seg-bar{display:flex;align-items:center;gap:10px;margin:2px 0 10px;flex-wrap:wrap}
+  .seg-group{display:inline-flex;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:2px;gap:2px}
+  .seg{appearance:none;border:none;background:none;font-family:inherit;font-size:12.5px;font-weight:600;color:var(--text-2);padding:5px 14px;border-radius:6px;cursor:pointer;transition:background var(--t),color var(--t);white-space:nowrap}
+  .seg:hover{color:var(--text)}
+  .seg.on{background:var(--accent-dim);color:var(--accent)}
+  .seg-bar .sort-select{margin-left:auto}
+  @media(max-width:560px){.seg{flex:1;text-align:center;padding:7px 10px}.seg-group{flex:1}}
+
+  /* ===== Data menu (consolidated Import / Export) ===== */
+  .data-menu-wrap{position:relative;display:inline-flex}
+  .data-menu-wrap .caret{margin-left:1px;opacity:.7}
+  .data-menu{position:absolute;top:calc(100% + 6px);right:0;z-index:130;min-width:230px;background:var(--surface-modal);border:1px solid var(--border-2);border-radius:var(--radius-lg);box-shadow:var(--shadow-pop);padding:5px;animation:popIn .16s cubic-bezier(.16,1,.3,1) both}
+  .data-menu.hidden{display:none}
+  .data-menu-h{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);padding:7px 9px 4px}
+  .data-mi{display:flex;align-items:flex-start;gap:10px;width:100%;text-align:left;background:none;border:none;font-family:inherit;color:var(--text);padding:8px 9px;border-radius:7px;cursor:pointer;transition:background var(--t)}
+  .data-mi:hover{background:var(--surface-hover)}
+  .data-mi svg{margin-top:2px;color:var(--text-2);flex-shrink:0}
+  .data-mi b{font-size:13px;font-weight:550;display:block}
+  .data-mi span{font-size:11.5px;color:var(--text-3);display:block;margin-top:1px}
+
+  /* ===== Dashboard: completed breakdown (today + this week, by type & area) ===== */
+  .dbk-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:560px){.dbk-grid{grid-template-columns:1fr;gap:16px}}
+  .dbk-col{display:flex;flex-direction:column;gap:8px;min-width:0}
+  .dbk-col+.dbk-col{border-left:1px solid var(--border);padding-left:14px}
+  @media(max-width:560px){.dbk-col+.dbk-col{border-left:none;padding-left:0;border-top:1px solid var(--border);padding-top:14px}}
+  .dbk-head{display:flex;align-items:baseline;gap:6px}
+  .dbk-num{font-size:26px;font-weight:700;line-height:1;color:var(--text);font-variant-numeric:tabular-nums}
+  .dbk-unit{font-size:11.5px;color:var(--text-3);font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+  .dbk-types{font-size:12px;color:var(--text-2)}
+  .dbk-chips{display:flex;flex-wrap:wrap;gap:5px}
+  .dbk-chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--text-2);background:var(--surface-hover);border:1px solid var(--border);padding:2px 8px;border-radius:20px}
+  .dbk-chip b{color:var(--text);font-weight:650;font-variant-numeric:tabular-nums}
+  .dbk-dot{width:7px;height:7px;border-radius:50%;background:var(--c,var(--text-3));flex-shrink:0}
+
   /* ===== Drag to reorder / recategorize ===== */
   .item-grip{display:flex;align-items:center;justify-content:center;align-self:stretch;width:18px;margin-right:-2px;color:var(--text-3);cursor:grab;opacity:0;transition:opacity var(--t),color var(--t);touch-action:none;flex-shrink:0;-webkit-tap-highlight-color:transparent}
   .item:hover .item-grip{opacity:.5}
@@ -997,24 +1037,6 @@
     <div id="cat-nav"></div>
   </div>
 
-  <div class="sb-divider"></div>
-
-  <div class="sb-section">
-    <div class="sb-label">Types</div>
-    <div class="nav-item" id="nav-task" onclick="setFilter('task','type')" role="button" tabindex="0">
-      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="2"/><path d="M5 8l2.5 2.5L11 5"/></svg>
-      Tasks <span class="nav-count" id="cnt-task">0</span>
-    </div>
-    <div class="nav-item" id="nav-idea" onclick="setFilter('idea','type')" role="button" tabindex="0">
-      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2a4 4 0 0 1 2 7.46V11H6V9.46A4 4 0 0 1 8 2z"/><path d="M6 12h4M7 14h2"/></svg>
-      Ideas <span class="nav-count" id="cnt-idea">0</span>
-    </div>
-    <div class="nav-item" id="nav-note" onclick="setFilter('note','type')" role="button" tabindex="0">
-      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3h10v8l-3 3H3z"/><path d="M6 6h4M6 9h2"/></svg>
-      Notes <span class="nav-count" id="cnt-note">0</span>
-    </div>
-  </div>
-
   <div class="sb-footer">
     <div class="sb-footer-text"><span class="kbd">⌘N</span> new &nbsp;·&nbsp; <span class="kbd">⌘F</span> search &nbsp;·&nbsp; <span class="kbd">Esc</span> close</div>
   </div>
@@ -1023,6 +1045,7 @@
 <div class="nav-backdrop" id="nav-backdrop" onclick="closeNav()"></div>
 
 <div class="main">
+  <div class="topchrome">
   <div class="header">
     <div class="header-row">
       <button class="nav-hamburger" id="nav-ham" onclick="toggleNav()" aria-label="Open navigation menu" aria-expanded="false">
@@ -1043,14 +1066,24 @@
           <span>Graph</span>
         </button>
         <span class="header-list-actions">
-          <button class="btn btn-ghost" onclick="importJSON()" aria-label="Import items">
-            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 10v3h12v-3M8 2v8M5 7l3 3 3-3"/></svg>
-            <span>Import</span>
-          </button>
-          <button class="btn btn-ghost" onclick="exportJSON()" aria-label="Export items">
-            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 10v3h12v-3M8 10V2M5 5l3-3 3 3"/></svg>
-            <span>Export</span>
-          </button>
+          <div class="data-menu-wrap">
+            <button class="btn btn-ghost" id="data-btn" onclick="toggleDataMenu(event)" aria-haspopup="true" aria-expanded="false" aria-label="Data: import or export">
+              <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><ellipse cx="8" cy="4" rx="5.2" ry="2"/><path d="M2.8 4v8c0 1.1 2.3 2 5.2 2s5.2-.9 5.2-2V4M2.8 8c0 1.1 2.3 2 5.2 2s5.2-.9 5.2-2"/></svg>
+              <span>Data</span>
+              <svg class="caret" width="9" height="9" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6l4 4 4-4"/></svg>
+            </button>
+            <div class="data-menu hidden" id="data-menu" role="menu" aria-label="Data options">
+              <div class="data-menu-h">Your data</div>
+              <button class="data-mi" role="menuitem" onclick="closeDataMenu();exportJSON()">
+                <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M2 10v3h12v-3M8 10V2M5 5l3-3 3 3"/></svg>
+                <span><b>Export items</b><span>Download all items as a JSON backup</span></span>
+              </button>
+              <button class="data-mi" role="menuitem" onclick="closeDataMenu();importJSON()">
+                <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M2 10v3h12v-3M8 2v8M5 7l3 3 3-3"/></svg>
+                <span><b>Import items</b><span>Merge items from a JSON file</span></span>
+              </button>
+            </div>
+          </div>
           <button class="btn btn-primary" onclick="openModal()">
             <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8 2v12M2 8h12"/></svg>
             <span>New Item</span>
@@ -1079,6 +1112,7 @@
       <input class="add-input" id="quick-input" placeholder="Quick add — press Enter to save" onkeydown="quickAdd(event)" autocomplete="off" spellcheck="false" aria-label="Quick add item">
       <button class="btn btn-primary" onclick="quickAdd({key:'Enter'})">Add</button>
     </div>
+  </div>
   </div>
 
   <div class="list-area" id="list" role="list"></div>
@@ -1371,6 +1405,8 @@ function load(){try{return JSON.parse(localStorage.getItem(KEY))||[];}catch{retu
 function save(d){localStorage.setItem(KEY,JSON.stringify(d));if(typeof sbPushStore==='function'&&!_sbApplying)sbPushStore('todos');}
 
 let filter='all', filterMode='view', _booting=true, view='dashboard', sortBy='priority';
+let bucket='all'; // workspace split: 'all' | 'tasks' (task+project) | 'notes' (note+idea)
+function setBucket(b){bucket=b;render();}
 
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,5);}
 
@@ -1525,8 +1561,44 @@ function getFiltered(){
     }
     return mq&&mf;
   });
-  return applySort(items);
+  // Tasks/Notes split — a second axis layered on top of the active filter (skipped when a specific
+  // type is already being filtered, e.g. from a Graph type-node click, to avoid double-filtering).
+  let arr=items;
+  if(view==='list'&&filter!=='archive'&&filterMode!=='type'){
+    if(bucket==='tasks')arr=arr.filter(i=>i.type==='task'||i.type==='project');
+    else if(bucket==='notes')arr=arr.filter(i=>i.type==='note'||i.type==='idea');
+  }
+  return applySort(arr);
 }
+function isTaskType(i){return i.type==='task'||i.type==='project';}
+function segBarHTML(){
+  const seg=(k,l)=>'<button class="seg'+(bucket===k?' on':'')+'" onclick="setBucket(\''+k+'\')" aria-pressed="'+(bucket===k)+'">'+l+'</button>';
+  return '<div class="seg-bar"><div class="seg-group" role="group" aria-label="Filter by tasks or notes">'+seg('all','All')+seg('tasks','Tasks')+seg('notes','Notes')+'</div>'+sortControlHTML()+'</div>';
+}
+function groupHTML(label,arr,offset){
+  if(!arr.length)return '';
+  offset=offset||0;
+  return '<div class="section-head"><span class="section-head-label">'+label+' · '+arr.length+'</span><div class="section-head-line"></div></div>'
+    +arr.map((i,idx)=>itemHTML(i,false,offset+idx)).join('');
+}
+function toggleDataMenu(e){
+  if(e)e.stopPropagation();
+  const m=document.getElementById('data-menu'),b=document.getElementById('data-btn');
+  const open=m.classList.toggle('hidden')===false;
+  if(b)b.setAttribute('aria-expanded',open);
+  if(open){
+    setTimeout(()=>document.addEventListener('pointerdown',_dataMenuOutside),0);
+    document.addEventListener('keydown',_dataMenuEsc);
+  }
+}
+function closeDataMenu(){
+  const m=document.getElementById('data-menu'),b=document.getElementById('data-btn');
+  if(m)m.classList.add('hidden'); if(b)b.setAttribute('aria-expanded','false');
+  document.removeEventListener('pointerdown',_dataMenuOutside);
+  document.removeEventListener('keydown',_dataMenuEsc);
+}
+function _dataMenuOutside(e){ if(!e.target.closest||!e.target.closest('.data-menu-wrap'))closeDataMenu(); }
+function _dataMenuEsc(e){ if(e.key==='Escape')closeDataMenu(); }
 
 function ageStr(iso){
   if(!iso)return '';
@@ -1721,8 +1793,8 @@ function render(){
     const icon=isArchiveView
       ?`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8h14v11a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1z"/><path d="M10 12h4"/></svg>`
       :`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 13l2.2-7.4A2 2 0 0 1 8.1 4h7.8a2 2 0 0 1 1.9 1.6L20 13v5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><path d="M4 13h4l1.5 2.5h5L16 13h4"/></svg>`;
-    const title=isArchiveView?'Archive is empty':'Nothing here yet';
-    el.innerHTML=`<div class="empty-state">
+    const title=isArchiveView?'Archive is empty':(bucket==='tasks'?'No tasks here':bucket==='notes'?'No notes here':'Nothing here yet');
+    el.innerHTML=(isArchiveView?'':segBarHTML())+`<div class="empty-state">
       <div class="empty-icon">${icon}</div>
       <div class="empty-title">${title}</div>
       <div class="empty-hint">${hint}</div>
@@ -1735,8 +1807,14 @@ function render(){
     html+=all.map((i,idx)=>itemHTML(i,true,idx)).join('');
   } else {
     html+=reminderBar();
-    html+=`<div class="section-head"><span class="section-head-label">Active · ${all.length}</span><div class="section-head-line"></div>${sortControlHTML()}</div>`;
-    html+=all.map((i,idx)=>itemHTML(i,false,idx)).join('');
+    html+=segBarHTML();
+    if(bucket==='all'){
+      // Distinct organization: actionable Tasks first, then reference Notes/Ideas — each its own section.
+      const tasksArr=all.filter(isTaskType), notesArr=all.filter(i=>!isTaskType(i));
+      html+=groupHTML('Tasks',tasksArr,0)+groupHTML('Notes',notesArr,tasksArr.length);
+    } else {
+      html+=groupHTML(bucket==='tasks'?'Tasks':'Notes',all,0);
+    }
   }
   el.innerHTML=html;
 }
@@ -3201,6 +3279,21 @@ function journalInsights(){
 }
 const JI_ICON='<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-right:1px"><path d="M8 3.5C6.5 2 3 2 3 2v9s3.5 0 5 1.5C9.5 11 13 11 13 11V2s-3.5 0-5 1.5z"/><path d="M8 3.5v9"/></svg>';
 
+// Breakdown of a set of completed items by type (task/idea/note/project) and by life area.
+function doneBreakdown(arr){
+  const byType={},byCat={};
+  arr.forEach(i=>{const t=i.type||'task';byType[t]=(byType[t]||0)+1;const c=i.category||'general';byCat[c]=(byCat[c]||0)+1;});
+  const order=['task','idea','note','project'];
+  const typeLine=order.filter(t=>byType[t]).map(t=>byType[t]+' '+(TYPE_LABEL[t]||t).toLowerCase()+(byType[t]>1?'s':'')).join(' · ')||'—';
+  const catChips=Object.entries(byCat).sort((a,b)=>b[1]-a[1]).slice(0,6).map(([k,v])=>{const cc=CATS[k]||CATS.general;return '<span class="dbk-chip" style="--c:'+cc.color+'"><span class="dbk-dot"></span>'+esc(cc.label)+'<b>'+v+'</b></span>';}).join('');
+  return {typeLine,catChips};
+}
+function doneColHTML(num,unit,arr){
+  const b=doneBreakdown(arr);
+  return '<div class="dbk-col"><div class="dbk-head"><span class="dbk-num">'+num+'</span><span class="dbk-unit">'+unit+'</span></div>'
+    +'<div class="dbk-types">'+b.typeLine+'</div>'
+    +'<div class="dbk-chips">'+(b.catChips||'<span class="dbk-types" style="color:var(--text-3)">none yet</span>')+'</div></div>';
+}
 function renderDashboard(){
   setTitle('Today',null);
   const now=new Date(),todayK=dateKey(now);
@@ -3208,7 +3301,8 @@ function renderDashboard(){
   // tasks
   const overdue=active.filter(i=>i.dueDate&&i.dueDate<todayK);
   const dueToday=active.filter(i=>i.dueDate===todayK);
-  const doneToday=archived.filter(i=>localDay(i.archivedAt)===todayK).length;
+  const doneTodayItems=archived.filter(i=>localDay(i.archivedAt)===todayK);
+  const doneToday=doneTodayItems.length;
   // daily habits
   const daily=loadDaily(),dDone=new Set(daily.log[todayK]||[]);
   const dTotal=daily.templates.length,dDoneN=daily.templates.filter(t=>dDone.has(t.id)).length;
@@ -3234,13 +3328,6 @@ function renderDashboard(){
     +(maxStreak>0?'<span class="dstreak">'+J_FLAME+maxStreak+'-day streak</span>':'<span class="dstreak cold">no streak yet</span>')
     +'<button class="dcard-cta" onclick="setView(\'daily\')">Open daily checklist →</button></div>';
 
-  const faces={great:'😄',good:'🙂',okay:'😐',low:'😕',rough:'😣'};
-  const moodFaces=JMOODS.map(m=>'<button class="dmood-face'+(todayMood===m.id?' on':'')+'" style="--mc:'+m.color+';--mdim:'+m.dim+'" onclick="dashSetMood(\''+m.id+'\')" title="'+m.label+'" aria-label="Log mood: '+m.label+'">'+faces[m.id]+'</button>').join('');
-  const moodCard='<div class="dcard"><div class="dcard-label"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M5.5 9.5s.9 1.5 2.5 1.5 2.5-1.5 2.5-1.5"/><circle cx="6" cy="6.5" r=".6" fill="currentColor"/><circle cx="10" cy="6.5" r=".6" fill="currentColor"/></svg>How are you?</div>'
-    +'<div class="dmood-faces">'+moodFaces+'</div>'
-    +'<div class="dstat-sub">'+(weekAvg!=null?'This week avg <strong style="color:var(--text)">'+weekAvg.toFixed(1)+'</strong>/5':'Tap a face to log today')+'</div>'
-    +'<button class="dcard-cta" onclick="setView(\'journal\')">Open journal →</button></div>';
-
   const tasksCard='<div class="dcard"><div class="dcard-label"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="2"/><path d="M5 8l2 2 4-4"/></svg>Tasks</div>'
     +'<div class="dstat-row"><span class="dstat-big">'+active.length+'</span><span class="dstat-unit">open</span></div>'
     +'<div class="dstat-sub">'+doneToday+' done today'+(dueToday.length?' · '+dueToday.length+' due':'')+(overdue.length?' · <span class="over">'+overdue.length+' overdue</span>':'')+'</div>'
@@ -3263,9 +3350,6 @@ function renderDashboard(){
   const heatCard='<div class="dcard"><div class="dcard-label">Habit consistency · last 17 weeks</div><div class="dheat">'+heatCols+'</div>'
     +'<div class="dheat-foot">Less <span class="dheat-swatch" style="background:var(--surface-hover)"></span><span class="dheat-swatch" style="background:#5c4216"></span><span class="dheat-swatch" style="background:#9a6e1d"></span><span class="dheat-swatch" style="background:#cf8b1f"></span><span class="dheat-swatch" style="background:#e8a020"></span> More</div></div>';
 
-  const moodTrendCard='<div class="dcard"><div class="dcard-label">Mood · last 30 days</div>'+svgMoodLine(moodSeries)
-    +'<div class="dchart-cap">'+(weekAvg!=null?'7-day average '+weekAvg.toFixed(1)+'/5':'Log your mood to see trends')+'</div></div>';
-
   // tasks by category donut
   const byCat={};active.forEach(i=>{const c=i.category||'general';byCat[c]=(byCat[c]||0)+1;});
   const catE=Object.entries(byCat).sort((a,b)=>b[1]-a[1]),top=catE.slice(0,5),otherN=catE.slice(5).reduce((a,e)=>a+e[1],0);
@@ -3281,18 +3365,17 @@ function renderDashboard(){
   const bars=comp.map((v,i)=>'<div class="dbar'+(v===0?' empty':'')+'" style="height:'+(v/cMax*100)+'%" title="'+v+' completed"></div>').join('');
   const compCard='<div class="dcard"><div class="dcard-label">Completed · last 14 days</div><div class="dbars">'+bars+'</div><div class="dchart-cap">'+cTotal+' task'+(cTotal===1?'':'s')+' completed in 2 weeks</div></div>';
 
-  // today focus: overdue + due today + high-priority open
-  const focusItems=[];const seen=new Set();
-  overdue.forEach(i=>{if(!seen.has(i.id)){seen.add(i.id);focusItems.push({i,tag:'overdue'});}});
-  dueToday.forEach(i=>{if(!seen.has(i.id)){seen.add(i.id);focusItems.push({i,tag:'today'});}});
-  sortByPriority(active.filter(i=>i.priority==='high'&&!seen.has(i.id))).forEach(i=>{if(focusItems.length<7&&!seen.has(i.id)){seen.add(i.id);focusItems.push({i,tag:'high'});}});
+  // today focus: high-priority open items (overdue/due-today high-pri items keep their urgency chip)
+  const focusItems=sortByPriority(active.filter(i=>i.priority==='high')).slice(0,7).map(i=>({
+    i, tag:(i.dueDate&&i.dueDate<todayK)?'overdue':(i.dueDate===todayK?'today':'high')
+  }));
   const focusHTML=focusItems.length?focusItems.slice(0,7).map(({i,tag})=>{
     const cat=CATS[i.category||'general']||CATS.general;
     const tagHTML=tag==='overdue'?'<span class="due-chip overdue">'+fmtDue(i.dueDate)+'</span>':tag==='today'?'<span class="due-chip soon">today</span>':'<span class="prio-high"><span class="prio-dot"></span>High</span>';
     return '<div class="dfocus" onclick="openDetail(\''+i.id+'\')"><div class="cb" onclick="event.stopPropagation();toggleDone(\''+i.id+'\')" role="checkbox" aria-checked="false" aria-label="Mark done: '+esc(i.text||'')+'" tabindex="0" onkeydown="if(event.key===\' \'||event.key===\'Enter\'){event.stopPropagation();toggleDone(\''+i.id+'\');event.preventDefault()}"><svg class="cb-check" width="9" height="9" viewBox="0 0 10 10" fill="none" stroke="#111" stroke-width="2.2"><path d="M1.5 5l2.8 2.8 4.2-5"/></svg></div>'
       +'<div class="dfocus-body"><div class="dfocus-text"><span class="item-emoji">'+(i.emoji||guessEmoji(i.text||'',i.category))+'</span> '+esc(i.text||'')+'</div><div class="dfocus-meta"><span class="badge-cat" style="background:'+cat.dim+';color:'+cat.color+'">'+cat.label+'</span>'+tagHTML+'</div></div></div>';
-  }).join(''):'<div class="dempty">Nothing urgent. Enjoy the breathing room.</div>';
-  const focusCard='<div class="dcard dlist-card"><div class="dcard-label"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2a6 6 0 1 0 6 6"/><path d="M8 5v3l2 1.5"/></svg>Today\'s focus</div>'+focusHTML+'</div>';
+  }).join(''):'<div class="dempty">No high-priority items. Nice and clear.</div>';
+  const focusCard='<div class="dcard dlist-card"><div class="dcard-label"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 2v12M4 3h8l-1.5 2.5L12 8H4"/></svg>High-priority focus</div>'+focusHTML+'</div>';
 
   // upcoming next 7 days
   const upEnd=new Date(now);upEnd.setDate(upEnd.getDate()+8);const upEndK=dateKey(upEnd);
@@ -3300,20 +3383,6 @@ function renderDashboard(){
   const upHTML=upcoming.length?upcoming.map(i=>{const cat=CATS[i.category||'general']||CATS.general;
     return '<div class="dup" onclick="openDetail(\''+i.id+'\')" style="cursor:pointer"><span class="dup-date">'+fmtDue(i.dueDate)+'</span><span class="dup-cat" style="background:'+cat.color+'"></span><span class="dup-text">'+esc(i.text||'')+'</span></div>';}).join(''):'<div class="dempty">Nothing scheduled in the next week</div>';
   const upCard='<div class="dcard dlist-card"><div class="dcard-label"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 6.5h12M5 2v2M11 2v2"/></svg>Upcoming</div>'+upHTML+'</div>';
-
-  // in-progress: items with phasic steps not yet complete (started first, then by progress)
-  const inProg=active.map(i=>({i,st:stepStats(i)})).filter(x=>x.st&&!x.st.complete)
-    .sort((a,b)=>(b.st.done>0)-(a.st.done>0)||b.st.pct-a.st.pct).slice(0,7);
-  const inProgHTML=inProg.length?inProg.map(({i,st})=>{
-    const cat=CATS[i.category||'general']||CATS.general;
-    return '<div class="dprog" onclick="openDetail(\''+i.id+'\')">'
-      +'<div class="prog-track" style="max-width:64px"><div class="prog-fill" style="width:'+st.pct+'%"></div></div>'
-      +'<span class="prog-count">'+st.done+'/'+st.total+'</span>'
-      +'<div class="dprog-body"><div class="dprog-text"><span class="item-emoji">'+(i.emoji||guessEmoji(i.text||'',i.category))+'</span> '+esc(i.text||'')+'</div>'
-      +(st.next?'<div class="dprog-next">Next: '+esc(st.next)+'</div>':'')+'</div>'
-      +'<span class="badge-cat" style="background:'+cat.dim+';color:'+cat.color+'">'+cat.label+'</span></div>';
-  }).join(''):'<div class="dempty">No multi-step items in progress. Add steps to a task to track its phases.</div>';
-  const inProgCard='<div class="dcard dlist-card"><div class="dcard-label"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 8h6M2 4h10M2 12h8"/></svg>In progress</div>'+inProgHTML+'</div>';
 
   // journal insights (on-device analysis)
   const ji=journalInsights();
@@ -3340,20 +3409,21 @@ function renderDashboard(){
   rv.push('<span class="rv-item">🔁 habits <b>'+habitDays+'</b>/7 days</span>');
   rv.push('<span class="rv-item'+(overdue.length?' over':'')+'">⚠️ '+overdue.length+' overdue</span>');
   var reviewCard='<div class="dcard"><div class="dcard-label"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2.5" y="2.5" width="11" height="11" rx="1.5"/><path d="M5.5 8l1.5 1.5L10.5 6"/></svg>This week in review</div><div class="rv-row">'+rv.join('')+'</div></div>';
+  // Completed breakdown — today + this week, split by type and by life area
+  var completedCard='<div class="dcard"><div class="dcard-label"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 8l2 2 4-4"/><path d="M8 12l2 2 4-9"/></svg>Completed</div><div class="dbk-grid">'+doneColHTML(doneToday,'today',doneTodayItems)+doneColHTML(doneWk.length,'this week',doneWk)+'</div></div>';
   document.getElementById('list').innerHTML='<div class="dash-wrap">'
     +'<div class="dash-greet"><div class="dash-hello">'+timeGreeting()+', JB</div><div class="dash-sub">'+now.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})+' &nbsp;·&nbsp; '+highlight+'</div></div>'
     +'<div class="cond" id="cond-strip"></div>'
     +reminderBar()
-    +'<div class="dash-hero">'+habitCard+moodCard+tasksCard+journalCard+'</div>'
-    +'<div class="dash-sec">Week in review</div>'
-    +'<div class="dins-row" style="grid-template-columns:1fr">'+reviewCard+'</div>'
-    +'<div class="dash-sec">This week</div>'
-    +'<div class="dins">'+heatCard+moodTrendCard+'</div>'
-    +'<div class="dash-sec">Reflections</div>'+reflectSection
-    +'<div class="dins-row" style="margin-top:13px">'+catCard+compCard+'</div>'
+    +'<div class="dash-hero">'+habitCard+tasksCard+journalCard+'</div>'
     +'<div class="dash-sec">Now</div>'
     +'<div class="dins-row">'+focusCard+upCard+'</div>'
-    +'<div class="dins-row" style="grid-template-columns:1fr">'+inProgCard+'</div>'
+    +'<div class="dash-sec">Week in review</div>'
+    +'<div class="dins-row" style="grid-template-columns:1fr">'+reviewCard+'</div>'
+    +'<div class="dins-row" style="margin-top:13px">'+completedCard+'</div>'
+    +'<div class="dins-row" style="margin-top:13px">'+catCard+compCard+'</div>'
+    +'<div class="dins-row" style="grid-template-columns:1fr;margin-top:13px">'+heatCard+'</div>'
+    +'<div class="dash-sec">Reflections</div>'+reflectSection
     +'</div>';
   loadConditions();
 }
