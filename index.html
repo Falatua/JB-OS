@@ -960,6 +960,9 @@
   .capture-budget{font-size:11px;color:var(--text-3);margin-top:12px;text-align:center;font-variant-numeric:tabular-nums}
   .capture-budget .cb-bar{height:3px;border-radius:2px;background:var(--border-2);margin-top:5px;overflow:hidden}
   .capture-budget .cb-fill{height:100%;background:var(--green);border-radius:2px;transition:width .3s}
+  .cap-row .cap-ok{color:var(--green);font-weight:700;font-size:16px;line-height:1.1;flex-shrink:0}
+  .capture-foot{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
+  .capture-foot .btn{min-width:104px;justify-content:center}
   @media(max-width:560px){.header-actions #capture-btn span{display:none}.header-actions #capture-btn{padding:6px 9px}}
 </style>
 </head>
@@ -1431,6 +1434,7 @@
     </div>
     <div class="capture-log" id="capture-log"></div>
     <div class="capture-budget" id="capture-budget"></div>
+    <div class="capture-foot"><button class="btn btn-primary" onclick="closeCapture()">Done</button></div>
   </div>
 </div>
 
@@ -2419,7 +2423,7 @@ function logCapture(r,errMsg){
   const row=document.createElement('div'); row.className='cap-row'+(errMsg?' err':'');
   if(errMsg){row.innerHTML='<span class="cap-emoji">⚠️</span><div><div class="cap-title">'+esc(errMsg)+'</div></div>';}
   else{const routeTask=(r.routing==='task'||r.type==='task'||r.type==='project'),cat=CATS[r.category]||CATS.general;
-    row.innerHTML='<span class="cap-emoji">'+guessEmoji(r.title||'',r.category)+'</span><div><div class="cap-title">'+esc((r.title||'Screenshot').slice(0,80))+'</div><div class="cap-meta"><span class="cap-badge '+(routeTask?'task':'note')+'">'+(routeTask?'TASK':'NOTE')+'</span><span>'+esc(cat.label)+'</span>'+(r.link?'<span>· link</span>':'')+'</div></div>';}
+    row.innerHTML='<span class="cap-ok">✓</span><div><div class="cap-title">'+esc((r.title||'Screenshot').slice(0,80))+'</div><div class="cap-meta">Saved to <span class="cap-badge '+(routeTask?'task':'note')+'">'+(routeTask?'Tasks':'Notes')+'</span> · '+esc(cat.label)+(r.link?' · link':'')+'</div></div>';}
   log.insertBefore(row,log.firstChild);
 }
 function renderCaptureBudget(b){const el=document.getElementById('capture-budget');if(!el||!b)return;const cap=b.cap||1,spend=b.spend||0,pct=Math.min(100,Math.round(spend/cap*100)),col=spend>=cap*0.95?'var(--red)':spend>=cap*0.75?'var(--yellow)':'var(--green)';el.innerHTML='Today: $'+spend.toFixed(2)+' of $'+cap.toFixed(2)+' used<div class="cb-bar"><div class="cb-fill" style="width:'+pct+'%;background:'+col+'"></div></div>';}
