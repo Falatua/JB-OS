@@ -1527,6 +1527,33 @@ const CATS = {
   general:  {label:'General',      color:'#7e7e8c', dim:'rgba(126,126,140,.12)'},
 };
 
+// Graph "concept" nodes — entities (people, tools, efforts) extracted from item text so items
+// wire together through shared meaning, not just their category. A concept only appears when it
+// links ≥2 items (a real bridge). Reuses the same entity vocabulary as the categorizer.
+const CONCEPT_COLOR = '#e6c869';
+const CONCEPTS = [
+  // people
+  {key:'mackenzie',label:'Mackenzie',re:/mackenzie|kenzie/i},
+  {key:'archie',label:'Archie',re:/\barchie\b/i},
+  {key:'gigi',label:'Gigi',re:/\bgigi\b/i},
+  {key:'dad',label:'Dad',re:/\bdad\b/i},
+  {key:'heber',label:'Heber',re:/\bheber\b/i},
+  // AI & tools (these bridge across work / tech / musubi)
+  {key:'claude',label:'Claude',re:/\bclaude\b/i},
+  {key:'ai',label:'AI',re:/\bai\b|chatgpt|\bgpt\b|\bllm\b|autonomous (general )?agent/i},
+  {key:'manus',label:'Manus',re:/\bmanus\b/i},
+  {key:'higgsfield',label:'Higgsfield',re:/higgsfield/i},
+  {key:'obsidian',label:'Obsidian',re:/obsidian/i},
+  // efforts / brands
+  {key:'musubi',label:'Musubi',re:/\bmusubi\b/i},
+  {key:'jbos',label:'JB OS',re:/jb ?os|to-?do (list )?(web )?app|daily (to-?do|task)/i},
+  {key:'romantd',label:'Roman TD',re:/roman ?td/i},
+  {key:'answerlab',label:'AnswerLab',re:/answer ?lab/i},
+  // gaming hardware / emulation
+  {key:'aynthor',label:'AYN Thor',re:/ayn thor|anythor|\bthor\b/i},
+  {key:'roms',label:'ROMs / Emulation',re:/\brom\b|\broms\b|emulat|\b3ds\b|\bswitch\b/i},
+];
+
 const TYPE_LABEL = {task:'Task',idea:'Idea',note:'Note',project:'Project'};
 // Types are now just Task (actionable) and Note (reference). Legacy idea/project items fold in:
 // idea -> note, project -> task. Used for display + dropdowns; items convert for real when edited/saved.
@@ -2925,7 +2952,7 @@ function graphColorMode(){_G&&_G.cmode();}
 function graphGoNode(k){_G&&_G.goNode&&_G.goNode(k);}
 function graphIsolate(k){_G&&_G.iso&&_G.iso(k);}
 function graphSnapshot(){_G&&_G.snap&&_G.snap();}
-var GRAPH_GROUPS=[['item','Items','#9aa0a6'],['cat','Life areas','#e8a020'],['type','Types','#8a8f98'],['journal','Journal','#b07cc6'],['habit','Habits','#2dd4bf']];
+var GRAPH_GROUPS=[['item','Items','#9aa0a6'],['cat','Life areas','#e8a020'],['concept','Concepts','#e6c869'],['type','Types','#8a8f98'],['journal','Journal','#b07cc6'],['habit','Habits','#2dd4bf']];
 var TYPEC={task:'#6f93bf',idea:'#cda94e',note:'#9aa0a6',project:'#5bb188'};
 function _hexA(h,a){h=String(h||'#888').replace('#','');if(h.length===3)h=h[0]+h[0]+h[1]+h[1]+h[2]+h[2];var n=parseInt(h,16);if(isNaN(n))return 'rgba(136,136,140,'+a+')';return 'rgba('+((n>>16)&255)+','+((n>>8)&255)+','+(n&255)+','+a+')';}
 function renderGraph(){
@@ -2945,7 +2972,7 @@ function renderGraph(){
   var dpr=Math.min(window.devicePixelRatio||1,2);
   var ACC=(getComputedStyle(document.documentElement).getPropertyValue('--accent').trim())||'#e8a020';
   var todayK=dateKey(new Date());
-  var groups=_graphGroups?Object.assign({item:true,cat:true,type:true,journal:true,habit:true},_graphGroups):{item:true,cat:true,type:true,journal:true,habit:true};
+  var groups=_graphGroups?Object.assign({item:true,cat:true,concept:true,type:true,journal:true,habit:true},_graphGroups):{item:true,cat:true,concept:true,type:true,journal:true,habit:true};
   var colorMode=_graphColorMode; // 'area' | 'type'
   var RM=!!(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches); // honor reduced-motion: calm the animation
   var nodes=[],edges=[],byKey={},catUsed={},typeUsed={},catNode={},typeNode={},hub=null;
@@ -2974,9 +3001,16 @@ function renderGraph(){
     Object.keys(catUsed).forEach(function(c){var cc=CATS[c]||CATS.general;var cn=node('cat:'+c,cc.label,'cat','cat',cc.color,9,{cat:c});edge(hub,cn);catNode[c]=cn;});
     Object.keys(typeUsed).forEach(function(t){var tn=node('type:'+t,(TYPE_LABEL[t]||t)+'s','type','type',TYPEC[t]||'#8a8f98',8,{type:t});edge(hub,tn);typeNode[t]=tn;});
     items.forEach(function(it){var c=it.category||'general',t=it.type||'task',cc=CATS[c]||CATS.general,pi=priorityInfo(it.priority);var n=node('it:'+it.id,it.text||'Untitled','item','item',cc.color,pi.id==='high'?6:(pi.id==='in_progress'?5.7:5),{id:it.id});n.od=!!(it.dueDate&&it.dueDate<todayK);n.hi=pi.id==='high';n.wip=pi.id==='in_progress';n.cl=catNode[c];n.catKey=c;n.typeKey=t;n.altColor=TYPEC[t]||'#8a8f98';n.recent=((it.updatedAt||it.createdAt||'').slice(0,10)===todayK);var stt=(typeof stepStats==='function')?stepStats(it):null;n.prog=(stt&&stt.total)?(stt.done/stt.total):null;edge(n,catNode[c]);if(typeNode[t])edge(n,typeNode[t]);});
+    // Concept nodes: bridge items that share an entity (person/tool/effort), revealing cross-category threads.
+    try{
+      var cHits={};
+      items.forEach(function(it){var hay=(it.text||'')+' '+(it.notes||'')+' '+(it.description||'');CONCEPTS.forEach(function(cp){if(cp.re.test(hay)){(cHits[cp.key]=cHits[cp.key]||[]).push(byKey['it:'+it.id]);}});});
+      CONCEPTS.forEach(function(cp){var hits=cHits[cp.key];if(!hits||hits.length<2)return; // only show genuine bridges (≥2 items)
+        var cn=node('cp:'+cp.key,cp.label,'concept','concept',CONCEPT_COLOR,7,{concept:cp.key});cn.cCount=hits.length;hits.forEach(function(itn){edge(cn,itn);});});
+    }catch(e){}
     try{var entries=(jEntries?jEntries():[]).slice(0,14);if(entries.length){var jh=node('jhub','Journal','jhub','journal','#b07cc6',11);edge(hub,jh);entries.forEach(function(e){edge(node('j:'+e.id,e.date||'entry','journal','journal','#b07cc6',4,{jid:e.id}),jh);});}}catch(e){}
     try{var tmpl=(loadDaily().templates||[]).slice(0,20);if(tmpl.length){var hh=node('hhub','Habits','hhub','habit','#2dd4bf',11);edge(hub,hh);tmpl.forEach(function(t){edge(node('h:'+t.id,t.text||'habit','habit','habit','#2dd4bf',4),hh);});}}catch(e){}
-    nodes.forEach(function(n){ if(n.kind==='cat'||n.kind==='type'||n.kind==='jhub'||n.kind==='hhub') n.r=Math.min(16,n.baseR+Math.sqrt(n.deg)*1.6); }); // size hubs by connectivity
+    nodes.forEach(function(n){ if(n.kind==='cat'||n.kind==='type'||n.kind==='jhub'||n.kind==='hhub'||n.kind==='concept') n.r=Math.min(16,n.baseR+Math.sqrt(n.deg)*1.6); }); // size hubs by connectivity
     selected=selected?byKey[selected.key]||null:null; hover=hover?byKey[hover.key]||null:null; // keep live refs valid
     focusNode=focusNode?byKey[focusNode.key]||null:null; drag=drag?byKey[drag.key]||null:null;
   }
@@ -3086,7 +3120,7 @@ function renderGraph(){
   function loop(){if(view!=='graph'||myGen!==_graphGen||!document.getElementById('graph-canvas')){if(typeof saveState==='function')saveState();_G=null;return;}_now=performance.now();camStep();if(alpha>0.02||drag)step();draw();if((++_saveTick%45)===0&&!drag&&!panning)saveState();requestAnimationFrame(loop);}
   function pos(e){var r=canvas.getBoundingClientRect();var p=e.touches&&e.touches[0]?e.touches[0]:(e.changedTouches&&e.changedTouches[0]?e.changedTouches[0]:e);return {x:p.clientX-r.left,y:p.clientY-r.top};}
   var tip=document.getElementById('graph-tip');
-  function showTip(n,sx,sy){if(!tip)return;if(!n||n===selected){tip.classList.remove('on');return;}var sub=n.kind==='cat'?'Life area':n.kind==='type'?'Type':n.kind==='hub'?'Hub':n.kind==='journal'||n.kind==='jhub'?'Journal':n.kind==='habit'||n.kind==='hhub'?'Habit':(n.od?'Overdue':n.hi?'High priority':n.wip?'Work in progress':'Item');tip.innerHTML='<b>'+esc(n.label)+'</b><span>'+sub+' · '+n.deg+' link'+(n.deg===1?'':'s')+'</span>';tip.style.left=Math.min(W-150,sx+14)+'px';tip.style.top=(sy+14)+'px';tip.style.borderColor=_hexA(NC(n),0.6);tip.classList.add('on');}
+  function showTip(n,sx,sy){if(!tip)return;if(!n||n===selected){tip.classList.remove('on');return;}var sub=n.kind==='cat'?'Life area':n.kind==='concept'?'Concept':n.kind==='type'?'Type':n.kind==='hub'?'Hub':n.kind==='journal'||n.kind==='jhub'?'Journal':n.kind==='habit'||n.kind==='hhub'?'Habit':(n.od?'Overdue':n.hi?'High priority':n.wip?'Work in progress':'Item');tip.innerHTML='<b>'+esc(n.label)+'</b><span>'+sub+' · '+n.deg+' link'+(n.deg===1?'':'s')+'</span>';tip.style.left=Math.min(W-150,sx+14)+'px';tip.style.top=(sy+14)+'px';tip.style.borderColor=_hexA(NC(n),0.6);tip.classList.add('on');}
   function down(e){cam=null;if(e.touches&&e.touches.length===2){var a=e.touches[0],b=e.touches[1];pinch={d:Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY),s:scale};return;}var p=pos(e);var n=hit(p.x,p.y);moved=false;last=p;if(n)drag=n;else panning=true;}
   function move(e){
     if(pinch&&e.touches&&e.touches.length===2){var a=e.touches[0],b=e.touches[1],nd=Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY);var r=canvas.getBoundingClientRect();var cx=(a.clientX+b.clientX)/2-r.left,cy=(a.clientY+b.clientY)/2-r.top;var ns=Math.max(0.3,Math.min(3.2,pinch.s*(nd/pinch.d)));var wx=(cx-ox)/scale,wy=(cy-oy)/scale;scale=ns;ox=cx-wx*scale;oy=cy-wy*scale;if(e.cancelable)e.preventDefault();return;}
@@ -3116,6 +3150,7 @@ function renderGraph(){
     if(n.kind==='cat'){var c2=CATS[n.ref.cat]||CATS.general;return x+'<div class="gi-head"><span class="gi-dot" style="background:'+c2.color+'"></span><span class="gi-title">'+c2.label+'</span></div><div class="gi-sub">Life area · '+(catUsed[n.ref.cat]||0)+' item(s)</div>'+connHTML(n)+'<div class="gi-actions"><button class="btn btn-primary" onclick="graphOpenSel()">View list</button><button class="btn btn-ghost" onclick="graphFocusSel()">Focus</button></div>';}
     if(n.kind==='type'){return x+'<div class="gi-head"><span class="gi-dot" style="background:'+n.color+'"></span><span class="gi-title">'+esc(n.label)+'</span></div><div class="gi-sub">Type · '+(typeUsed[n.ref.type]||0)+' item(s)</div>'+connHTML(n)+'<div class="gi-actions"><button class="btn btn-primary" onclick="graphOpenSel()">View list</button><button class="btn btn-ghost" onclick="graphFocusSel()">Focus</button></div>';}
     if(n.kind==='journal'){return x+'<div class="gi-head"><span class="gi-dot" style="background:#b07cc6"></span><span class="gi-title">Journal entry</span></div><div class="gi-sub">'+esc(n.label)+'</div>'+connHTML(n)+'<div class="gi-actions"><button class="btn btn-primary" onclick="graphOpenSel()">Open entry</button><button class="btn btn-ghost" onclick="graphFocusSel()">Focus</button></div>';}
+    if(n.kind==='concept'){var cn=(n.cCount||n.deg);return x+'<div class="gi-head"><span class="gi-dot" style="background:'+CONCEPT_COLOR+'"></span><span class="gi-title">'+esc(n.label)+'</span></div><div class="gi-sub">Concept · '+cn+' linked item'+(cn===1?'':'s')+' across your areas</div>'+connHTML(n)+'<div class="gi-actions"><button class="btn btn-primary" onclick="graphFocusSel()">Focus connections</button></div>';}
     return x+'<div class="gi-head"><span class="gi-dot" style="background:'+n.color+'"></span><span class="gi-title">'+esc(n.label)+'</span></div><div class="gi-sub">'+deg+' connection(s)</div>'+connHTML(n)+'<div class="gi-actions"><button class="btn btn-primary" onclick="graphOpenSel()">Open</button><button class="btn btn-ghost" onclick="graphFocusSel()">Focus</button></div>';
   }
   function showInfo(n){var el=document.getElementById('graph-info');if(!el)return;el.innerHTML=infoHTML(n);el.classList.remove('hidden');}
