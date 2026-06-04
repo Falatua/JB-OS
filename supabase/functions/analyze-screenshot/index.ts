@@ -3,6 +3,8 @@
 //   • Screenshot, web client -> Supabase JWT, body {image}, persist:false (client saves the item)
 //   • Screenshot, iOS Shortcut -> x-jbos-token header, body {image}, persist:true (function writes it)
 //   • Brain dump, web client -> Supabase JWT, body {text} -> returns {items:[...]} to preview & save
+//   • Graph connections, web client -> Supabase JWT, body {connections:[{id,text,category}]}
+//        -> returns {connections:[{a,b,reason}]} (non-obvious links for the knowledge graph)
 // All modes share the same Haiku model + the $1.00/day cost cap (main:ss_budget).
 //
 // Deploy:  supabase functions deploy analyze-screenshot --no-verify-jwt
@@ -130,6 +132,53 @@ async function brainDump(text: string, admin: any, ANTHROPIC_KEY: string) {
   return json({ items: clean, budget: { spend: budget.spend, cap: DAILY_CAP } });
 }
 
+// ===== Graph connections: surface non-obvious links across JB's items (knowledge-graph insight) =====
+const CONNECTIONS_PROMPT = `You are mapping the deep structure of JB's personal task/note system to surface NON-OBVIOUS connections — pairs of items that relate thematically, could be done together, build on one another, or reveal a pattern in how he works and who he is.
+
+About JB: runs Musubi Strong (a Hawaiʻi / Pacific-Islander apparel brand — Shopify + Instagram growth + original designs). Day job at AnswerLab (UX research; writes reports/end-of-day updates). Builds Roman TD (a tower-defense game) and JB OS (this very app). Into hypertrophy training (Mike Israetel / RP). Heavy on AI tooling (Claude, Manus, Higgsfield), Obsidian, and retro gaming/emulation (AYN Thor, 3DS/Switch ROMs). Family: partner Mackenzie, kids Archie & Gigi.
+
+Given the items (each: id, text, category), return up to 12 of the STRONGEST connections. Favor links that cross categories or reveal a real insight (e.g. an AI tool that could serve Musubi, two tasks that share a hidden dependency, a recurring theme). Skip trivial same-topic pairings unless genuinely illuminating. Each connection = the two item ids + a SHORT reason (≤ 10 words, concrete).
+
+Respond with ONLY valid JSON — no preamble, no fences:
+{"connections":[{"a":"<id>","b":"<id>","reason":"..."}]}`;
+
+async function analyzeConnections(items: any[], admin: any, ANTHROPIC_KEY: string) {
+  const today = todayKey();
+  const budgetId = `${SPACE}:ss_budget`;
+  const { data: bRow } = await admin.from("jbos_sync").select("payload").eq("id", budgetId).maybeSingle();
+  let budget = (bRow?.payload as { date?: string; spend?: number }) || { date: today, spend: 0 };
+  if (budget.date !== today) budget = { date: today, spend: 0 };
+  if ((budget.spend || 0) + PRECALL_GUARD > DAILY_CAP) return json({ error: "cap", budget: { spend: budget.spend || 0, cap: DAILY_CAP } });
+
+  const clean = items.slice(0, 60).map((it: any) => ({ id: String(it.id || ""), text: String(it.text || "").slice(0, 160), category: String(it.category || "general") })).filter((it: any) => it.id && it.text);
+  const ids = new Set(clean.map((it: any) => it.id));
+  let connections: any[] = [];
+  let usage = { input_tokens: 0, output_tokens: 0 };
+  try {
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-api-key": ANTHROPIC_KEY, "anthropic-version": "2023-06-01" },
+      body: JSON.stringify({ model: MODEL, max_tokens: 1500, system: CONNECTIONS_PROMPT, messages: [{ role: "user", content: JSON.stringify(clean) }] }),
+    });
+    const data = await res.json();
+    if (!res.ok) { console.error("anthropic-conn", data); return json({ error: "ai", budget: { spend: budget.spend || 0, cap: DAILY_CAP } }); }
+    usage = data.usage || usage;
+    const t = (data.content?.[0]?.text || "").trim().replace(/^```(?:json)?/i, "").replace(/```$/, "").trim();
+    const parsed = JSON.parse(t);
+    connections = Array.isArray(parsed.connections) ? parsed.connections : (Array.isArray(parsed) ? parsed : []);
+  } catch (e) { console.error("conn-parse", e); return json({ error: "ai" }); }
+
+  const cost = usage.input_tokens * IN_COST + usage.output_tokens * OUT_COST;
+  budget = { date: today, spend: +((budget.spend || 0) + cost).toFixed(6) };
+  await admin.from("jbos_sync").upsert({ id: budgetId, payload: budget, updated_at: new Date().toISOString() });
+
+  const out = connections
+    .filter((c: any) => c && ids.has(c.a) && ids.has(c.b) && c.a !== c.b)
+    .slice(0, 12)
+    .map((c: any) => ({ a: String(c.a), b: String(c.b), reason: String(c.reason || "").slice(0, 80) }));
+  return json({ connections: out, budget: { spend: budget.spend, cap: DAILY_CAP } });
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   if (req.method !== "POST") return json({ error: "method" }, 405);
@@ -157,8 +206,11 @@ Deno.serve(async (req) => {
   }
   if (!authed) return json({ error: "auth" }, 401);
 
-  let payload: { image?: string; persist?: boolean; source_hint?: string; text?: string };
+  let payload: { image?: string; persist?: boolean; source_hint?: string; text?: string; connections?: any[] };
   try { payload = await req.json(); } catch { return json({ error: "bad-json" }, 200); }
+
+  // ===== Graph connections mode: find non-obvious links across the items =====
+  if (Array.isArray(payload.connections) && payload.connections.length) return await analyzeConnections(payload.connections, admin, ANTHROPIC_KEY!);
 
   // ===== Brain-dump mode: split a plain-text ramble into multiple items =====
   if (payload.text && !payload.image) return await brainDump(payload.text, admin, ANTHROPIC_KEY!);

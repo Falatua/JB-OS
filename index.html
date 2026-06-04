@@ -892,6 +892,9 @@
   .graph-groups .gg:hover{background:color-mix(in srgb,var(--surface) 96%,transparent)}
   .graph-groups .gg-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;box-shadow:0 0 6px color-mix(in srgb,currentColor 0%,transparent)}
   .graph-groups .gg:not(.on) .gg-dot{filter:grayscale(1);opacity:.5}
+  .graph-groups .gg-ai{color:#e6c869;opacity:1;border-color:color-mix(in srgb,#e6c869 35%,var(--border))}
+  .graph-groups .gg-ai:hover{background:color-mix(in srgb,#e6c869 12%,transparent)}
+  .graph-groups .gg-ai:disabled{opacity:.6;cursor:default}
   .gg-cmode{display:inline-flex;align-items:center;gap:5px;font:inherit;font-size:11px;font-weight:500;color:var(--text-1);background:color-mix(in srgb,var(--surface) 86%,transparent);border:1px solid var(--border);border-radius:20px;padding:4px 9px;cursor:pointer;backdrop-filter:blur(8px);pointer-events:auto}
   .gg-cmode:hover{background:color-mix(in srgb,var(--surface) 96%,transparent)}
   .gg-cmode .gg-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
@@ -2940,10 +2943,29 @@ function renderView(){
    multi-dimensional network, not a star). Degree-sized nodes, color-coded by
    life-area with state rings (overdue/high), group toggles, search, zoom/fit,
    and a click-to-open details panel showing each node's connections. */
-var _graphGen=0, _G=null, _graphCleanup=[], _graphGroups=null, _graphColorMode='area', _graphPos=null, _graphCam=null;
+var _graphGen=0, _G=null, _graphCleanup=[], _graphGroups=null, _graphColorMode='area', _graphPos=null, _graphCam=null, _graphAI=null;
 function graphZoom(f){_G&&_G.zoom(f);}
 function graphFit(){_G&&_G.fit();}
 function graphSearch(v){_G&&_G.search(v);}
+// Ask Claude (via the Edge Function) to surface non-obvious connections across the items, then
+// draw them as gold dashed bridges. Click again to clear. A deep read of how the pieces relate.
+function graphFindConnections(){
+  var btn=document.getElementById('graph-ai-btn');
+  if(Array.isArray(_graphAI)&&_graphAI.length){ _graphAI=null; if(_G&&_G.rebuild)_G.rebuild(); if(btn)btn.textContent='✨ Find links'; toast('Cleared suggested links'); return; }
+  if(!SB||!_sbAuthed){toast('Sign in first to find connections.');return;}
+  var items=load().filter(function(x){return !x.archived;}).slice(0,60).map(function(x){return {id:x.id,text:(x.text||'').slice(0,140),category:x.category||'general'};});
+  if(items.length<3){toast('Add a few more items first.');return;}
+  if(btn){btn.disabled=true;btn.textContent='✨ Thinking…';}
+  SB.functions.invoke('analyze-screenshot',{body:{connections:items}}).then(function(res){
+    var data=res.data;
+    if(res.error||!data||data.error){toast(data&&data.error==='cap'?'Daily $1.00 limit reached — resets at midnight.':'Couldn’t analyze — try again.');}
+    else if(Array.isArray(data.connections)&&data.connections.length){
+      _graphAI=data.connections; if(_G&&_G.rebuild)_G.rebuild();
+      if(btn)btn.textContent='✨ Clear links';
+      toast('Found '+data.connections.length+' hidden link'+(data.connections.length>1?'s':'')+' — gold dashes; tap a linked item to read why');
+    } else { toast('No strong hidden connections surfaced this time.'); }
+  }).catch(function(){toast('Something went wrong — try again.');}).finally(function(){if(btn)btn.disabled=false;});
+}
 function graphToggleGroup(g){_G&&_G.toggle(g);}
 function graphCloseInfo(){_G&&_G.closeInfo();}
 function graphFocusSel(){_G&&_G.focus();}
@@ -2960,7 +2982,7 @@ function renderGraph(){
   _graphCleanup.forEach(function(f){try{f();}catch(e){}});_graphCleanup=[]; // detach listeners from any prior graph mount
   var host=document.getElementById('list');
   host.innerHTML='<div class="graph-wrap"><canvas id="graph-canvas"></canvas>'
-    +'<div class="graph-toolbar"><input id="graph-search" placeholder="Search the graph…" oninput="graphSearch(this.value)" spellcheck="false" autocomplete="off"><div class="graph-groups" id="graph-groups"></div><button class="gg gg-cmode" id="graph-cmode" onclick="graphColorMode()" title="Switch node colouring between life-area and type"></button></div>'
+    +'<div class="graph-toolbar"><input id="graph-search" placeholder="Search the graph…" oninput="graphSearch(this.value)" spellcheck="false" autocomplete="off"><div class="graph-groups" id="graph-groups"></div><button class="gg gg-cmode" id="graph-cmode" onclick="graphColorMode()" title="Switch node colouring between life-area and type"></button><button class="gg gg-ai" id="graph-ai-btn" onclick="graphFindConnections()" title="Ask Claude to find hidden connections across your items">✨ Find links</button></div>'
     +'<div class="graph-zoom"><button title="Zoom in" onclick="graphZoom(1.25)">+</button><button title="Zoom out" onclick="graphZoom(0.8)">−</button><button title="Fit to view" onclick="graphFit()">⛶</button><button title="Save snapshot (PNG)" onclick="graphSnapshot()">⤓</button></div>'
     +'<div class="graph-legend" id="graph-legend"></div>'
     +'<div class="graph-stats" id="graph-stats"></div>'
@@ -2968,6 +2990,7 @@ function renderGraph(){
     +'<canvas id="graph-mini" title="Mini-map — click or drag to pan"></canvas>'
     +'<div class="graph-tip" id="graph-tip"></div>'
     +'<div class="graph-hint">Drag to pan · scroll / pinch to zoom · double-click to focus · ⌘K-style keys: +/− zoom · F fit · Esc clear</div></div>';
+  (function(){var aib=document.getElementById('graph-ai-btn');if(aib&&Array.isArray(_graphAI)&&_graphAI.length)aib.textContent='✨ Clear links';})(); // keep label in sync if links already loaded
   var wrap=host.querySelector('.graph-wrap'), canvas=document.getElementById('graph-canvas'), ctx=canvas.getContext('2d');
   var dpr=Math.min(window.devicePixelRatio||1,2);
   var ACC=(getComputedStyle(document.documentElement).getPropertyValue('--accent').trim())||'#e8a020';
@@ -3010,6 +3033,8 @@ function renderGraph(){
     }catch(e){}
     try{var entries=(jEntries?jEntries():[]).slice(0,14);if(entries.length){var jh=node('jhub','Journal','jhub','journal','#b07cc6',11);edge(hub,jh);entries.forEach(function(e){edge(node('j:'+e.id,e.date||'entry','journal','journal','#b07cc6',4,{jid:e.id}),jh);});}}catch(e){}
     try{var tmpl=(loadDaily().templates||[]).slice(0,20);if(tmpl.length){var hh=node('hhub','Habits','hhub','habit','#2dd4bf',11);edge(hub,hh);tmpl.forEach(function(t){edge(node('h:'+t.id,t.text||'habit','habit','habit','#2dd4bf',4),hh);});}}catch(e){}
+    // Claude-suggested hidden connections → gold dashed bridges between two items (also gently pull related items together)
+    if(Array.isArray(_graphAI)){_graphAI.forEach(function(cc){var na=byKey['it:'+cc.a],nb=byKey['it:'+cc.b];if(na&&nb&&na!==nb){var e=[na,nb];e.ai=true;e.reason=cc.reason||'';edges.push(e);na.deg++;nb.deg++;}});}
     nodes.forEach(function(n){ if(n.kind==='cat'||n.kind==='type'||n.kind==='jhub'||n.kind==='hhub'||n.kind==='concept') n.r=Math.min(16,n.baseR+Math.sqrt(n.deg)*1.6); }); // size hubs by connectivity
     selected=selected?byKey[selected.key]||null:null; hover=hover?byKey[hover.key]||null:null; // keep live refs valid
     focusNode=focusNode?byKey[focusNode.key]||null:null; drag=drag?byKey[drag.key]||null:null;
@@ -3068,8 +3093,14 @@ function renderGraph(){
     // edges — gentle curves; faint at rest; highlighted/hovered links light up with a color gradient,
     // flowing dashes, and traveling "neural" pulses. Structural spokes from the hub always carry a faint pulse.
     edges.forEach(function(e){var A=e[0],B=e[1];if(!visible(A)||!visible(B))return;
-      var hot=hi&&hi[A.key]&&hi[B.key], on=hover&&(A===hover||B===hover);
       var ax=bx(A),ay=by(A),bx2=bx(B),by2=by(B),c=ctrl(ax,ay,bx2,by2);
+      if(e.ai){ // Claude-suggested hidden connection — gold dashed, always visible
+        var emA=hover&&(A===hover||B===hover);
+        ctx.beginPath();ctx.moveTo(ax,ay);ctx.quadraticCurveTo(c.x,c.y,bx2,by2);
+        ctx.strokeStyle=emA?'#f4dd95':_hexA('#e6c869',0.5);ctx.globalAlpha=1;ctx.lineWidth=(emA?2.1:1.25)/scale;
+        ctx.setLineDash(RM?[]:[2,6]);ctx.lineDashOffset=flow;ctx.stroke();ctx.setLineDash([]);return;
+      }
+      var hot=hi&&hi[A.key]&&hi[B.key], on=hover&&(A===hover||B===hover);
       ctx.beginPath();ctx.moveTo(ax,ay);ctx.quadraticCurveTo(c.x,c.y,bx2,by2);
       if(hot||on){var g=ctx.createLinearGradient(ax,ay,bx2,by2);g.addColorStop(0,NC(A));g.addColorStop(1,NC(B));
         ctx.strokeStyle=g;ctx.globalAlpha=on?0.95:0.6;ctx.lineWidth=(on?1.9:1.4)/scale;
@@ -3133,6 +3164,10 @@ function renderGraph(){
   function dbl(e){var p=pos(e);var n=hit(p.x,p.y);if(!n)return;if(n.kind==='hub'){focusNode=null;fitView(true);return;}focusNode=n;selectNode(n);var s={};var rel=[n];edges.forEach(function(ed){if(ed[0]===n)rel.push(ed[1]);if(ed[1]===n)rel.push(ed[0]);});frameTo(rel,120,2.2,true);}
   function act(n){if(!n)return;if(n.kind==='item')openDetail(n.ref.id);else if(n.kind==='cat'){setView('list');setFilter(n.ref.cat,'cat');}else if(n.kind==='type'){setView('list');setFilter(n.ref.type,'type');}else if(n.kind==='journal')openJournal(n.ref.jid);else if(n.kind==='jhub')setView('journal');else if(n.kind==='habit'||n.kind==='hhub')setView('daily');else if(n.kind==='hub'){focusNode=null;fitView();}}
   function selectNode(n){selected=n;showInfo(n);}
+  function aiConnHTML(id){if(!Array.isArray(_graphAI)||!_graphAI.length)return '';var its=load();
+    var rows=_graphAI.filter(function(c){return c.a===id||c.b===id;}).slice(0,6).map(function(c){var oid=c.a===id?c.b:c.a;var o=its.find(function(z){return z.id===oid;});if(!o)return '';
+      return '<button class="gi-link" onclick="graphGoNode(\'it:'+oid+'\')" title="'+esc(c.reason||'')+'"><span class="gi-ldot" style="background:'+CONCEPT_COLOR+'"></span>'+esc((o.text||'Untitled').slice(0,26))+(c.reason?' — '+esc(c.reason):'')+'</button>';}).filter(Boolean).join('');
+    if(!rows)return '';return '<div class="gi-conn"><div class="gi-conn-h" style="color:'+CONCEPT_COLOR+'">✨ Hidden links</div><div class="gi-conn-list">'+rows+'</div></div>';}
   function connHTML(n){var ns=[];edges.forEach(function(e){if(e[0]===n)ns.push(e[1]);else if(e[1]===n)ns.push(e[0]);});if(!ns.length)return '';
     var chips=ns.slice(0,10).map(function(m){var lab=m.label.length>22?m.label.slice(0,21)+'…':m.label;return '<button class="gi-link" onclick="graphGoNode(\''+String(m.key).replace(/'/g,"\\'")+'\')"><span class="gi-ldot" style="background:'+NC(m)+'"></span>'+esc(lab)+'</button>';}).join('');
     return '<div class="gi-conn"><div class="gi-conn-h">Connections · '+ns.length+'</div><div class="gi-conn-list">'+chips+(ns.length>10?'<span class="gi-more">+'+(ns.length-10)+' more</span>':'')+'</div></div>';}
@@ -3144,6 +3179,7 @@ function renderGraph(){
         +(st?'<div class="gi-prog"><div class="prog-track"><div class="prog-fill" style="width:'+st.pct+'%"></div></div><span class="prog-count">'+st.done+'/'+st.total+'</span></div>':'')
         +(it.notes?'<div class="gi-notes">'+esc(it.notes)+'</div>':'')
         +connHTML(n)
+        +aiConnHTML(n.ref.id)
         +'<div class="gi-actions"><button class="btn btn-primary" onclick="graphOpenSel()">Open ↗</button><button class="btn btn-ghost" onclick="graphFocusSel()">Focus connections</button></div>';
     }
     var deg=n.deg;
