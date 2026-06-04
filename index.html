@@ -394,6 +394,18 @@
   .cal-ev:hover{background:var(--border)}
   .cal-ev.monthly{border-left-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
   .cal-more{font-size:10px;color:var(--text-3);padding:0 5px}
+  /* Week rows + multi-day spanning bars (Google/Outlook style) */
+  .cal-dows{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+  .cal-weeks{display:flex;flex-direction:column;gap:6px}
+  .cal-week{position:relative}
+  .cal-week-days{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+  .cal-week-events{position:absolute;left:0;right:0;top:25px;display:grid;grid-template-columns:repeat(7,1fr);gap:3px 6px;align-content:start;pointer-events:none}
+  .cal-bar{pointer-events:auto;min-width:0;height:18px;display:flex;align-items:center;border:1px solid transparent;border-left:3px solid var(--ev-color,var(--accent));border-radius:4px;padding:0 7px;font-size:10.5px;line-height:1;color:var(--text);cursor:pointer;overflow:hidden;transition:filter var(--t)}
+  .cal-bar-txt{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .cal-bar.contL{border-left-width:1px;border-top-left-radius:0;border-bottom-left-radius:0}
+  .cal-bar.contR{border-top-right-radius:0;border-bottom-right-radius:0}
+  .cal-bar:hover{filter:brightness(1.18)}
+  .cal-ag-range{font-size:10px;font-weight:600;color:var(--accent);background:var(--accent-dim);padding:2px 7px;border-radius:20px;flex-shrink:0;white-space:nowrap}
   /* Month/Agenda segmented toggle */
   .cal-modes{display:inline-flex;margin-left:auto;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:2px;gap:2px}
   .cal-mode{font-size:12px;font-weight:500;font-family:inherit;color:var(--text-3);background:none;border:none;padding:5px 13px;border-radius:calc(var(--radius) - 3px);cursor:pointer;transition:background var(--t),color var(--t)}
@@ -1329,6 +1341,10 @@
         <span class="prop-label"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 6.5h12M5 2v2M11 2v2"/></svg> Due date</span>
         <input id="d-duedate" type="date" style="flex:1;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:6px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
       </div>
+      <div class="prop-row">
+        <span class="prop-label"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 6.5h12M5 2v2M11 2v2"/><path d="M8 8.5l2 2"/></svg> End date</span>
+        <input id="d-enddate" type="date" title="Set this to make the item span multiple days on the calendar (e.g. a trip)" style="flex:1;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:6px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none">
+      </div>
     </div>
 
     <div class="detail-section">
@@ -2072,6 +2088,7 @@ function openDetail(id){
   document.getElementById('d-type').value=normType(it.type);
   document.getElementById('d-priority').value=it.priority||'normal';
   document.getElementById('d-duedate').value=it.dueDate||'';
+  document.getElementById('d-enddate').value=it.endDate||'';
   _dVideo=it.video||''; renderDetailVideo();
   renderDetailSteps(it.steps||[]);
   renderDetailLinks(it.links||[]);
@@ -2235,6 +2252,8 @@ function saveDetail(){
   it.type=document.getElementById('d-type').value;
   it.priority=document.getElementById('d-priority').value;
   it.dueDate=document.getElementById('d-duedate').value||'';
+  const _end=document.getElementById('d-enddate').value||'';
+  if(_end&&it.dueDate&&_end>=it.dueDate)it.endDate=_end; else delete it.endDate; // span only when end ≥ start
   if(_dVideo)it.video=_dVideo; else delete it.video;
   const status=document.getElementById('d-status').value;
   if(status==='done'){if(!it.archived){it.archived=true;it.done=true;it.archivedAt=new Date().toISOString();}}
@@ -2635,7 +2654,7 @@ function toast(msg,actionLabel,actionFn){
         if(!srv)return loc;
         let next=loc;
         if(!loc.userEdited){
-          ['text','notes','description','priority','category','type','emoji','dueDate','steps'].forEach(k=>{
+          ['text','notes','description','priority','category','type','emoji','dueDate','endDate','steps'].forEach(k=>{
             if(srv[k]===undefined)return;
             const differ=(typeof srv[k]==='object')?JSON.stringify(srv[k])!==JSON.stringify(next[k]):srv[k]!==next[k];
             if(differ){next=(next===loc?{...loc}:next);next[k]=srv[k];changed=true;}
@@ -3180,6 +3199,11 @@ function calInit(){if(!calRef){const n=new Date();calRef=new Date(n.getFullYear(
 function calShift(n){calInit();calRef=new Date(calRef.getFullYear(),calRef.getMonth()+n,1);render();}
 function calToday(){const n=new Date();calRef=new Date(n.getFullYear(),n.getMonth(),1);render();}
 function calSetMode(mode){calMode=mode;render();}
+function calRangeLabel(s,e){ // "Jun 7–11" within a month, "Jun 28 – Jul 2" across months
+  const MO=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const a=s.split('-').map(Number), b=e.split('-').map(Number);
+  return a[1]===b[1] ? `${MO[a[1]-1]} ${a[2]}–${b[2]}` : `${MO[a[1]-1]} ${a[2]} – ${MO[b[1]-1]} ${b[2]}`;
+}
 function renderCalendar(){
   calInit();
   if(calMode===null)calMode=(window.matchMedia&&window.matchMedia('(max-width:640px)').matches)?'agenda':'month'; // phones default to the legible agenda list
@@ -3191,30 +3215,55 @@ function renderCalendar(){
   const hasDated=Object.keys(evByDay).length>0;
   const dows=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   let head=dows.map(d=>`<div class="cal-dow">${d}</div>`).join('');
-  let cells='';
-  for(let i=0;i<startDow;i++)cells+=`<div class="cal-cell muted"></div>`;
-  for(let d=1;d<=days;d++){
-    const isToday=`${y}-${pad(m+1)}-${pad(d)}`===todayK;
-    let evs='';
-    const de=evByDay[d]||[];
-    evs+=de.slice(0,3).map(i=>{const c=CATS[i.category||'general']||CATS.general;const em=i.emoji||guessEmoji(i.text||'',i.category);return `<div class="cal-ev" style="--ev-color:${c.color}" role="button" tabindex="0" onclick="openDetail('${i.id}')" onkeydown="if(event.key==='Enter'||event.key===' '){openDetail('${i.id}');event.preventDefault()}" title="${esc(i.text||'')}">${em} ${esc(i.text||'')}</div>`;}).join('');
-    if(de.length>3)evs+=`<div class="cal-more">+${de.length-3} more</div>`;
-    cells+=`<div class="cal-cell ${isToday?'today':''}"><div class="cal-daynum">${d}</div>${evs}</div>`;
+  // ----- Month grid as week rows with lane-packed spanning bars (Google/Outlook style) -----
+  const mkDate=d=>`${y}-${pad(m+1)}-${pad(d)}`, mStart=mkDate(1), mEnd=mkDate(days);
+  // Every dated item, with an end (endDate or the single dueDate), that touches this month.
+  const monthEvents=load().filter(i=>i.dueDate&&!i.archived).map(i=>{
+    const e=(i.endDate&&i.endDate>=i.dueDate)?i.endDate:i.dueDate; return {item:i,s:i.dueDate,e};
+  }).filter(ev=>ev.e>=mStart&&ev.s<=mEnd);
+  const weeks=[]; let wkArr=[];
+  for(let i=0;i<startDow;i++)wkArr.push(null);
+  for(let d=1;d<=days;d++){wkArr.push(d);if(wkArr.length===7){weeks.push(wkArr);wkArr=[];}}
+  if(wkArr.length){while(wkArr.length<7)wkArr.push(null);weeks.push(wkArr);}
+  function weekHTML(week){
+    const dayCells=week.map(d=>{
+      if(!d)return `<div class="cal-cell muted"></div>`;
+      return `<div class="cal-cell ${mkDate(d)===todayK?'today':''}"><div class="cal-daynum">${d}</div></div>`;
+    }).join('');
+    const realDays=week.filter(Boolean);
+    if(!realDays.length)return `<div class="cal-week"><div class="cal-week-days">${dayCells}</div></div>`;
+    const wStart=mkDate(realDays[0]), wEnd=mkDate(realDays[realDays.length-1]);
+    const segs=monthEvents.filter(ev=>ev.e>=wStart&&ev.s<=wEnd).map(ev=>{
+      const segS=ev.s<wStart?wStart:ev.s, segE=ev.e>wEnd?wEnd:ev.e;
+      const startCol=week.indexOf(+segS.slice(8)), endCol=week.indexOf(+segE.slice(8));
+      return {ev,startCol,endCol,contL:ev.s<wStart,contR:ev.e>wEnd};
+    }).sort((a,b)=>a.startCol-b.startCol||(b.endCol-b.startCol)-(a.endCol-a.startCol));
+    const lanes=[]; // greedy lane packing so overlapping spans stack instead of colliding
+    segs.forEach(sg=>{let L=0;for(;;L++){const used=lanes[L]||(lanes[L]=[]);if(!used.some(r=>!(sg.endCol<r.s||sg.startCol>r.e))){used.push({s:sg.startCol,e:sg.endCol});sg.lane=L;break;}}});
+    const maxLane=segs.reduce((mx,s)=>Math.max(mx,s.lane),0);
+    const bars=segs.map(sg=>{
+      const i=sg.ev.item, c=CATS[i.category||'general']||CATS.general, em=i.emoji||guessEmoji(i.text||'',i.category);
+      const label=(sg.contL?'':em+' ')+esc(i.text||'');
+      return `<div class="cal-bar${sg.contL?' contL':''}${sg.contR?' contR':''}" style="grid-column:${sg.startCol+1}/span ${sg.endCol-sg.startCol+1};grid-row:${sg.lane+1};background:${c.dim};border-color:${c.color}" role="button" tabindex="0" title="${esc(i.text||'')}${sg.ev.e>sg.ev.s?' ('+calRangeLabel(sg.ev.s,sg.ev.e)+')':''}" onclick="openDetail('${i.id}')" onkeydown="if(event.key==='Enter'||event.key===' '){openDetail('${i.id}');event.preventDefault()}"><span class="cal-bar-txt">${label}</span></div>`;
+    }).join('');
+    const minH=Math.max(96,30+(maxLane+1)*21);
+    return `<div class="cal-week"><div class="cal-week-days" style="min-height:${minH}px">${dayCells}</div><div class="cal-week-events">${bars}</div></div>`;
   }
-  // Agenda (list) body — far more legible than a 7-column grid on a phone
+  const grid=`<div class="cal-dows">${head}</div><div class="cal-weeks">${weeks.map(weekHTML).join('')}</div>`;
+  // Agenda (list) body — far more legible than a 7-column grid on a phone; shows the full span range
   let agenda='';
   const agDays=[];for(let d=1;d<=days;d++){if(evByDay[d]&&evByDay[d].length)agDays.push(d);}
   if(agDays.length){
     agenda='<div class="cal-agenda">'+agDays.map(d=>{
       const dd=new Date(y,m,d),isToday=`${y}-${pad(m+1)}-${pad(d)}`===todayK,dow=dows[dd.getDay()];
-      const rows=evByDay[d].map(i=>{const c=CATS[i.category||'general']||CATS.general;const em=i.emoji||guessEmoji(i.text||'',i.category);
-        return `<div class="cal-ag-ev" role="button" tabindex="0" onclick="openDetail('${i.id}')" onkeydown="if(event.key==='Enter'||event.key===' '){openDetail('${i.id}');event.preventDefault()}"><span class="cal-ag-dot" style="background:${c.color}"></span><span class="cal-ag-emoji">${em}</span><span class="cal-ag-text">${esc(i.text||'')}</span><span class="cal-ag-cat">${esc(c.label)}</span></div>`;}).join('');
+      const rows=evByDay[d].map(i=>{const c=CATS[i.category||'general']||CATS.general;const em=i.emoji||guessEmoji(i.text||'',i.category);const rg=(i.endDate&&i.endDate>i.dueDate)?`<span class="cal-ag-range">${calRangeLabel(i.dueDate,i.endDate)}</span>`:'';
+        return `<div class="cal-ag-ev" role="button" tabindex="0" onclick="openDetail('${i.id}')" onkeydown="if(event.key==='Enter'||event.key===' '){openDetail('${i.id}');event.preventDefault()}"><span class="cal-ag-dot" style="background:${c.color}"></span><span class="cal-ag-emoji">${em}</span><span class="cal-ag-text">${esc(i.text||'')}</span>${rg}<span class="cal-ag-cat">${esc(c.label)}</span></div>`;}).join('');
       return `<div class="cal-ag-day${isToday?' today':''}"><div class="cal-ag-date"><span class="cal-ag-dow">${dow}</span><span class="cal-ag-num">${d}</span>${isToday?'<span class="cal-ag-today">Today</span>':''}</div><div class="cal-ag-items">${rows}</div></div>`;
     }).join('')+'</div>';
   } else {
     agenda=`<div class="empty-hint" style="margin:4px 0 14px">Nothing dated in ${calRef.toLocaleDateString('en-US',{month:'long'})}. Set a <strong>Due date</strong> on a task to place it here.</div>`;
   }
-  const monthBody=`${!hasDated?`<div class="empty-hint" style="margin:0 0 12px">Nothing dated this month. Set a <strong>Due date</strong> on a task (Tasks &amp; Notes → open an item → Due date) to place it here and on your Google feed.</div>`:''}<div class="cal-grid">${head}${cells}</div>`;
+  const monthBody=`${!hasDated?`<div class="empty-hint" style="margin:0 0 12px">Nothing dated this month. Set a <strong>Due date</strong> on a task (Tasks &amp; Notes → open an item → Due date) to place it here and on your Google feed.</div>`:''}${grid}`;
   const feed=new URL('calendar.ics', location.href).href;
   document.getElementById('list').innerHTML=`<div class="cal-wrap">
     <div class="cal-head">
@@ -3253,6 +3302,7 @@ function buildICS(){
   const L=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//JB OS//Calendar//EN','CALSCALE:GREGORIAN','X-WR-CALNAME:JB OS'];
   load().filter(i=>i.dueDate&&!i.archived).forEach(i=>{
     L.push('BEGIN:VEVENT','UID:'+i.id+'@jbos','DTSTAMP:'+stamp,'DTSTART;VALUE=DATE:'+i.dueDate.replace(/-/g,''),'SUMMARY:'+icsEsc(i.text));
+    if(i.endDate&&i.endDate>=i.dueDate){const ed=new Date(i.endDate+'T00:00:00');ed.setDate(ed.getDate()+1);L.push('DTEND;VALUE=DATE:'+ed.getFullYear()+pad(ed.getMonth()+1)+pad(ed.getDate()));} // all-day DTEND is exclusive → +1 day
     if(i.description)L.push('DESCRIPTION:'+icsEsc(i.description));
     L.push('END:VEVENT');
   });
@@ -3919,6 +3969,19 @@ var TKEY='jbos_tomb_v1';
 function loadTomb(){try{return JSON.parse(localStorage.getItem(TKEY))||{};}catch(e){return {};}}
 function saveTombMap(t){localStorage.setItem(TKEY,JSON.stringify(t));if(typeof sbPushStore==='function'&&!_sbApplying)sbPushStore('tombstones');}
 function addTomb(id){if(id==null)return;var t=loadTomb();t[id]=new Date().toISOString();saveTombMap(t);}
+// Archived items live ~1 month from when they were archived, then they're gone for good —
+// keeps the archive from growing without bound. Purged ids are tombstoned so sync won't resurrect them.
+var ARCHIVE_TTL_DAYS=31;
+function purgeOldArchived(){
+  var items=load(), cutoff=Date.now()-ARCHIVE_TTL_DAYS*864e5, keep=[], tomb=loadTomb(), now=new Date().toISOString(), purged=0;
+  for(var i=0;i<items.length;i++){
+    var it=items[i], at=(it&&it.archived&&it.archivedAt)?Date.parse(it.archivedAt):NaN;
+    if(it&&it.archived&&!isNaN(at)&&at<cutoff){ tomb[it.id]=now; purged++; continue; }
+    keep.push(it);
+  }
+  if(purged){ saveTombMap(tomb); save(keep); }
+  return purged;
+}
 function _tombed(x,tomb){var t=tomb&&tomb[x&&x.id];return !!(t&&t>=_itemTs(x));} // dead unless item is newer than its tombstone
 function _mergeTomb(r,l){var o={};[r||{},l||{}].forEach(function(m){Object.keys(m).forEach(function(id){if(!o[id]||m[id]>o[id])o[id]=m[id];});});return o;}
 // Apply a merged tombstone map, then prune every store so removals propagate even
@@ -4129,6 +4192,7 @@ function sbAuthUI(user){
 }
 
 if(load().length)_booting=false;
+purgeOldArchived(); // drop archived items older than ~1 month (tombstoned so sync won't bring them back)
 // Defer the first render one tick so every top-level const (incl. the Musubi MZ_* data
 // the dashboard now previews) is initialized before renderDashboard runs — avoids a TDZ crash.
 setTimeout(function(){render();},0);

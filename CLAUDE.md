@@ -60,8 +60,14 @@ habit, a monthly recurring item, a journaling prompt, or a dated calendar event.
 }
 ```
 
-Optional fields: `dueDate` ("YYYY-MM-DD"), `links` ([]), `attachments` ([]), `updatedAt`,
-`archivedAt`. Keep `description` to the things that aren't obvious from the title; don't pad.
+Optional fields: `dueDate` ("YYYY-MM-DD"), `endDate` ("YYYY-MM-DD"), `links` ([]),
+`attachments` ([]), `updatedAt`, `archivedAt`. Keep `description` to the things that aren't
+obvious from the title; don't pad.
+
+**Date spans** — set `endDate` (≥ `dueDate`) to make an item span multiple days on the calendar
+(Google/Outlook-style bar), e.g. *"Dad in town Jun 7–11"* → `dueDate:"2026-06-07"`,
+`endDate:"2026-06-11"`. For a single day, leave `endDate` unset. Spans are color-coded by category
+and stack into lanes; they also export to the Google feed (`.ics`) as multi-day events.
 
 **Progress steps** — any item (task/idea/note/project) can carry an optional ordered
 `steps` array for phasic, multi-stage things (e.g. "emailed → waiting → shipped → received"):
@@ -188,7 +194,9 @@ Never push malformed JSON — it breaks the whole list render.
 - All dates JB gives are interpreted in his local (Hawai‘i) context; store `dueDate` as the
   plain calendar date. Use UTC ISO-8601 for `createdAt`/`updatedAt`.
 - Don't delete or archive items unless JB asks. To mark something done, set `done: true`
-  (the app will archive it on sync).
+  (the app will archive it on sync). **Archived items auto-expire ~1 month after `archivedAt`**
+  (`purgeOldArchived()` in `index.html`) and are tombstoned so they're gone for good — the
+  archive never grows without bound.
 - Keep the 13 categories, 4 types, and 4 priorities fixed. If a new category/type/priority
   seems needed, **ask first** — adding one also requires matching UI support in `index.html`.
 - Keep this file accurate. When the system or JB's preferences change, update it in the same push.

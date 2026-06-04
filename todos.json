@@ -124,7 +124,9 @@
     "done": false,
     "archived": false,
     "dueDate": "2026-06-07",
-    "createdAt": "2026-05-30T23:42:48Z"
+    "createdAt": "2026-05-30T23:42:48Z",
+    "endDate": "2026-06-11",
+    "updatedAt": "2026-06-04T15:26:47Z"
   },
   {
     "id": "tg-016",
