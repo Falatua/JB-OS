@@ -1154,7 +1154,7 @@
               </button>
             </div>
           </div>
-          <button class="btn btn-primary" id="newitem-btn" onclick="primaryAdd()">
+          <button class="btn btn-primary" id="newitem-btn" onclick="primaryAdd()" aria-label="New item">
             <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8 2v12M2 8h12"/></svg>
             <span id="newitem-label">New Item</span>
           </button>
@@ -1164,7 +1164,7 @@
     <div class="search-wrap" id="search-wrap">
       <div class="search-inner">
         <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="7" cy="7" r="5"/><path d="M11 11l3 3"/></svg>
-        <input id="search" type="text" placeholder="Search all items..." oninput="searchInput()" onkeydown="searchKey(event)" onfocus="searchInput()" onblur="setTimeout(closeSearchResults,160)" autocomplete="off" spellcheck="false" aria-label="Search items" role="combobox" aria-autocomplete="list" aria-controls="search-results">
+        <input id="search" type="text" placeholder="Search all items…" oninput="searchInput()" onkeydown="searchKey(event)" onfocus="searchInput()" onblur="setTimeout(closeSearchResults,160)" autocomplete="off" spellcheck="false" aria-label="Search items" role="combobox" aria-autocomplete="list" aria-controls="search-results">
       </div>
       <div class="search-results hidden" id="search-results" role="listbox" aria-label="Search results"></div>
     </div>
@@ -1230,7 +1230,7 @@
     </div>
     <div class="field">
       <label for="m-notes">Notes <span style="color:var(--text-3);font-weight:400">(optional)</span></label>
-      <textarea id="m-notes" placeholder="Any extra context..."></textarea>
+      <textarea id="m-notes" placeholder="Any extra context…"></textarea>
     </div>
     <div class="field-row">
       <div class="field">
@@ -1405,7 +1405,7 @@
     </div>
     <div class="field">
       <label for="rt-notes">Notes <span style="color:var(--text-3);font-weight:400">(optional)</span></label>
-      <textarea id="rt-notes" placeholder="Any detail, target, or reminder..."></textarea>
+      <textarea id="rt-notes" placeholder="Any detail, target, or reminder…"></textarea>
     </div>
     <div class="field-row">
       <div class="field">
@@ -2770,7 +2770,9 @@ function applyViewChrome(v){
   const la=document.querySelector('.header-list-actions');if(la)la.style.display=(v==='journal'||v==='musubi'||v==='graph')?'none':'';
   // The single add button adapts to the page it's on
   const nl=document.getElementById('newitem-label');
-  if(nl)nl.textContent=(v==='daily')?'New habit':(v==='monthly')?'New monthly':'New Item';
+  const nlText=(v==='daily')?'New habit':(v==='monthly')?'New monthly':'New Item';
+  if(nl)nl.textContent=nlText;
+  const nb=document.getElementById('newitem-btn');if(nb)nb.setAttribute('aria-label',nlText); // keep the accessible name in sync (label is hidden on mobile)
 }
 // One context-aware add: a habit on Daily/Monthly, otherwise the full item modal (which already
 // pre-fills life-area/type/priority from the current filter).
