@@ -23,7 +23,14 @@ const IN_COST = 1.0 / 1_000_000;
 const OUT_COST = 5.0 / 1_000_000;
 const PRECALL_GUARD = 0.003; // conservative per-call reservation
 
-const CATEGORIES = "work | personal | family | kids | finance | tech | shopping | grocery | errands | lifestyle | health | musubi | general";
+const CATEGORIES = "work | personal | family | finance | tech | gaming | shopping | grocery | errands | lifestyle | health | musubi | general";
+
+// Entity rules JB set — applied identically to screenshots and brain dumps.
+const ENTITY_RULES = `ENTITY RULES (always apply, they override generic guesses):
+- AnswerLab or "AL" -> work.
+- Kenzie/Mackenzie, Archie, or Gigi -> family.
+- Musubi, Musubi Strong, or Instagram -> musubi.
+- Pokémon, ROM/ROMs, emulation, game consoles or handhelds (Nintendo/Switch/PlayStation/Xbox/3DS/AYN Thor), Roman TD, or World of Warcraft -> gaming.`;
 
 const SYSTEM_PROMPT = `You are a screenshot analysis assistant embedded in JB OS, a personal productivity operating system. Read one iOS screenshot and decide whether it should become a NOTE or a TASK, then generate its content.
 
@@ -32,7 +39,8 @@ ROUTING RULES:
 - Only choose TASK when the screenshot clearly shows a specific action to do: a purchase to make, a reservation/booking, a form/signup to complete, a bill to pay, or a reply to send. If in doubt, choose NOTE.
 
 CATEGORY: pick the single best fit from exactly this set: ${CATEGORIES}.
-- musubi = anything for the Musubi Strong apparel brand. tech = coding/AI/devices. grocery = food. shopping = non-food goods. errands = run-around-town chores. Use general only as a last resort.
+${ENTITY_RULES}
+- musubi = the Musubi Strong apparel brand. work = AnswerLab + freelance design (Heber). family = partner/kids/parents (includes Archie & Gigi). gaming = video games, consoles, PC gaming, ROMs. tech = coding/AI/devices/JB OS. grocery = food. shopping = non-food goods. errands = run-around-town chores. Use general only as a last resort.
 
 TYPE: "note" for reference/info, "idea" for a concept/inspiration to explore, "task" for an action, "project" only for a clearly multi-step effort.
 
@@ -59,8 +67,10 @@ const DUMP_PROMPT = (today: string) => `You are the capture assistant inside JB 
 RULES:
 - Split ONLY genuinely separate things. If it's clearly one thing, return one item. Don't over-split a single multi-clause thought.
 - TYPE: "task" if it's actionable (something to do — pay, order, call, buy, fix, schedule), "note" if it's reference/info/an idea/an event to remember ("dad's in town", "idea for...").
-- CATEGORY: the single best fit from exactly this set: ${CATEGORIES}. musubi = the Musubi Strong apparel brand; tech = coding/AI/devices; grocery = food; shopping = non-food goods; errands = run-around-town chores. Use general only as a last resort.
-- PRIORITY: "high" ONLY if money is at stake, there's a hard deadline, or it blocks something; otherwise "normal".
+- CATEGORY: the single best fit from exactly this set: ${CATEGORIES}.
+  ${ENTITY_RULES}
+  Also: work = AnswerLab + freelance design (Heber); family includes kids (Archie/Gigi); gaming = video games/consoles/PC gaming/ROMs; tech = coding/AI/devices/JB OS; grocery = food; shopping = non-food goods; errands = run-around-town chores. Use general only as a last resort.
+- PRIORITY: "high" ONLY if money is at stake, there's a hard deadline, or it blocks something; otherwise "normal". Never mark a grocery or errands item "high" — those are always low priority (the app sets that automatically).
 - DUEDATE: resolve any time phrase ("today","tomorrow","Friday","next week","the 9th","Jun 9-11") to an absolute YYYY-MM-DD using today=${today}. For a range, use the START date. If no date is implied, null.
 - NOTES: a SHORT extra detail ONLY if the user gave more than the title needs — no padding, never restate the title. Usually "".
 - TITLE: clean, short, scannable.
@@ -235,7 +245,7 @@ Deno.serve(async (req) => {
       const validCat = CATEGORIES.split(" | ").includes(out.category) ? out.category : "general";
       items.unshift({
         id, text: out.title, notes: "", description: out.body,
-        type: out.type, priority: out.priority, source: "screenshot", category: validCat,
+        type: out.type, priority: (validCat === "grocery" || validCat === "errands") ? "low" : out.priority, source: "screenshot", category: validCat,
         emoji: "📸",
         links: /^https?:\/\//i.test(out.link) ? [{ label: out.source_hint ? "Open — " + out.source_hint : "Open link", url: out.link }] : [],
         attachments: imageUrl ? [{ name: "screenshot.jpg", type: "image/jpeg", url: imageUrl }] : [],

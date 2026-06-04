@@ -91,11 +91,12 @@
     "notes": "Research the Manus AI autonomous agent and how it could support Musubi Strong.",
     "description": "Explore Manus AI (autonomous general AI agent) and evaluate concrete ways it could help run or grow Musubi Strong: e.g. drafting and scheduling IG content, automating store and product tasks, market and competitor research, design-asset prep, and customer comms. Note what it does better than the tools already in use, its pricing, and whether it's worth adopting.",
     "priority": "normal",
-    "category": "tech",
+    "category": "musubi",
     "source": "chat",
     "done": false,
     "archived": false,
-    "createdAt": "2026-06-01T03:17:34Z"
+    "createdAt": "2026-06-01T03:17:34Z",
+    "updatedAt": "2026-06-04T15:14:42Z"
   },
   {
     "id": "tg-018",
@@ -131,12 +132,13 @@
     "type": "task",
     "emoji": "🐟",
     "notes": "First item in the new Grocery list.",
-    "priority": "normal",
+    "priority": "low",
     "category": "grocery",
     "source": "telegram",
     "done": false,
     "archived": false,
-    "createdAt": "2026-05-30T21:43:04Z"
+    "createdAt": "2026-05-30T21:43:04Z",
+    "updatedAt": "2026-06-04T15:17:06Z"
   },
   {
     "id": "tg-015",
@@ -146,11 +148,12 @@
     "notes": "Player feedback: people are confused about prospects, how they become towers, and how towers become combo towers, and by the term 'tile' (maybe call it 'map'). Reword the start-of-game instructions to be clearer.",
     "description": "Roman TD onboarding feedback from players. Confusion points: (1) what a 'prospect' is, (2) how a prospect becomes a tower, (3) how a tower becomes a combo tower, (4) how to place and save prospects so they turn into towers. Action: rework the beginning-of-game instructions to explain prospects, their placement, and the prospect to tower to combo-tower progression more clearly, efficiently, and effectively. Separately, players are confused by the term 'tile' — consider renaming it to 'map', or clarifying what a tile is.",
     "priority": "normal",
-    "category": "tech",
+    "category": "gaming",
     "source": "telegram",
     "done": false,
     "archived": false,
-    "createdAt": "2026-05-30T19:54:58Z"
+    "createdAt": "2026-05-30T19:54:58Z",
+    "updatedAt": "2026-06-04T15:14:42Z"
   },
   {
     "id": "c-game-transfer",
@@ -159,11 +162,12 @@
     "emoji": "🎮",
     "notes": "Move the 3DS and Switch game files/backups over to my personal Dropbox.",
     "priority": "normal",
-    "category": "tech",
+    "category": "gaming",
     "source": "chat",
     "done": false,
     "archived": false,
-    "createdAt": "2026-05-30T02:49:58Z"
+    "createdAt": "2026-05-30T02:49:58Z",
+    "updatedAt": "2026-06-04T15:14:42Z"
   },
   {
     "id": "c-coins-cash",
@@ -171,12 +175,13 @@
     "type": "task",
     "emoji": "🪙",
     "notes": "Reminder: cash in the loose coins (Coinstar / bank).",
-    "priority": "normal",
+    "priority": "low",
     "category": "errands",
     "source": "chat",
     "done": false,
     "archived": false,
-    "createdAt": "2026-05-29T21:03:04Z"
+    "createdAt": "2026-05-29T21:03:04Z",
+    "updatedAt": "2026-06-04T15:17:06Z"
   },
   {
     "id": "tg-013",
@@ -331,14 +336,15 @@
     "id": "tg-004",
     "text": "Order the Anythor grip and accessories",
     "type": "task",
-    "emoji": "🛒",
+    "emoji": "🎮",
     "notes": "Order grip and consider any accessories",
     "priority": "normal",
-    "category": "shopping",
+    "category": "gaming",
     "source": "telegram",
     "done": false,
     "archived": false,
-    "createdAt": "2026-05-29T19:11:00Z"
+    "createdAt": "2026-05-29T19:11:00Z",
+    "updatedAt": "2026-06-04T15:14:42Z"
   },
   {
     "id": "tg-005",
@@ -373,11 +379,12 @@
     "emoji": "🔋",
     "notes": "",
     "priority": "normal",
-    "category": "errands",
+    "category": "family",
     "source": "telegram",
     "done": false,
     "archived": false,
-    "createdAt": "2026-05-29T19:11:00Z"
+    "createdAt": "2026-05-29T19:11:00Z",
+    "updatedAt": "2026-06-04T15:14:42Z"
   },
   {
     "id": "tg-009",
@@ -386,24 +393,26 @@
     "emoji": "🍼",
     "notes": "",
     "priority": "normal",
-    "category": "errands",
+    "category": "family",
     "source": "telegram",
     "done": false,
     "archived": false,
-    "createdAt": "2026-05-29T19:11:00Z"
+    "createdAt": "2026-05-29T19:11:00Z",
+    "updatedAt": "2026-06-04T15:14:42Z"
   },
   {
     "id": "tg-011",
     "text": "Download ROMs from Karen's old phone (wipe phone first)",
     "type": "task",
-    "emoji": "📱",
+    "emoji": "🎮",
     "notes": "Make sure phone is wiped before/after transferring ROMs",
     "priority": "normal",
-    "category": "tech",
+    "category": "gaming",
     "source": "telegram",
     "done": false,
     "archived": false,
-    "createdAt": "2026-05-29T19:17:00Z"
+    "createdAt": "2026-05-29T19:17:00Z",
+    "updatedAt": "2026-06-04T15:14:42Z"
   },
   {
     "id": "tg-006",
@@ -441,11 +450,12 @@
     "notes": "Wire Claude into Musubi’s Google Analytics for AI-driven insights.",
     "description": "Set up an integration so Claude can read Musubi Strong’s Google Analytics (GA4) data — to summarize traffic, surface trends, and recommend content/store moves. Decide on the access method (GA4 API, data export, or MCP) and which reports matter most.",
     "priority": "normal",
-    "category": "tech",
+    "category": "musubi",
     "source": "chat",
     "done": false,
     "archived": false,
-    "createdAt": "2026-06-02T18:00:00Z"
+    "createdAt": "2026-06-02T18:00:00Z",
+    "updatedAt": "2026-06-04T15:14:42Z"
   },
   {
     "id": "c-claude-transcripts",

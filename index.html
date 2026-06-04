@@ -1499,9 +1499,9 @@ const CATS = {
   work:     {label:'Work',         color:'#60a5fa', dim:'rgba(96,165,250,.12)'},
   personal: {label:'Personal',     color:'#a78bfa', dim:'rgba(167,139,250,.12)'},
   family:   {label:'Family',       color:'#4ade80', dim:'rgba(74,222,128,.12)'},
-  kids:     {label:'Kids',         color:'#f472b6', dim:'rgba(244,114,182,.12)'},
   finance:  {label:'Finance',      color:'#fbbf24', dim:'rgba(251,191,36,.12)'},
   tech:     {label:'Tech',         color:'#38bdf8', dim:'rgba(56,189,248,.12)'},
+  gaming:   {label:'Gaming',       color:'#e879f9', dim:'rgba(232,121,249,.12)'},
   shopping: {label:'Shopping',     color:'#fb923c', dim:'rgba(251,146,60,.12)'},
   grocery:  {label:'Grocery',      color:'#10b981', dim:'rgba(16,185,129,.12)'},
   errands:  {label:'Errands',      color:'#fb7185', dim:'rgba(251,113,133,.12)'},
@@ -1517,7 +1517,7 @@ const TYPE_LABEL = {task:'Task',idea:'Idea',note:'Note',project:'Project'};
 function normType(t){return t==='idea'?'note':t==='project'?'task':((t==='task'||t==='note')?t:'task');}
 const SRC_LABEL  = {telegram:'via Telegram',browser:'added manually',chat:'via chat',screenshot:'via screenshot',braindump:'via brain dump'};
 
-function load(){try{return JSON.parse(localStorage.getItem(KEY))||[];}catch{return [];}}
+function load(){try{const a=JSON.parse(localStorage.getItem(KEY))||[];for(let i=0;i<a.length;i++){if(a[i]&&a[i].category==='kids')a[i].category='family';}return a;}catch{return [];}}
 function save(d){localStorage.setItem(KEY,JSON.stringify(d));if(typeof sbPushStore==='function'&&!_sbApplying)sbPushStore('todos');}
 
 let filter='all', filterMode='view', _booting=true, view='dashboard', sortBy='priority';
@@ -1550,6 +1550,7 @@ function addItem(text, type='task', notes='', source='browser', priority='normal
   const autoOrganize=!category||category==='general';
   if(autoOrganize&&type==='task')type=guessType(text,notes);
   if(autoOrganize)category=guessCategory(text,notes);
+  if(category==='grocery'||category==='errands')priority='low'; // groceries & errands are always low priority
   const items=load();
   const now=new Date().toISOString();
   items.unshift({id:uid(),text:text.trim(),notes:notes.trim(),type,priority,source,category,done:false,
@@ -2321,30 +2322,32 @@ function guessType(text,notes){
 // Infer a life area from the title + notes so items don't pile up in "General".
 // Ordered most-specific first; mirrors JB's fixed category set. Returns 'general' if nothing fits.
 function guessCategory(text,notes){
-  const s=((text||'')+' '+(notes||'')).toLowerCase();
+  const raw=(text||'')+' '+(notes||'');
+  const s=raw.toLowerCase();
   // Weighted scoring, not first-match: every signal adds weight and the highest total wins.
   // Strong identity/brand cues (weight 3) outscore generic verbs (weight 1), so
-  // "order Archie a onesie" → kids (not shopping) and "ship Musubi tees" → musubi (not shopping).
-  // Ties favour the earlier (more specific) category via SIG order. [regex, category, weight]
+  // "order Archie a onesie" → family and "ship Musubi tees" → musubi (not shopping).
+  // Entity rules JB set: AnswerLab/AL → work · Kenzie/Archie/Gigi → family · Musubi/Instagram
+  // → musubi · ROM/Pokémon/consoles/Roman TD/WoW → gaming. [regex, category, weight]
   const SIG=[
     // strong identity / proper nouns
-    [/\bmusubi\b|musubistrong|throwback thursday|auntie'?s favou?rite/,'musubi',3],
-    [/answerlab|\bheber\b/,'work',3],
-    [/\barchie\b|\bgigi\b/,'kids',3],
-    [/mackenzie|kenzie/,'family',3],
-    [/roman ?td|jb ?os|obsidian|\bclaude\b|\bsupabase\b|\bmanus\b/,'tech',3],
+    [/\bmusubi\b|musubi strong|musubistrong|\binstagram\b|throwback thursday|auntie'?s favou?rite/,'musubi',3],
+    [/answer ?lab|answerlab|\bheber\b/,'work',3],
+    [/mackenzie|kenzie|\barchie\b|\bgigi\b/,'family',3],
+    [/pok[eé]mon|ayn thor|\bayn\b|roman ?td|world of warcraft|\bwarcraft\b/,'gaming',3],
+    [/jb ?os|obsidian|\bclaude\b|\bsupabase\b|\bmanus\b/,'tech',3],
     [/israetel|\brp\b|hypertrophy/,'health',3],
     // domain words
-    [/shopify|instagram|\big\b|\btee\b|t-?shirt|\bshirt\b|apparel|hoodie|\bmerch\b|\bdrop\b|pop-?up|\bbooth\b|\bvendor\b|\bcollab\b|\bdesigns?\b|photo ?shoot|mockup|\bisland\b|hawaii|hawaiian|\boahu\b|polynesian|\bpacific\b|\bbrand\b|throwback|auntie/,'musubi',2],
+    [/shopify|\big\b|\btee\b|t-?shirt|\bshirt\b|apparel|hoodie|\bmerch\b|\bdrop\b|pop-?up|\bbooth\b|\bvendor\b|\bcollab\b|\bdesigns?\b|photo ?shoot|mockup|\bisland\b|hawaii|hawaiian|\boahu\b|polynesian|\bpacific\b|\bbrand\b|throwback|auntie/,'musubi',2],
     [/end-of-day|\beod\b|stakeholder|usability|research study|client deck|\bdeck\b|freelance|\bclient\b/,'work',2],
-    [/\bbaby\b|diaper|nursery|stroller|\bpump\b|onesie|\bcrib\b|toddler|\bkids?\b|bottle|formula/,'kids',2],
-    [/\bdad\b|\bmom\b|\bwife\b|partner|in-?laws?|\bfamily\b|anniversary|\bvisit\b/,'family',2],
-    [/\bcode\b|coding|\bapp\b|\bapi\b|\bai\b|chatgpt|\broms?\b|emulat|\bserver\b|\bvps\b|github|\brepo\b|deploy|website|web app|automation|\bscript\b|second brain|\bagent\b|\bmcp\b|telegram|pages/,'tech',2],
+    [/\bbaby\b|diaper|nursery|stroller|\bpump\b|onesie|\bcrib\b|toddler|\bkids?\b|bottle|formula|\bdad\b|\bmom\b|\bwife\b|partner|in-?laws?|\bfamily\b|anniversary|\bvisit\b/,'family',2],
+    [/\brom\b|\broms\b|emulat|\bconsole\b|nintendo|\bswitch\b|playstation|\bps[45]\b|\bxbox\b|steam deck|handheld|\b3ds\b|game ?boy|gamecube|\bvideo ?games?\b|\bgaming\b|pc gaming|\bgamer\b/,'gaming',2],
+    [/\bcode\b|coding|\bapp\b|\bapi\b|\bai\b|chatgpt|\bserver\b|\bvps\b|github|\brepo\b|deploy|website|web app|automation|\bscript\b|second brain|\bagent\b|\bmcp\b|telegram|pages/,'tech',2],
     [/\bbill\b|\btaxe?s?\b|invoice|\brent\b|mortgage|invest|stocks?|portfolio|\bbank\b|payment|budget|insurance|refund|venmo|paypal|subscription|\brenew/,'finance',2],
     [/\bgym\b|workout|work ?out|\blift\b|\btrain(ing)?\b|cardio|\bdiet\b|protein|macros|doctor|dentist|appointment|checkup|therapy|\bsleep\b|stretch|mobility|\bmeds?\b|vitamin|supplement|deload|mesocycle|\bwalk\b|\bsteps?\b/,'health',2],
     [/grocer|\bmilk\b|\beggs?\b|\bbread\b|tuna|\bahi\b|poke|chicken|\bbeef\b|\brice\b|\bsnacks?\b|produce|\bfruit\b|veggie|trader joe|\bfood\b/,'grocery',2],
     [/errand|\bcoins?\b|key fob|\bfob\b|post office|\bdmv\b|dry clean|car wash|oil change|\breturn\b|drop ?off/,'errands',2],
-    [/\bgame\b|gaming|\bmovie\b|\bshow\b|\bhobby\b|vacation|\btrip\b|\btravel\b|concert|\bsurf\b|\bbeach\b|leisure/,'lifestyle',2],
+    [/\bmovie\b|\bshow\b|\bhobby\b|vacation|\btrip\b|\btravel\b|concert|\bsurf\b|\bbeach\b|leisure/,'lifestyle',2],
     [/haircut|barber|relationship|\badmin\b|password|reflect|self-?care|journal/,'personal',2],
     // generic verbs / weak cues
     [/\bbuy\b|\border\b|\bshop\b|purchase|amazon|\bcart\b|\bgear\b|accessor/,'shopping',1],
@@ -2354,6 +2357,7 @@ function guessCategory(text,notes){
   ];
   const score={};
   for(const sig of SIG){ if(sig[0].test(s)) score[sig[1]]=(score[sig[1]]||0)+sig[2]; }
+  if(/\bAL\b/.test(raw)) score.work=(score.work||0)+3; // "AL" = AnswerLab (match uppercase on the raw text)
   let best=null,bestScore=0;
   for(const sig of SIG){ const v=score[sig[1]]||0; if(v>bestScore){bestScore=v;best=sig[1];} }
   return best||'general';
@@ -2369,7 +2373,7 @@ function guessEmoji(text,category){
     [/invest|stocks|capital gains|portfolio/,'📈'],
     [/rent|\bbill\b|invoice|\btax\b|budget|payment|mortgage|finance/,'💰'],
     [/donate|donation|gofundme|charity/,'❤️'],
-    [/tuna|ahi|salmon|\bfish\b|poke/,'🐟'],
+    [/tuna|\bahi\b|salmon|\bfish\b|\bpoke\b/,'🐟'],
     [/\bbuy\b|order|shop|grocery|groceries|purchase|\bcart\b|grip|accessor/,'🛒'],
     [/\bcall\b|phone call|ring\b/,'📞'],
     [/email|inbox|reply/,'✉️'],
@@ -2379,7 +2383,8 @@ function guessEmoji(text,category){
     [/\bread\b|\bbook\b|article/,'📖'],
     [/\bvps\b|server|deploy|\bgit\b|github|\brepo\b|coding|\bcode\b|web app|website|\bapi\b|connections/,'💻'],
     [/design|figma|\blogo\b|mockup/,'🎨'],
-    [/\brom|roms|download|old phone/,'📱'],
+    [/pok[eé]mon|nintendo|playstation|\bxbox\b|\bconsole\b|\brom\b|\broms\b|emulat|warcraft|\bgaming\b|video ?game|ayn thor|roman ?td|\b3ds\b|game ?boy/,'🎮'],
+    [/download|old phone/,'📱'],
     [/obsidian|note-taking|second brain/,'🗂️'],
     [/music|song|playlist/,'🎵'],
     [/cook|meal|recipe|dinner|lunch/,'🍽️'],
@@ -2390,7 +2395,7 @@ function guessEmoji(text,category){
     [/idea|brainstorm|concept/,'💡']
   ];
   for(let i=0;i<map.length;i++){if(map[i][0].test(s))return map[i][1];}
-  const c={work:'💼',personal:'🌿',family:'👨‍👩‍👧',kids:'🧒',finance:'💰',tech:'💻',shopping:'🛒',grocery:'🛒',errands:'🧾',lifestyle:'✨',health:'🩺',musubi:'🌺',general:'📌'};
+  const c={work:'💼',personal:'🌿',family:'👨‍👩‍👧',finance:'💰',tech:'💻',gaming:'🎮',shopping:'🛒',grocery:'🛒',errands:'🧾',lifestyle:'✨',health:'🩺',musubi:'🌺',general:'📌'};
   return c[category]||'📌';
 }
 
@@ -2453,7 +2458,7 @@ function createCapturedItem(r){
   const now=new Date().toISOString();
   const type=['task','idea','note','project'].includes(r.type)?r.type:(r.routing==='task'?'task':'note');
   const category=CATS[r.category]?r.category:guessCategory((r.title||'')+' '+(r.body||''));
-  const priority=r.priority==='high'?'high':'normal';
+  const priority=(category==='grocery'||category==='errands')?'low':(r.priority==='high'?'high':'normal');
   const title=(r.title||'Screenshot').slice(0,120);
   const item={id:uid(),text:title,notes:'',description:r.body||'',type,priority,source:'screenshot',category,
     emoji:guessEmoji(title,category),
@@ -2537,7 +2542,7 @@ function saveDumpItems(){
     const title=row.querySelector('.bd-title').value.trim(); if(!title)return;
     const type=row.querySelector('.bd-type').value==='task'?'task':'note';
     let category=row.querySelector('.bd-cat').value; if(!CATS[category])category=guessCategory(title);
-    const priority=row.getAttribute('data-prio')==='high'?'high':'normal';
+    const priority=(category==='grocery'||category==='errands')?'low':(row.getAttribute('data-prio')==='high'?'high':'normal');
     const dueDate=row.getAttribute('data-due')||'';
     const notes=row.getAttribute('data-notes')||'';
     const item={id:uid(),text:title,notes:'',description:notes,type,priority,source:'braindump',category,
@@ -2612,7 +2617,7 @@ function toast(msg,actionLabel,actionFn){
       const localIds=new Set(local.map(x=>x.id));
       const tomb=loadTomb(); // don't re-seed items the user has deleted
       // Remap legacy category names
-      const catRemap={errands:'errands',shopping:'shopping',tech:'tech'};
+      const catRemap={errands:'errands',shopping:'shopping',tech:'tech',kids:'family'};
       const fresh=serverItems
         .filter(x=>!localIds.has(x.id) && !_tombed(x,tomb))
         .map(x=>{
@@ -2620,7 +2625,8 @@ function toast(msg,actionLabel,actionFn){
           const autoOrganize=!x.category||rawCat==='general';
           const nextType=x.type||(autoOrganize?guessType(x.text,x.notes||x.description):'task');
           const nextCat=autoOrganize?guessCategory(x.text,x.notes||x.description):rawCat;
-          return {...x,category:nextCat,source:x.source||'telegram',type:nextType};
+          const nextPrio=(nextCat==='grocery'||nextCat==='errands')?'low':(x.priority||'normal');
+          return {...x,category:nextCat,priority:nextPrio,source:x.source||'telegram',type:nextType};
         });
       // For existing items: sync server field edits (dueDate, priority, etc.) unless the user edited it in-app, and pick up server done-state
       let changed=fresh.length>0;

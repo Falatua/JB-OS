@@ -102,12 +102,12 @@ checks the item off himself. Add `steps` when JB describes a process with phases
 ### `category` (fixed set — never invent new ones)
 | Category | Use for |
 |----------|---------|
-| `musubi` | Anything for the **Musubi Strong** brand (product, content, IG, store, designs, shoots). All Musubi brand work lives here — **not** in `work`. |
+| `musubi` | Anything for the **Musubi Strong** brand (product, content, IG/Instagram, store, designs, shoots). All Musubi brand work lives here — **not** in `work`. |
 | `work` | **AnswerLab** (day job) + JB's side/freelance **design** work (e.g. Heber). Nothing Musubi-related. |
-| `tech` | Coding, AI tools, devices, emulation/ROMs, the JB OS app, Roman TD, servers |
+| `tech` | Coding, AI tools (Claude/Manus), devices, the JB OS app, servers/VPS, Obsidian. *(Games/ROMs/Roman TD now live in `gaming`.)* |
+| `gaming` | Video games, consoles & handhelds, PC gaming, **ROMs**/emulation, Pokémon, **AYN Thor**, **Roman TD**, World of Warcraft |
 | `finance` | Bills, taxes, investing, rent, payments |
-| `family` | Mackenzie (partner), JB's dad, extended family |
-| `kids` | Archie / baby gear, pumps, nursery, kid stuff |
+| `family` | Mackenzie/Kenzie (partner), **Archie & Gigi** (kids), baby gear/pumps/nursery, JB's dad, extended family |
 | `health` | Training/hypertrophy, diet, medical, appointments |
 | `shopping` | Buying non-food goods |
 | `grocery` | Food/grocery items |
@@ -116,11 +116,20 @@ checks the item off himself. Add `steps` when JB describes a process with phases
 | `lifestyle` | Leisure, hobbies, vibe/identity |
 | `general` | Only when nothing else fits |
 
+**Entity shortcuts (always apply — for task/note entry, brain dump, AND screenshots):**
+- **AnswerLab** or **"AL"** → `work`
+- **Kenzie / Mackenzie, Archie, or Gigi** → `family`
+- **Musubi / Musubi Strong / Instagram** → `musubi`
+- **Pokémon · ROM/ROMs · emulation · consoles/handhelds (Nintendo/Switch/PlayStation/Xbox/3DS/AYN Thor) · Roman TD · World of Warcraft** → `gaming`
+
+When a Musubi brand task also names a kid (e.g. *"Musubi: order Archie's shoot gear"*) it stays `musubi` — the brand is the subject. The keyword engine lives in `index.html`'s `guessCategory()`; the screenshot/brain-dump rules live in the `analyze-screenshot` Edge Function. Update **all three** together when these rules change.
+
 ### `priority`
 - **high** — money is at stake, there's a hard deadline, or it blocks something else.
 - **in_progress** — actively being worked, handed off, or waiting on a current next step.
 - **normal** — everything else (the default).
 - **low** — someday, nice-to-have, or intentionally de-emphasized.
+- **Grocery & errands are always `low`.** Any item in the `grocery` or `errands` category is set to `priority: low` automatically (enforced in app entry, brain dump, screenshots, and sync). Don't mark them higher.
 
 ### `dueDate`
 - Set it whenever JB names a date or window. A range → use the **start** date
