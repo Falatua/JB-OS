@@ -4254,6 +4254,7 @@ function sbStartSync(){
     });
     render(); updateCounts();
     sbSetStatus('Synced — private to your account ✓',true);
+    setTimeout(function(){try{memMaybeRefresh();}catch(e){}},3000); // after auth + cloud pull settle, quietly refresh the "About JB" profile if data changed
     if(firstStart){ Object.keys(sbStores()).forEach(function(n){sbPushStore(n);}); } // push local-only data up once
     if(hadLegacy){try{SB.from('jbos_sync').delete().eq('id',space).then(function(){},function(){});}catch(e){}}
   },function(){ sbSetStatus('Sync: connection failed'); });
@@ -4344,7 +4345,6 @@ function sbAuthUI(user){
 
 if(load().length)_booting=false;
 purgeOldArchived(); // drop archived items older than ~1 month (tombstoned so sync won't bring them back)
-setTimeout(function(){try{memMaybeRefresh();}catch(e){}},5000); // once data + sync settle, quietly refresh the "About JB" profile if anything changed
 // Defer the first render one tick so every top-level const (incl. the Musubi MZ_* data
 // the dashboard now previews) is initialized before renderDashboard runs — avoids a TDZ crash.
 setTimeout(function(){render();},0);
@@ -4552,7 +4552,7 @@ function memProfileText(){var f=(memLoad().facts||[]).slice(0,40).map(function(x
 function _hash32(s){var h=5381,i=s.length;while(i)h=(h*33)^s.charCodeAt(--i);return (h>>>0).toString(36);}
 function memJournalDigest(){try{return (typeof jEntries==='function'?jEntries():[]).slice(0,60).map(function(e){var t=(e.blocks||[]).map(function(b){return ((b.q?b.q+': ':'')+(b.a||'')).trim();}).filter(Boolean).join(' · ');return {date:e.date||'',text:t.slice(0,400)};}).filter(function(x){return x.text;});}catch(e){return [];}}
 function memFingerprint(){var its=load().map(function(x){return (x.text||'')+'|'+(x.category||'')+'|'+(x.archived?1:0);}).join('');var jr=memJournalDigest().map(function(j){return j.text;}).join('');return _hash32(its+''+jr);}
-var _memBusy=false;
+var _memBusy=false, _memTried=false;
 function memRefresh(manual){
   if(_memBusy)return Promise.resolve();
   if(!SB||!_sbAuthed){if(manual)toast('Sign in first to update your profile.');return Promise.resolve();}
@@ -4573,12 +4573,12 @@ function memRefresh(manual){
   }).catch(function(){if(manual)toast('Something went wrong — try again.');}).finally(function(){_memBusy=false;var b=document.getElementById('mem-refresh-btn');if(b){b.disabled=false;b.textContent='↻ Refresh';}});
 }
 function memMaybeRefresh(){try{
-  if(!SB||!_sbAuthed||load().length<3)return;
+  if(_memTried||!SB||!_sbAuthed||load().length<3)return;                  // at most one auto-attempt per page session
   var mem=memLoad();
   if(mem.fp===memFingerprint())return;                                   // fingerprint short-circuit: nothing changed
   var last=mem.updatedAt?Date.parse(mem.updatedAt):0;
   if(mem.facts.length && Date.now()-last < 6*3600*1000)return;            // auto at most ~once / 6h
-  memRefresh(false);
+  _memTried=true; memRefresh(false);
 }catch(e){}}
 var MEM_CAT_LABEL={identity:'Identity',work:'Work',musubi:'Musubi',family:'Family',health:'Health',gaming:'Gaming',tech:'Tech',finance:'Finance',personal:'Personal',patterns:'Patterns'};
 function openMemModal(){var m=document.getElementById('mem-modal');if(!m)return;_lastFocus=document.activeElement;renderMemModal();m.classList.remove('hidden');}
