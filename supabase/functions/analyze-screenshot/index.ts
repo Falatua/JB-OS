@@ -214,7 +214,7 @@ async function extractMemory(mem: any, admin: any, ANTHROPIC_KEY: string) {
     const res = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: { "Content-Type": "application/json", "x-api-key": ANTHROPIC_KEY, "anthropic-version": "2023-06-01" },
-      body: JSON.stringify({ model: MODEL, max_tokens: 2000, system: MEMORY_PROMPT, messages: [{ role: "user", content: JSON.stringify({ known, items, journal }).slice(0, 24000) }] }),
+      body: JSON.stringify({ model: MODEL, max_tokens: 4000, system: MEMORY_PROMPT, messages: [{ role: "user", content: JSON.stringify({ known, items, journal }).slice(0, 24000) }] }),
     });
     const data = await res.json();
     if (!res.ok) { console.error("anthropic-mem", data); return json({ error: "ai", budget: { spend: budget.spend || 0, cap: DAILY_CAP } }); }
