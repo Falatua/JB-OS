@@ -1383,10 +1383,10 @@
     <div class="detail-meta" id="d-meta"></div>
 
     <div class="detail-actions">
-      <button class="btn btn-ghost" style="color:var(--red)" onclick="deleteFromDetail()">Delete</button>
+      <button class="btn btn-ghost" id="d-delete-btn" style="color:var(--red)" onclick="deleteFromDetail()">Delete</button>
       <div style="flex:1"></div>
       <button class="btn btn-ghost" onclick="closeDetail()">Cancel</button>
-      <button class="btn btn-primary" onclick="saveDetail()">Save changes</button>
+      <button class="btn btn-primary" id="d-save-btn" onclick="saveDetail()">Save changes</button>
     </div>
   </div>
 </div>
@@ -2073,19 +2073,17 @@ function addFromModal(){
   closeModal();
 }
 
-/* ===== Item Detail (Notion-style) ===== */
-let detailId=null, _dAttach=[];
+/* ===== Item Detail (Notion-style) — also used to CREATE new items (full editor) ===== */
+let detailId=null, _dAttach=[], _isNew=false, _draftItem=null;
 
-function openDetail(id){
-  const it=load().find(x=>x.id===id);if(!it)return;
-  _lastFocus=document.activeElement;
-  detailId=id;
+// Populate the detail editor from an item (existing or a fresh draft) and show it.
+function _fillDetail(it,isNew){
   _dAttach=(it.attachments||[]).map(a=>({...a}));
   document.getElementById('d-title').value=it.text||'';
   document.getElementById('d-description').value=it.description||it.notes||'';
   document.getElementById('d-status').value=it.archived?'done':'active';
   document.getElementById('d-cat').value=it.category||'general';
-  document.getElementById('d-type').value=normType(it.type);
+  document.getElementById('d-type').value=normType(it.type||'task');
   document.getElementById('d-priority').value=it.priority||'normal';
   document.getElementById('d-duedate').value=it.dueDate||'';
   document.getElementById('d-enddate').value=it.endDate||'';
@@ -2094,14 +2092,37 @@ function openDetail(id){
   renderDetailLinks(it.links||[]);
   renderDetailAttach();
   renderDetailBadges();
-  const created=it.createdAt?new Date(it.createdAt).toLocaleString():'—';
-  const updated=it.updatedAt?new Date(it.updatedAt).toLocaleString():created;
-  document.getElementById('d-meta').innerHTML=
-    `<span>Created ${esc(created)}</span><span>Last edited ${esc(updated)}</span><span>Source: ${esc(SRC_LABEL[it.source]||it.source||'manual')}</span>`;
+  const del=document.getElementById('d-delete-btn'), sv=document.getElementById('d-save-btn');
+  if(del)del.style.display=isNew?'none':'';      // nothing to delete yet on a new item
+  if(sv)sv.textContent=isNew?'Add item':'Save changes';
+  if(isNew){
+    document.getElementById('d-meta').innerHTML='<span>New item — add as much or as little as you want (steps, dates, links…), then Add it.</span>';
+  } else {
+    const created=it.createdAt?new Date(it.createdAt).toLocaleString():'—';
+    const updated=it.updatedAt?new Date(it.updatedAt).toLocaleString():created;
+    document.getElementById('d-meta').innerHTML=`<span>Created ${esc(created)}</span><span>Last edited ${esc(updated)}</span><span>Source: ${esc(SRC_LABEL[it.source]||it.source||'manual')}</span>`;
+  }
   ['d-cat','d-type','d-priority','d-status'].forEach(sid=>{document.getElementById(sid).onchange=renderDetailBadges;});
   document.getElementById('detail').classList.remove('hidden');
   setTimeout(()=>document.getElementById('d-title').focus(),50);
 }
+function openDetail(id){
+  const it=load().find(x=>x.id===id);if(!it)return;
+  _lastFocus=document.activeElement; _isNew=false; _draftItem=null; detailId=id;
+  _fillDetail(it,false);
+}
+// New item uses the exact same editor (steps, dates, links, attachments…). The draft lives
+// in memory and is only written to the store on Save — Cancel/Esc discards it cleanly.
+function openCreate(){
+  _lastFocus=document.activeElement; _isNew=true;
+  const it={id:uid(),text:'',type:(filterMode==='type')?normType(filter):'task',
+    priority:(filterMode==='prio'&&PRIORITY_IDS.includes(filter))?filter:'normal',
+    category:(filterMode==='cat'&&CATS[filter])?filter:'general',
+    source:'browser',description:'',steps:[],links:[],attachments:[]};
+  _draftItem=it; detailId=it.id;
+  _fillDetail(it,true);
+}
+function openModal(){ openCreate(); } // the old quick-add is replaced by the full editor
 
 function renderDetailBadges(){
   const cat=CATS[document.getElementById('d-cat').value]||CATS.general;
@@ -2244,9 +2265,13 @@ function handleFileAttach(e){
 
 function saveDetail(){
   if(!detailId)return;
-  const items=load();const i=items.findIndex(x=>x.id===detailId);if(i<0)return;
-  const it=items[i];
-  it.text=document.getElementById('d-title').value.trim()||it.text;
+  const isNew=_isNew, items=load();
+  let it;
+  if(isNew){ it=_draftItem||{id:detailId}; }
+  else { const i=items.findIndex(x=>x.id===detailId); if(i<0)return; it=items[i]; }
+  const title=document.getElementById('d-title').value.trim();
+  if(isNew && !title){ toast('Give it a title first'); document.getElementById('d-title').focus(); return; }
+  it.text=title||it.text;
   it.description=document.getElementById('d-description').value.trim();
   it.category=document.getElementById('d-cat').value;
   it.type=document.getElementById('d-type').value;
@@ -2262,12 +2287,20 @@ function saveDetail(){
   if(steps.length)it.steps=steps; else delete it.steps;
   it.links=collectLinks();
   it.attachments=_dAttach;
+  if(isNew){
+    if(!it.category||it.category==='general')it.category=guessCategory(it.text,it.description); // auto-organize if left General
+    it.emoji=it.emoji||guessEmoji(it.text,it.category);
+    it.done=!!it.done; it.archived=!!it.archived;
+    it.createdAt=it.createdAt||new Date().toISOString();
+  }
+  if(it.category==='grocery'||it.category==='errands')it.priority='low'; // groceries & errands are always low
   it.userEdited=true; // protect this item's fields from being overwritten by the server seed
   it.updatedAt=new Date().toISOString();
+  if(isNew)items.unshift(it);
   try{save(items);}
   catch(err){toast('Storage full — remove a large attachment and retry');return;}
   render();updateCounts();closeDetail();
-  toast('Saved');
+  toast(isNew?('Added: '+it.text.slice(0,44)):'Saved');
 }
 
 function deleteFromDetail(){
@@ -2278,7 +2311,7 @@ function deleteFromDetail(){
   toast('Deleted');
 }
 
-function closeDetail(){document.getElementById('detail').classList.add('hidden');detailId=null;_dAttach=[];restoreFocus();}
+function closeDetail(){document.getElementById('detail').classList.add('hidden');detailId=null;_dAttach=[];_isNew=false;_draftItem=null;restoreFocus();}
 function closeDetailOutside(e){if(e.target.id==='detail')closeDetail();}
 
 document.addEventListener('keydown',e=>{
