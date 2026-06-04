@@ -995,6 +995,27 @@
   .bd-del{margin-left:auto;background:none;border:none;color:var(--text-3);cursor:pointer;font-size:13px;padding:2px 6px;border-radius:5px;line-height:1}
   .bd-del:hover{background:var(--surface-hover);color:var(--red)}
 
+  /* ===== About JB — living memory ===== */
+  .mem-sub{font-size:11.5px;color:var(--text-3);margin:2px 0 12px;line-height:1.5}
+  #mem-list{display:flex;flex-direction:column;gap:13px;max-height:48vh;overflow-y:auto}
+  .mem-empty{font-size:13px;color:var(--text-3);line-height:1.6;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px}
+  .mem-group-h{display:flex;align-items:center;gap:7px;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);margin-bottom:6px}
+  .mem-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+  .mem-fact{display:flex;align-items:center;gap:8px;padding:6px 4px;border-top:1px solid var(--border)}
+  .mem-fact:first-of-type{border-top:none}
+  .mem-fact-txt{flex:1;min-width:0;font-size:13px;color:var(--text);line-height:1.45}
+  .mem-fact.pinned .mem-fact-txt{color:var(--accent)}
+  .mem-act{background:none;border:none;color:var(--text-3);cursor:pointer;font-size:13px;padding:3px 5px;border-radius:5px;line-height:1;flex-shrink:0}
+  .mem-act:hover{background:var(--surface-hover);color:var(--text)}
+  .mem-addrow{display:flex;gap:8px;margin-top:12px}
+  .mem-addrow input{flex:1;background:var(--surface);border:1px solid var(--border-2);border-radius:var(--radius);padding:8px 11px;color:var(--text);font:inherit;font-size:13px;outline:none}
+  .mem-addrow input:focus{border-color:var(--accent)}
+  .mem-foot-note{flex:1;min-width:0;font-size:10.5px;color:var(--text-3);line-height:1.4}
+  /* dashboard card */
+  .dmem-facts{display:flex;flex-direction:column;gap:5px;margin-bottom:4px}
+  .dmem-fact{font-size:12.5px;color:var(--text-2);line-height:1.45;padding-left:12px;position:relative;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .dmem-fact::before{content:'•';position:absolute;left:2px;color:var(--accent)}
+
   /* ===== Drag to reorder / recategorize ===== */
   .item-grip{display:flex;align-items:center;justify-content:center;align-self:stretch;width:18px;margin-right:-2px;color:var(--text-3);cursor:grab;opacity:0;transition:opacity var(--t),color var(--t);touch-action:none;flex-shrink:0;-webkit-tap-highlight-color:transparent}
   .item:hover .item-grip{opacity:.5}
@@ -1506,6 +1527,16 @@
     <div id="bd-preview"></div>
     <div class="capture-budget" id="bd-budget"></div>
     <div class="capture-foot"><button class="btn btn-ghost" onclick="closeBrainDump()">Cancel</button><button class="btn btn-primary" id="bd-save" style="display:none" onclick="saveDumpItems()">Save all</button></div>
+  </div>
+</div>
+
+<div class="backdrop hidden" id="mem-modal" onclick="closeMemOutside(event)" role="dialog" aria-modal="true" aria-label="What JB OS knows about you">
+  <div class="modal capture-modal">
+    <div class="capture-head"><span>🧠 What JB OS knows about you</span><button class="gi-x" onclick="closeMemModal()" aria-label="Close">✕</button></div>
+    <div class="mem-sub" id="mem-sub"></div>
+    <div id="mem-list"></div>
+    <div class="mem-addrow"><input id="mem-add-in" placeholder="Add a fact about yourself…" autocomplete="off" onkeydown="if(event.key==='Enter')memAddFact()"><button class="btn btn-ghost" onclick="memAddFact()">Add</button></div>
+    <div class="capture-foot"><span class="mem-foot-note">Learns from your items, journal &amp; history. Pinned ★ facts are kept; ✕ removes one.</span><button class="btn btn-ghost" id="mem-refresh-btn" onclick="memRefresh(true)">↻ Refresh</button><button class="btn btn-primary" onclick="closeMemModal()">Done</button></div>
   </div>
 </div>
 
@@ -2345,7 +2376,7 @@ function closeDetail(){document.getElementById('detail').classList.add('hidden')
 function closeDetailOutside(e){if(e.target.id==='detail')closeDetail();}
 
 document.addEventListener('keydown',e=>{
-  if(e.key==='Escape'){if(!document.getElementById('journal-modal').classList.contains('hidden')&&(!document.getElementById('j-question-menu').classList.contains('hidden')||!document.getElementById('j-template-menu').classList.contains('hidden'))){closeAllJMenus();return;}closeModal();closeDetail();closeJournal();closePrompts();closeRoutine();closeNav();closeCmd();closeCapture();closeBrainDump();}
+  if(e.key==='Escape'){if(!document.getElementById('journal-modal').classList.contains('hidden')&&(!document.getElementById('j-question-menu').classList.contains('hidden')||!document.getElementById('j-template-menu').classList.contains('hidden'))){closeAllJMenus();return;}closeModal();closeDetail();closeJournal();closePrompts();closeRoutine();closeNav();closeCmd();closeCapture();closeBrainDump();closeMemModal();}
   if((e.metaKey||e.ctrlKey)&&(e.key==='k'||e.key==='K')){e.preventDefault();openCmd();return;}
   if((e.metaKey||e.ctrlKey)&&e.key==='n'){e.preventDefault();view==='journal'?newJournalEntry():primaryAdd();}
   if((e.metaKey||e.ctrlKey)&&e.key==='f'&&view==='list'){e.preventDefault();document.getElementById('search').focus();}
@@ -2522,7 +2553,7 @@ async function captureScreenshots(files){
     if(body)body.innerHTML='<div class="capture-zone-main"><span class="capture-spin"></span>Reading screenshot'+(files.length>1?(' '+(i+1)+' of '+files.length):'')+'…</div>';
     try{
       const b64=await resizeImage(files[i],1200);
-      const {data,error}=await SB.functions.invoke(SS_FN,{body:{image:b64,persist:false}});
+      const {data,error}=await SB.functions.invoke(SS_FN,{body:{image:b64,persist:false,profile:memProfileText()}});
       if(error){logCapture(null,'Could not reach the analyzer. Check your connection and try again.');continue;}
       if(data&&data.error){logCapture(null,data.error==='cap'?'Daily $1.00 limit reached — resets at midnight.':'Analysis failed — try again.');if(data.budget)renderCaptureBudget(data.budget);continue;}
       if(!data||!data.title){logCapture(null,'Could not read that screenshot.');continue;}
@@ -2588,7 +2619,7 @@ async function runBrainDump(){
   document.getElementById('bd-preview').innerHTML='';
   document.getElementById('bd-save').style.display='none';
   try{
-    const {data,error}=await SB.functions.invoke('analyze-screenshot',{body:{text}});
+    const {data,error}=await SB.functions.invoke('analyze-screenshot',{body:{text,profile:memProfileText()}});
     if(error){status.textContent='Could not reach the analyzer. Check your connection and try again.';}
     else if(data&&data.error){status.textContent=data.error==='cap'?'Daily $1.00 limit reached — resets at midnight.':'Analysis failed — try again.';if(data.budget)renderBdBudget(data.budget);}
     else if(!data||!Array.isArray(data.items)||!data.items.length){status.textContent='Could not pull any items from that — try rephrasing.';}
@@ -2956,7 +2987,7 @@ function graphFindConnections(){
   var items=load().filter(function(x){return !x.archived;}).slice(0,60).map(function(x){return {id:x.id,text:(x.text||'').slice(0,140),category:x.category||'general'};});
   if(items.length<3){toast('Add a few more items first.');return;}
   if(btn){btn.disabled=true;btn.textContent='✨ Thinking…';}
-  SB.functions.invoke('analyze-screenshot',{body:{connections:items}}).then(function(res){
+  SB.functions.invoke('analyze-screenshot',{body:{connections:items,profile:memProfileText()}}).then(function(res){
     var data=res.data;
     if(res.error||!data||data.error){toast(data&&data.error==='cap'?'Daily $1.00 limit reached — resets at midnight.':'Couldn’t analyze — try again.');}
     else if(Array.isArray(data.connections)&&data.connections.length){
@@ -3030,6 +3061,12 @@ function renderGraph(){
       items.forEach(function(it){var hay=(it.text||'')+' '+(it.notes||'')+' '+(it.description||'');CONCEPTS.forEach(function(cp){if(cp.re.test(hay)){(cHits[cp.key]=cHits[cp.key]||[]).push(byKey['it:'+it.id]);}});});
       CONCEPTS.forEach(function(cp){var hits=cHits[cp.key];if(!hits||hits.length<2)return; // only show genuine bridges (≥2 items)
         var cn=node('cp:'+cp.key,cp.label,'concept','concept',CONCEPT_COLOR,7,{concept:cp.key});cn.cCount=hits.length;hits.forEach(function(itn){edge(cn,itn);});});
+      // Self-growing concepts: entities the "About JB" memory has learned (people/tools/efforts)
+      var memEnts=(typeof memLoad==='function'?(memLoad().entities||[]):[]), seen={};
+      CONCEPTS.forEach(function(cp){seen[cp.key]=1;});
+      memEnts.forEach(function(en){var m=(en&&en.match||'').toLowerCase();if(!m||m.length<3)return;var key=en.kind+':'+m;if(seen[key])return;seen[key]=1;
+        var hits=[];items.forEach(function(it){if((((it.text||'')+' '+(it.notes||'')+' '+(it.description||'')).toLowerCase()).indexOf(m)>=0)hits.push(byKey['it:'+it.id]);});
+        if(hits.length<2)return;var cn=node('cpe:'+key,en.name||en.match,'concept','concept',CONCEPT_COLOR,7,{concept:key});cn.cCount=hits.length;hits.forEach(function(itn){edge(cn,itn);});});
     }catch(e){}
     try{var entries=(jEntries?jEntries():[]).slice(0,14);if(entries.length){var jh=node('jhub','Journal','jhub','journal','#b07cc6',11);edge(hub,jh);entries.forEach(function(e){edge(node('j:'+e.id,e.date||'entry','journal','journal','#b07cc6',4,{jid:e.id}),jh);});}}catch(e){}
     try{var tmpl=(loadDaily().templates||[]).slice(0,20);if(tmpl.length){var hh=node('hhub','Habits','hhub','habit','#2dd4bf',11);edge(hub,hh);tmpl.forEach(function(t){edge(node('h:'+t.id,t.text||'habit','habit','habit','#2dd4bf',4),hh);});}}catch(e){}
@@ -3917,6 +3954,13 @@ function renderDashboard(){
       +'<div class="dmz-cta">Open Musubi →</div></div></div>';
   })();
 
+  // ---- "About JB" living-memory card ----
+  var _mem=memLoad(), _mf=_mem.facts||[];
+  var memCard='<div class="dcard dmem dcard-click" role="button" tabindex="0" title="What JB OS has learned about you" onclick="openMemModal()" onkeydown="if(event.key===\'Enter\')openMemModal()">'
+    +'<div class="dcard-label"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M8 2.2c-2 0-3.4 1.3-3.4 3 0 .4-.3.6-.6.9-.7.6-1 1.4-1 2.2 0 .9.5 1.6 1.2 2 .1 1.4 1.2 2.5 2.6 2.5M8 2.2c2 0 3.4 1.3 3.4 3 0 .4.3.6.6.9.7.6 1 1.4 1 2.2 0 .9-.5 1.6-1.2 2-.1 1.4-1.2 2.5-2.6 2.5M8 2.2v11.5"/></svg>What JB OS knows about you'+(_mf.length?' · '+_mf.length:'')+'</div>'
+    +(_mf.length?'<div class="dmem-facts">'+_mf.slice(0,5).map(function(f){return '<div class="dmem-fact">'+esc(f.text)+'</div>';}).join('')+'</div>':'<div class="dempty">A living profile of who you are and how you work — distilled from your items, journal &amp; history, and used to sharpen the graph and AI features.</div>')
+    +'<button class="dcard-cta" onclick="event.stopPropagation();openMemModal()">'+(_mf.length?'View &amp; edit →':'Build it →')+'</button></div>';
+
   document.getElementById('list').innerHTML='<div class="dash-wrap">'
     +'<div class="dash-greet"><div class="dash-hello">'+timeGreeting()+', JB</div><div class="dash-sub">'+now.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})+' &nbsp;·&nbsp; '+highlight+'</div></div>'
     +'<div class="cond" id="cond-strip"></div>'
@@ -3929,6 +3973,8 @@ function renderDashboard(){
     +'<div class="dins-row" style="grid-template-columns:1fr">'+reviewCard+'</div>'
     +'<div class="dins-row" style="margin-top:13px">'+completedCard+graphCard+'</div>'
     +'<div class="dins-row" style="margin-top:13px">'+catCard+compCard+'</div>'
+    +'<div class="dash-sec">About you</div>'
+    +'<div class="dins-row" style="grid-template-columns:1fr">'+memCard+'</div>'
     +'<div class="dash-sec">Reflections</div>'+reflectSection
     +'</div>';
   loadConditions();
@@ -4151,6 +4197,7 @@ function sbStores(){return {
   monthly:{load:loadMonthly,save:saveMonthly,merge:_mergeRoutine},
   journal:{load:jLoad,save:jSave,merge:_mergeJournal},
   musubi:{load:mzLoad,save:mzSave,merge:_mergeMusubi},
+  memory:{load:memLoad,save:memSave,merge:_mergeMemory},
   tombstones:{load:loadTomb,save:applyTomb,merge:_mergeTomb}
 };}
 function sbApplyStore(name,payload){
@@ -4232,7 +4279,7 @@ function sbStopSync(){
 // Wipe locally-cached personal data from this device. The cloud copy is untouched and re-pulls
 // on next sign-in — this just stops stale copies lingering on untrusted / signed-out devices.
 function sbWipeLocal(){
-  try{[KEY,DKEY,MKEY,JKEY,MZKEY,TKEY].forEach(function(k){localStorage.removeItem(k);});}catch(e){}
+  try{[KEY,DKEY,MKEY,JKEY,MZKEY,MEMKEY,TKEY].forEach(function(k){localStorage.removeItem(k);});}catch(e){}
   try{render();updateCounts();}catch(e){}
 }
 // Re-pull all stores from the cloud (used on app open/refocus for automatic sync)
@@ -4297,6 +4344,7 @@ function sbAuthUI(user){
 
 if(load().length)_booting=false;
 purgeOldArchived(); // drop archived items older than ~1 month (tombstoned so sync won't bring them back)
+setTimeout(function(){try{memMaybeRefresh();}catch(e){}},5000); // once data + sync settle, quietly refresh the "About JB" profile if anything changed
 // Defer the first render one tick so every top-level const (incl. the Musubi MZ_* data
 // the dashboard now previews) is initialized before renderDashboard runs — avoids a TDZ crash.
 setTimeout(function(){render();},0);
@@ -4484,6 +4532,78 @@ function mzLoad(){
   return s;
 }
 function mzSave(s){localStorage.setItem(MZKEY,JSON.stringify(s));if(typeof sbPushStore==='function'&&!_sbApplying)sbPushStore('musubi');}
+
+/* ===== "About JB" — living memory ============================================================
+   A small, evolving profile of durable facts about JB, distilled from his items + journal +
+   history by the Edge Function and periodically tidied. Powers the categorizer, the graph's
+   concept nodes, and the AI-connections prompt. Synced like the other stores. */
+const MEMKEY='jbos_memory_v1';
+function memLoad(){let s;try{s=JSON.parse(localStorage.getItem(MEMKEY))||{}}catch(e){s={}}
+  if(!Array.isArray(s.facts))s.facts=[];
+  if(!Array.isArray(s.entities))s.entities=[];
+  if(typeof s.fp!=='string')s.fp='';
+  if(typeof s.updatedAt!=='string')s.updatedAt='';
+  return s;}
+function memSave(s){localStorage.setItem(MEMKEY,JSON.stringify(s));if(typeof sbPushStore==='function'&&!_sbApplying)sbPushStore('memory');}
+// Cross-device: last writer wins on the whole profile (it regenerates, so this is safe + simple).
+function _mergeMemory(remote,local){remote=remote||{};local=local||{};return ((remote.updatedAt||'')>(local.updatedAt||''))?remote:local;}
+// Compact one-string profile fed to the AI prompts (connections / brain dump / screenshots).
+function memProfileText(){var f=(memLoad().facts||[]).slice(0,40).map(function(x){return '- '+(x.text||'');}).filter(function(s){return s.length>2;});return f.length?f.join('\n'):'';}
+function _hash32(s){var h=5381,i=s.length;while(i)h=(h*33)^s.charCodeAt(--i);return (h>>>0).toString(36);}
+function memJournalDigest(){try{return (typeof jEntries==='function'?jEntries():[]).slice(0,60).map(function(e){var t=(e.blocks||[]).map(function(b){return ((b.q?b.q+': ':'')+(b.a||'')).trim();}).filter(Boolean).join(' · ');return {date:e.date||'',text:t.slice(0,400)};}).filter(function(x){return x.text;});}catch(e){return [];}}
+function memFingerprint(){var its=load().map(function(x){return (x.text||'')+'|'+(x.category||'')+'|'+(x.archived?1:0);}).join('');var jr=memJournalDigest().map(function(j){return j.text;}).join('');return _hash32(its+''+jr);}
+var _memBusy=false;
+function memRefresh(manual){
+  if(_memBusy)return Promise.resolve();
+  if(!SB||!_sbAuthed){if(manual)toast('Sign in first to update your profile.');return Promise.resolve();}
+  var mem=memLoad();
+  var known=mem.facts.filter(function(f){return f.pinned||f.userAdded;}).map(function(f){return {text:f.text,category:f.category};});
+  var items=load().map(function(x){return {text:(x.text||'').slice(0,120),notes:(x.notes||x.description||'').slice(0,120),category:x.category||'general',done:!!x.archived};});
+  var fp=memFingerprint(); _memBusy=true;
+  var rb=document.getElementById('mem-refresh-btn'); if(rb&&manual){rb.disabled=true;rb.textContent='Thinking…';}
+  return SB.functions.invoke('analyze-screenshot',{body:{memory:{known:known,items:items,journal:memJournalDigest()}}}).then(function(res){
+    var data=res.data;
+    if(res.error||!data||data.error){if(manual)toast(data&&data.error==='cap'?'Daily $1.00 limit reached — resets at midnight.':'Couldn’t update your profile — try again.');return;}
+    var keep=mem.facts.filter(function(f){return f.pinned||f.userAdded;}), now=new Date().toISOString();
+    var auto=(data.facts||[]).map(function(f){return {id:uid(),text:f.text,category:f.category||'personal',source:f.source||'items',createdAt:now};});
+    var next=memLoad(); next.facts=keep.concat(auto); next.entities=Array.isArray(data.entities)?data.entities:[]; next.fp=fp; next.updatedAt=now;
+    memSave(next);
+    if(manual)toast('Updated — JB OS now knows '+next.facts.length+' things about you');
+    if(view==='dashboard')render(); renderMemModal();
+  }).catch(function(){if(manual)toast('Something went wrong — try again.');}).finally(function(){_memBusy=false;var b=document.getElementById('mem-refresh-btn');if(b){b.disabled=false;b.textContent='↻ Refresh';}});
+}
+function memMaybeRefresh(){try{
+  if(!SB||!_sbAuthed||load().length<3)return;
+  var mem=memLoad();
+  if(mem.fp===memFingerprint())return;                                   // fingerprint short-circuit: nothing changed
+  var last=mem.updatedAt?Date.parse(mem.updatedAt):0;
+  if(mem.facts.length && Date.now()-last < 6*3600*1000)return;            // auto at most ~once / 6h
+  memRefresh(false);
+}catch(e){}}
+var MEM_CAT_LABEL={identity:'Identity',work:'Work',musubi:'Musubi',family:'Family',health:'Health',gaming:'Gaming',tech:'Tech',finance:'Finance',personal:'Personal',patterns:'Patterns'};
+function openMemModal(){var m=document.getElementById('mem-modal');if(!m)return;_lastFocus=document.activeElement;renderMemModal();m.classList.remove('hidden');}
+function closeMemModal(){var m=document.getElementById('mem-modal');if(m)m.classList.add('hidden');restoreFocus();}
+function closeMemOutside(e){if(e.target.id==='mem-modal')closeMemModal();}
+function renderMemModal(){
+  var wrap=document.getElementById('mem-list'); if(!wrap)return;
+  var mem=memLoad(), facts=mem.facts||[];
+  var sub=document.getElementById('mem-sub'); if(sub)sub.textContent=facts.length?(facts.length+' facts · learned from your items, journal & history'+(mem.updatedAt?' · updated '+ageStr(mem.updatedAt):'')):'Nothing yet — tap Refresh to have JB OS read your items and journal.';
+  if(!facts.length){wrap.innerHTML='<div class="mem-empty">As you add items, brain dumps, and journal entries, JB OS distills a quiet profile of who you are and how you work — and uses it to sharpen categorization, the graph, and AI connections. Tap <strong>↻ Refresh</strong> to build it now.</div>';return;}
+  var order=Object.keys(MEM_CAT_LABEL), groups={};
+  facts.forEach(function(f){(groups[f.category||'personal']=groups[f.category||'personal']||[]).push(f);});
+  wrap.innerHTML=order.filter(function(c){return groups[c];}).map(function(c){
+    var cc=CATS[c]||CATS.general;
+    return '<div class="mem-group"><div class="mem-group-h"><span class="mem-dot" style="background:'+(cc&&cc.color||'#888')+'"></span>'+esc(MEM_CAT_LABEL[c]||c)+'</div>'+
+      groups[c].map(function(f){return '<div class="mem-fact'+(f.pinned?' pinned':'')+'" data-id="'+esc(f.id)+'">'+
+        '<span class="mem-fact-txt" title="'+(f.source?esc('from your '+f.source):'')+'">'+esc(f.text)+'</span>'+
+        '<button class="mem-act" title="'+(f.pinned?'Unpin':'Pin (keep forever)')+'" onclick="memPin(\''+esc(f.id)+'\')">'+(f.pinned?'★':'☆')+'</button>'+
+        '<button class="mem-act" title="Remove" onclick="memDel(\''+esc(f.id)+'\')">✕</button></div>';}).join('')+'</div>';
+  }).join('');
+}
+function memPin(id){var s=memLoad();var f=s.facts.find(function(x){return x.id===id;});if(!f)return;f.pinned=!f.pinned;s.updatedAt=new Date().toISOString();memSave(s);renderMemModal();}
+function memDel(id){var s=memLoad();s.facts=s.facts.filter(function(x){return x.id!==id;});s.updatedAt=new Date().toISOString();memSave(s);renderMemModal();if(view==='dashboard')render();}
+function memAddFact(){var inp=document.getElementById('mem-add-in');if(!inp)return;var v=(inp.value||'').trim();if(!v)return;var s=memLoad();s.facts.unshift({id:uid(),text:v,category:'personal',source:'items',pinned:true,userAdded:true,createdAt:new Date().toISOString()});s.updatedAt=new Date().toISOString();memSave(s);inp.value='';renderMemModal();if(view==='dashboard')render();}
+
 function mzPanelDaily(){
   const s=mzLoad(),k=dateKey(new Date()),st=s.checklist[k]||{};
   let total=0,done=0;Object.values(MZ_CHECK).forEach(b=>b.tasks.forEach(t=>{total++;if(st[t[0]])done++;}));

@@ -80,7 +80,7 @@ RULES:
 Respond with ONLY valid JSON — no preamble, no markdown fences:
 {"items":[{"title":"...","type":"task|note","category":"<one of the set>","priority":"normal|high","dueDate":"YYYY-MM-DD or null","notes":"short or empty"}]}`;
 
-async function brainDump(text: string, admin: any, ANTHROPIC_KEY: string) {
+async function brainDump(text: string, admin: any, ANTHROPIC_KEY: string, profile?: string) {
   const today = todayKey();
   // shared daily cost cap
   const budgetId = `${SPACE}:ss_budget`;
@@ -98,7 +98,7 @@ async function brainDump(text: string, admin: any, ANTHROPIC_KEY: string) {
       body: JSON.stringify({
         model: MODEL,
         max_tokens: 1500,
-        system: DUMP_PROMPT(today),
+        system: DUMP_PROMPT(today) + (profile ? "\n\nWHAT WE ALREADY KNOW ABOUT JB (use it to categorize accurately):\n" + String(profile).slice(0, 2000) : ""),
         messages: [{ role: "user", content: String(text).slice(0, 4000) }],
       }),
     });
@@ -142,7 +142,7 @@ Given the items (each: id, text, category), return up to 12 of the STRONGEST con
 Respond with ONLY valid JSON — no preamble, no fences:
 {"connections":[{"a":"<id>","b":"<id>","reason":"..."}]}`;
 
-async function analyzeConnections(items: any[], admin: any, ANTHROPIC_KEY: string) {
+async function analyzeConnections(items: any[], admin: any, ANTHROPIC_KEY: string, profile?: string) {
   const today = todayKey();
   const budgetId = `${SPACE}:ss_budget`;
   const { data: bRow } = await admin.from("jbos_sync").select("payload").eq("id", budgetId).maybeSingle();
@@ -158,7 +158,7 @@ async function analyzeConnections(items: any[], admin: any, ANTHROPIC_KEY: strin
     const res = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: { "Content-Type": "application/json", "x-api-key": ANTHROPIC_KEY, "anthropic-version": "2023-06-01" },
-      body: JSON.stringify({ model: MODEL, max_tokens: 1500, system: CONNECTIONS_PROMPT, messages: [{ role: "user", content: JSON.stringify(clean) }] }),
+      body: JSON.stringify({ model: MODEL, max_tokens: 1500, system: CONNECTIONS_PROMPT + (profile ? "\n\nLIVE PROFILE FACTS (current — trust these about JB):\n" + String(profile).slice(0, 2000) : ""), messages: [{ role: "user", content: JSON.stringify(clean) }] }),
     });
     const data = await res.json();
     if (!res.ok) { console.error("anthropic-conn", data); return json({ error: "ai", budget: { spend: budget.spend || 0, cap: DAILY_CAP } }); }
@@ -177,6 +177,69 @@ async function analyzeConnections(items: any[], admin: any, ANTHROPIC_KEY: strin
     .slice(0, 12)
     .map((c: any) => ({ a: String(c.a), b: String(c.b), reason: String(c.reason || "").slice(0, 80) }));
   return json({ connections: out, budget: { spend: budget.spend, cap: DAILY_CAP } });
+}
+
+// ===== "About JB" living memory: distill + tidy a durable profile from his data =====
+const MEM_CATS = ["identity", "work", "musubi", "family", "health", "gaming", "tech", "finance", "personal", "patterns"];
+const MEMORY_PROMPT = `You maintain JB's living profile inside JB OS (his personal operating system) — a compact set of DURABLE facts about who he is and how he works, used to make the app smarter (categorization, a knowledge graph, and AI features).
+
+You're given JSON: "known" (facts already pinned by the user — never drop or reword these, just avoid duplicating them), "items" (his current tasks/notes), and "journal" (recent personal entries).
+
+Return the UPDATED auto-derived profile:
+- Extract DURABLE facts: identity, location, family & people, roles/day-job, businesses & projects, tools he relies on, health/training, gaming, finances, and recurring patterns in how he works.
+- MERGE duplicates, rewrite vague facts into one crisp sentence, and DROP transient task-specific noise, one-offs, and anything no longer true.
+- Do NOT repeat anything already in "known".
+- Keep it tight: at most 32 facts, highest-signal first. Write each in third person ("JB ...").
+- Each fact: {"text": "...", "category": "<one of: ${MEM_CATS.join("|")}>", "source": "items" | "journal" | "history"}.
+
+ALSO return "entities": the distinct people, tools, and efforts JB mentions repeatedly (for a knowledge graph). Each: {"name": "<short label>", "kind": "person" | "tool" | "effort", "match": "<lowercase keyword or phrase that detects it in text>"}.
+
+Respond with ONLY valid JSON — no preamble, no fences:
+{"facts":[...], "entities":[...]}`;
+
+async function extractMemory(mem: any, admin: any, ANTHROPIC_KEY: string) {
+  const today = todayKey();
+  const budgetId = `${SPACE}:ss_budget`;
+  const { data: bRow } = await admin.from("jbos_sync").select("payload").eq("id", budgetId).maybeSingle();
+  let budget = (bRow?.payload as { date?: string; spend?: number }) || { date: today, spend: 0 };
+  if (budget.date !== today) budget = { date: today, spend: 0 };
+  if ((budget.spend || 0) + PRECALL_GUARD > DAILY_CAP) return json({ error: "cap", budget: { spend: budget.spend || 0, cap: DAILY_CAP } });
+
+  const known = Array.isArray(mem?.known) ? mem.known.slice(0, 40) : [];
+  const items = Array.isArray(mem?.items) ? mem.items.slice(0, 200) : [];
+  const journal = Array.isArray(mem?.journal) ? mem.journal.slice(0, 120) : [];
+  let facts: any[] = [], entities: any[] = [];
+  let usage = { input_tokens: 0, output_tokens: 0 };
+  try {
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-api-key": ANTHROPIC_KEY, "anthropic-version": "2023-06-01" },
+      body: JSON.stringify({ model: MODEL, max_tokens: 2000, system: MEMORY_PROMPT, messages: [{ role: "user", content: JSON.stringify({ known, items, journal }).slice(0, 24000) }] }),
+    });
+    const data = await res.json();
+    if (!res.ok) { console.error("anthropic-mem", data); return json({ error: "ai", budget: { spend: budget.spend || 0, cap: DAILY_CAP } }); }
+    usage = data.usage || usage;
+    const t = (data.content?.[0]?.text || "").trim().replace(/^```(?:json)?/i, "").replace(/```$/, "").trim();
+    const parsed = JSON.parse(t);
+    facts = Array.isArray(parsed.facts) ? parsed.facts : [];
+    entities = Array.isArray(parsed.entities) ? parsed.entities : [];
+  } catch (e) { console.error("mem-parse", e); return json({ error: "ai" }); }
+
+  const cost = usage.input_tokens * IN_COST + usage.output_tokens * OUT_COST;
+  budget = { date: today, spend: +((budget.spend || 0) + cost).toFixed(6) };
+  await admin.from("jbos_sync").upsert({ id: budgetId, payload: budget, updated_at: new Date().toISOString() });
+
+  const cleanFacts = facts.slice(0, 32).map((f: any) => ({
+    text: String(f.text || "").slice(0, 200).trim(),
+    category: MEM_CATS.includes(f.category) ? f.category : "personal",
+    source: ["items", "journal", "history"].includes(f.source) ? f.source : "items",
+  })).filter((f: any) => f.text.length > 2);
+  const cleanEnts = entities.slice(0, 30).map((e: any) => ({
+    name: String(e.name || "").slice(0, 40).trim(),
+    kind: ["person", "tool", "effort"].includes(e.kind) ? e.kind : "effort",
+    match: String(e.match || e.name || "").slice(0, 40).toLowerCase().trim(),
+  })).filter((e: any) => e.name && e.match);
+  return json({ facts: cleanFacts, entities: cleanEnts, budget: { spend: budget.spend, cap: DAILY_CAP } });
 }
 
 Deno.serve(async (req) => {
@@ -206,14 +269,17 @@ Deno.serve(async (req) => {
   }
   if (!authed) return json({ error: "auth" }, 401);
 
-  let payload: { image?: string; persist?: boolean; source_hint?: string; text?: string; connections?: any[] };
+  let payload: { image?: string; persist?: boolean; source_hint?: string; text?: string; connections?: any[]; memory?: any; profile?: string };
   try { payload = await req.json(); } catch { return json({ error: "bad-json" }, 200); }
 
+  // ===== "About JB" memory mode: distill + tidy the living profile =====
+  if (payload.memory && typeof payload.memory === "object") return await extractMemory(payload.memory, admin, ANTHROPIC_KEY!);
+
   // ===== Graph connections mode: find non-obvious links across the items =====
-  if (Array.isArray(payload.connections) && payload.connections.length) return await analyzeConnections(payload.connections, admin, ANTHROPIC_KEY!);
+  if (Array.isArray(payload.connections) && payload.connections.length) return await analyzeConnections(payload.connections, admin, ANTHROPIC_KEY!, payload.profile);
 
   // ===== Brain-dump mode: split a plain-text ramble into multiple items =====
-  if (payload.text && !payload.image) return await brainDump(payload.text, admin, ANTHROPIC_KEY!);
+  if (payload.text && !payload.image) return await brainDump(payload.text, admin, ANTHROPIC_KEY!, payload.profile);
 
   const image = (payload.image || "").replace(/^data:[^,]+,/, "");
   if (!image) return json({ error: "no-image" }, 200);
