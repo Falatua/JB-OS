@@ -1722,6 +1722,10 @@ function closeNav(){document.querySelector('.app').classList.remove('nav-open');
 
 function setFilter(f, mode){
   filter=f; filterMode=mode; if(!isListView(view))view=lastArea||'tasks';
+  // Refresh the area chrome — a filter can enter a list area straight from a non-list view (e.g.
+  // clicking a Life area while on the Today dashboard), where the top switcher/tint/button label
+  // were hidden and would otherwise never re-appear.
+  applyAreaTheme(view); applyViewChrome(view);
   closeNav();
   document.querySelectorAll('.nav-item').forEach(e=>{e.classList.remove('active');e.classList.remove('cat-active');});
   // Resolve the nav element id per mode so the active highlight lands on the right item
