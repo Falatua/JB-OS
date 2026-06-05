@@ -1802,9 +1802,11 @@ function sortControlHTML(){
     +opts.map(o=>'<option value="'+o[0]+'"'+(sortBy===o[0]?' selected':'')+'>Sort: '+o[1]+'</option>').join('')+'</select>';
 }
 
-function getFiltered(){
+// The search + active-filter predicate, WITHOUT the Tasks/Notes area scope or sort. Used both by
+// getFiltered() and by the area counts so the switcher can show the type-split of the current filter.
+function getFilteredBase(){
   const q=(document.getElementById('search')?.value||'').toLowerCase();
-  const items=load().filter(item=>{
+  return load().filter(item=>{
     const mq=!q||(item.text||'').toLowerCase().includes(q)||(item.notes||'').toLowerCase().includes(q);
     const isArchived=!!item.archived;
     let mf;
@@ -1828,10 +1830,12 @@ function getFiltered(){
     }
     return mq&&mf;
   });
+}
+function getFiltered(){
   // Scope to the active area (Tasks vs Notes). Applies to every filter incl. archive, so each area's
   // archive is separate too. Skipped only when a specific type is already being filtered (e.g. a Graph
   // type-node click), to avoid double-filtering.
-  let arr=items;
+  let arr=getFilteredBase();
   if(isListView(view)&&filterMode!=='type'){
     arr=arr.filter(view==='tasks'?isTaskType:(i=>!isTaskType(i)));
   }
@@ -2046,6 +2050,7 @@ function updateTabBar(){
 function dismissA2HS(){localStorage.setItem('jbos_a2hs','1');var e=document.getElementById('a2hs');if(e)e.classList.remove('show');}
 function render(){
   updateTabBar();
+  updateAreaCounts();
   if(!isListView(view)){renderView();return;}
   const all=getFiltered();
   const el=document.getElementById('list');
@@ -2099,9 +2104,7 @@ function updateCounts(){
     project:active.filter(x=>x.type==='project').length
   };
   Object.entries(c).forEach(([k,v])=>{const e=document.getElementById('cnt-'+k);if(e)e.textContent=v;});
-  // Area counts — sidebar badges + the top-of-app switcher.
-  const tasksN=active.filter(isTaskType).length, notesN=active.length-tasksN;
-  [['cnt-area-tasks',tasksN],['cnt-area-notes',notesN],['area-cnt-tasks',tasksN],['area-cnt-notes',notesN]].forEach(([id,v])=>{const e=document.getElementById(id);if(e)e.textContent=v;});
+  updateAreaCounts();
   SELECTABLE_CATS.forEach(k=>{
     const e=document.getElementById('cnt-cat-'+k);
     if(e)e.textContent=active.filter(x=>(x.category||'personal')===k).length;
@@ -2120,6 +2123,15 @@ function updateCounts(){
     const me=document.getElementById('cnt-monthly'); if(me)me.textContent=loadMonthly().templates.length;
     const je=document.getElementById('cnt-journal'); if(je)je.textContent=jEntries().length;
   }catch{}
+}
+// Tasks/Notes counts (top switcher + sidebar area badges) reflect the type-split of the CURRENT
+// filter while in a list area (Work → 8/2, High → high tasks/notes, etc.); on overview views they
+// show global active totals. Refreshed from updateCounts() and on every render (filter/search/sort).
+function updateAreaCounts(){
+  const base = isListView(view) ? getFilteredBase() : load().filter(x=>!x.archived);
+  const tN = base.filter(isTaskType).length, nN = base.length - tN;
+  [['cnt-area-tasks',tN],['cnt-area-notes',nN],['area-cnt-tasks',tN],['area-cnt-notes',nN]]
+    .forEach(([id,v])=>{const e=document.getElementById(id);if(e)e.textContent=v;});
 }
 
 
