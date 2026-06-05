@@ -114,13 +114,16 @@ checks the item off himself. Add `steps` when JB describes a process with phases
 | `gaming` | Video games, consoles & handhelds, PC gaming, **ROMs**/emulation, Pokémon, **AYN Thor**, **Roman TD**, World of Warcraft |
 | `finance` | Bills, taxes, investing, rent, payments |
 | `family` | Mackenzie/Kenzie (partner), **Archie & Gigi** (kids), baby gear/pumps/nursery, JB's dad, extended family |
-| `health` | Training/hypertrophy, diet, medical, appointments |
+| `health` | **Health and Fitness** — training/hypertrophy, diet, medical, appointments, leisure-sport |
 | `shopping` | Buying non-food goods |
 | `grocery` | Food/grocery items |
 | `errands` | Run-around-town chores (coins to cash, key fob batteries) |
-| `personal` | Self, relationships, personal growth, admin |
-| `lifestyle` | Leisure, hobbies, vibe/identity |
-| `general` | Only when nothing else fits |
+| `personal` | Self, relationships, personal growth, admin, **leisure/hobbies/travel** |
+
+There is **no `general` and no `lifestyle`** category — every item must land in a real, specific
+area above (leisure/hobbies/vibe → `personal`; fitness/sport → `health`). The engine never falls
+back to a catch-all; if nothing else fits, choose `personal`. (`general` survives in code only as an
+invisible render fallback — never assign it.)
 
 **Entity shortcuts (always apply — for task/note entry, brain dump, AND screenshots):**
 - **AnswerLab** or **"AL"** → `work`

@@ -25,7 +25,7 @@ const IN_COST = 1.0 / 1_000_000;
 const OUT_COST = 5.0 / 1_000_000;
 const PRECALL_GUARD = 0.003; // conservative per-call reservation
 
-const CATEGORIES = "work | personal | family | finance | tech | gaming | shopping | grocery | errands | lifestyle | health | musubi | general";
+const CATEGORIES = "work | personal | family | finance | tech | gaming | shopping | grocery | errands | health | musubi";
 
 // Entity rules JB set — applied identically to screenshots and brain dumps.
 const ENTITY_RULES = `ENTITY RULES (always apply, they override generic guesses):
@@ -42,14 +42,16 @@ ROUTING RULES:
 
 CATEGORY: pick the single best fit from exactly this set: ${CATEGORIES}.
 ${ENTITY_RULES}
-- musubi = the Musubi Strong apparel brand. work = AnswerLab + freelance design (Heber). family = partner/kids/parents (includes Archie & Gigi). gaming = video games, consoles, PC gaming, ROMs. tech = coding/AI/devices/JB OS. grocery = food. shopping = non-food goods. errands = run-around-town chores. Use general only as a last resort.
+- musubi = the Musubi Strong apparel brand. work = AnswerLab + freelance design (Heber). family = partner/kids/parents (includes Archie & Gigi). gaming = video games, consoles, PC gaming, ROMs. tech = coding/AI/devices/JB OS. health = Health and Fitness (training, diet, medical, leisure-sport). grocery = food. shopping = non-food goods. errands = run-around-town chores. personal = self, relationships, admin, and leisure/hobbies/travel. There is NO general/catch-all — always pick the single best-fitting area; if nothing else fits, use personal.
 
 TYPE: "note" for reference/info, "idea" for a concept/inspiration to explore, "task" for an action, "project" only for a clearly multi-step effort.
 
 LINK: if the screenshot shows or implies a useful URL, return it. For a place/restaurant with no URL, return a Google Maps search URL like "https://www.google.com/maps/search/?api=1&query=NAME+CITY". Otherwise return "".
 
+BODY: a fuller 1-3 sentence description of what it contains and why it matters to JB — add genuinely useful context or a sensible next step. You MAY make an EDUCATED GUESS using what we know about JB (below). If you inferred anything beyond what the screenshot literally shows, set "guess":true; otherwise "guess":false.
+
 Respond with ONLY a valid JSON object — no preamble, no markdown fences, no commentary — matching exactly:
-{"routing":"note|task","type":"note|idea|task|project","title":"<=60 chars","body":"1-3 sentence summary of what it contains and why it matters","category":"<one of the set>","priority":"normal|high","confidence":"high|medium|low","source_hint":"e.g. Instagram post, Google Maps, product page","link":"a URL or empty string"}`;
+{"routing":"note|task","type":"note|idea|task|project","title":"<=60 chars","body":"1-3 sentence context","category":"<one of the set>","priority":"normal|high","confidence":"high|medium|low","source_hint":"e.g. Instagram post, Google Maps, product page","link":"a URL or empty string","guess":true|false}`;
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -71,14 +73,15 @@ RULES:
 - TYPE: "task" if it's actionable (something to do — pay, order, call, buy, fix, schedule), "note" if it's reference/info/an idea/an event to remember ("dad's in town", "idea for...").
 - CATEGORY: the single best fit from exactly this set: ${CATEGORIES}.
   ${ENTITY_RULES}
-  Also: work = AnswerLab + freelance design (Heber); family includes kids (Archie/Gigi); gaming = video games/consoles/PC gaming/ROMs; tech = coding/AI/devices/JB OS; grocery = food; shopping = non-food goods; errands = run-around-town chores. Use general only as a last resort.
+  Also: work = AnswerLab + freelance design (Heber); family includes kids (Archie/Gigi); gaming = video games/consoles/PC gaming/ROMs; tech = coding/AI/devices/JB OS; health = Health and Fitness (training/diet/medical/leisure-sport); grocery = food; shopping = non-food goods; errands = run-around-town chores; personal = self/relationships/admin/leisure/hobbies/travel. There is NO general/catch-all — always pick the single best-fitting area; if nothing else fits, use personal.
 - PRIORITY: "high" ONLY if money is at stake, there's a hard deadline, or it blocks something; otherwise "normal". Never mark a grocery or errands item "high" — those are always low priority (the app sets that automatically).
 - DUEDATE: resolve any time phrase ("today","tomorrow","Friday","next week","the 9th","Jun 9-11") to an absolute YYYY-MM-DD using today=${today}. For a range, use the START date. If no date is implied, null.
-- NOTES: a SHORT extra detail ONLY if the user gave more than the title needs — no padding, never restate the title. Usually "".
+- NOTES: a SHORT one-line extra detail ONLY if the user gave more than the title needs — no padding. Usually "".
+- DESCRIPTION: a fuller 1-2 sentence description that adds genuinely useful context — what it likely means, why it matters to JB, or a sensible next step. You MAY make an EDUCATED GUESS using what we know about JB (below). Don't restate the title and don't pad. If you inferred anything beyond what the text literally says, set "guess":true; if it's purely literal, "guess":false.
 - TITLE: clean, short, scannable.
 
 Respond with ONLY valid JSON — no preamble, no markdown fences:
-{"items":[{"title":"...","type":"task|note","category":"<one of the set>","priority":"normal|high","dueDate":"YYYY-MM-DD or null","notes":"short or empty"}]}`;
+{"items":[{"title":"...","type":"task|note","category":"<one of the set>","priority":"normal|high","dueDate":"YYYY-MM-DD or null","notes":"short or empty","description":"1-2 sentence context","guess":true|false}]}`;
 
 async function brainDump(text: string, admin: any, ANTHROPIC_KEY: string, profile?: string) {
   const today = todayKey();
@@ -123,10 +126,12 @@ async function brainDump(text: string, admin: any, ANTHROPIC_KEY: string, profil
   const clean = items.slice(0, 30).map((it: any) => ({
     title: String(it.title || "").slice(0, 120).trim(),
     type: it.type === "task" ? "task" : "note",
-    category: cats.includes(it.category) ? it.category : "general",
+    category: cats.includes(it.category) ? it.category : "personal",
     priority: it.priority === "high" ? "high" : "normal",
     dueDate: (typeof it.dueDate === "string" && /^\d{4}-\d{2}-\d{2}$/.test(it.dueDate)) ? it.dueDate : null,
     notes: String(it.notes || "").slice(0, 300).trim(),
+    description: String(it.description || "").slice(0, 400).trim(),
+    guess: it.guess === true,
   })).filter((it: any) => it.title);
 
   return json({ items: clean, budget: { spend: budget.spend, cap: DAILY_CAP } });
@@ -150,7 +155,7 @@ async function analyzeConnections(items: any[], admin: any, ANTHROPIC_KEY: strin
   if (budget.date !== today) budget = { date: today, spend: 0 };
   if ((budget.spend || 0) + PRECALL_GUARD > DAILY_CAP) return json({ error: "cap", budget: { spend: budget.spend || 0, cap: DAILY_CAP } });
 
-  const clean = items.slice(0, 60).map((it: any) => ({ id: String(it.id || ""), text: String(it.text || "").slice(0, 160), category: String(it.category || "general") })).filter((it: any) => it.id && it.text);
+  const clean = items.slice(0, 60).map((it: any) => ({ id: String(it.id || ""), text: String(it.text || "").slice(0, 160), category: String(it.category || "personal") })).filter((it: any) => it.id && it.text);
   const ids = new Set(clean.map((it: any) => it.id));
   let connections: any[] = [];
   let usage = { input_tokens: 0, output_tokens: 0 };
@@ -242,6 +247,46 @@ async function extractMemory(mem: any, admin: any, ANTHROPIC_KEY: string) {
   return json({ facts: cleanFacts, entities: cleanEnts, budget: { spend: budget.spend, cap: DAILY_CAP } });
 }
 
+// ===== Describe: write a richer description for one manually-added item =====
+const DESCRIBE_PROMPT = `You write a concise, useful DESCRIPTION for a single item JB just added to JB OS (his personal productivity OS). You're given the item's title, type, and life area, plus what we know about JB.
+Write 1-2 sentences that add genuinely useful context — what it likely means, why it matters to JB, or a sensible next step. You MAY make an EDUCATED GUESS using the profile. Don't restate the title, don't pad, no preamble.
+If you inferred anything beyond the literal title, set "guess":true; otherwise "guess":false.
+Respond with ONLY valid JSON — no fences: {"description":"...","guess":true|false}`;
+
+async function describeItem(d: any, admin: any, ANTHROPIC_KEY: string, profile?: string) {
+  const today = todayKey();
+  const budgetId = `${SPACE}:ss_budget`;
+  const { data: bRow } = await admin.from("jbos_sync").select("payload").eq("id", budgetId).maybeSingle();
+  let budget = (bRow?.payload as { date?: string; spend?: number }) || { date: today, spend: 0 };
+  if (budget.date !== today) budget = { date: today, spend: 0 };
+  if ((budget.spend || 0) + PRECALL_GUARD > DAILY_CAP) return json({ error: "cap", budget: { spend: budget.spend || 0, cap: DAILY_CAP } });
+
+  const title = String(d?.title || "").slice(0, 200).trim();
+  if (!title) return json({ description: "", guess: false });
+  const ctx = `Title: ${title}\nType: ${String(d?.type || "task")}\nLife area: ${String(d?.category || "personal")}`;
+  let description = "", guess = false;
+  let usage = { input_tokens: 0, output_tokens: 0 };
+  try {
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-api-key": ANTHROPIC_KEY, "anthropic-version": "2023-06-01" },
+      body: JSON.stringify({ model: MODEL, max_tokens: 300, system: DESCRIBE_PROMPT + (profile ? "\n\nWHAT WE KNOW ABOUT JB:\n" + String(profile).slice(0, 2000) : ""), messages: [{ role: "user", content: ctx }] }),
+    });
+    const data = await res.json();
+    if (!res.ok) { console.error("anthropic-desc", data); return json({ error: "ai" }); }
+    usage = data.usage || usage;
+    const t = (data.content?.[0]?.text || "").trim().replace(/^```(?:json)?/i, "").replace(/```$/, "").trim();
+    const parsed = JSON.parse(t);
+    description = String(parsed.description || "").slice(0, 400).trim();
+    guess = parsed.guess === true;
+  } catch (e) { console.error("desc-parse", e); return json({ error: "ai" }); }
+
+  const cost = usage.input_tokens * IN_COST + usage.output_tokens * OUT_COST;
+  budget = { date: today, spend: +((budget.spend || 0) + cost).toFixed(6) };
+  await admin.from("jbos_sync").upsert({ id: budgetId, payload: budget, updated_at: new Date().toISOString() });
+  return json({ description, guess, budget: { spend: budget.spend, cap: DAILY_CAP } });
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   if (req.method !== "POST") return json({ error: "method" }, 405);
@@ -269,11 +314,14 @@ Deno.serve(async (req) => {
   }
   if (!authed) return json({ error: "auth" }, 401);
 
-  let payload: { image?: string; persist?: boolean; source_hint?: string; text?: string; connections?: any[]; memory?: any; profile?: string };
+  let payload: { image?: string; persist?: boolean; source_hint?: string; text?: string; connections?: any[]; memory?: any; describe?: any; profile?: string };
   try { payload = await req.json(); } catch { return json({ error: "bad-json" }, 200); }
 
   // ===== "About JB" memory mode: distill + tidy the living profile =====
   if (payload.memory && typeof payload.memory === "object") return await extractMemory(payload.memory, admin, ANTHROPIC_KEY!);
+
+  // ===== Describe mode: richer description for one manually-added item =====
+  if (payload.describe && typeof payload.describe === "object") return await describeItem(payload.describe, admin, ANTHROPIC_KEY!, payload.profile);
 
   // ===== Graph connections mode: find non-obvious links across the items =====
   if (Array.isArray(payload.connections) && payload.connections.length) return await analyzeConnections(payload.connections, admin, ANTHROPIC_KEY!, payload.profile);
@@ -303,7 +351,7 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         model: MODEL,
         max_tokens: 600,
-        system: SYSTEM_PROMPT,
+        system: SYSTEM_PROMPT + (payload.profile ? "\n\nWHAT WE KNOW ABOUT JB (use it for the body's educated guesses):\n" + String(payload.profile).slice(0, 2000) : ""),
         messages: [{
           role: "user",
           content: [
@@ -344,7 +392,8 @@ Deno.serve(async (req) => {
     type: ["note", "idea", "task", "project"].includes(result.type as string) ? result.type : (result.routing === "task" ? "task" : "note"),
     title: String(result.title || "Screenshot").slice(0, 120),
     body: String(result.body || ""),
-    category: String(result.category || "general"),
+    guess: result.guess === true,
+    category: String(result.category || "personal"),
     priority: result.priority === "high" ? "high" : "normal",
     confidence: result.confidence || "medium",
     source_hint: String(result.source_hint || payload.source_hint || ""),
@@ -360,9 +409,9 @@ Deno.serve(async (req) => {
       const { data: tRow } = await admin.from("jbos_sync").select("payload").eq("id", todosId).maybeSingle();
       const items = Array.isArray(tRow?.payload) ? tRow!.payload as any[] : [];
       const now = new Date().toISOString();
-      const validCat = CATEGORIES.split(" | ").includes(out.category) ? out.category : "general";
+      const validCat = CATEGORIES.split(" | ").includes(out.category) ? out.category : "personal";
       items.unshift({
-        id, text: out.title, notes: "", description: out.body,
+        id, text: out.title, notes: "", description: out.body, descGuess: out.guess,
         type: out.type, priority: (validCat === "grocery" || validCat === "errands") ? "low" : out.priority, source: "screenshot", category: validCat,
         emoji: "📸",
         links: /^https?:\/\//i.test(out.link) ? [{ label: out.source_hint ? "Open — " + out.source_hint : "Open link", url: out.link }] : [],

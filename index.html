@@ -93,8 +93,8 @@
   .sb-section{padding:0 8px 12px}
   .sb-label{font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--text-3);padding:8px 8px 4px}
 
-  .nav-item{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:var(--radius);cursor:pointer;color:var(--text-2);transition:background var(--t),color var(--t);font-size:13px;font-weight:450;user-select:none}
-  .nav-item:hover{background:var(--surface-hover);color:var(--text)}
+  .nav-item{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:var(--radius);cursor:pointer;color:var(--text-2);transition:background var(--t),color var(--t),transform var(--t);font-size:13px;font-weight:450;user-select:none}
+  .nav-item:hover{background:var(--surface-hover);color:var(--text);transform:translateX(2px)}
   .nav-item.active{background:var(--accent-dim);color:var(--accent)}
   .nav-item.active:hover{background:var(--accent-dim-h)}
   .nav-icon{width:15px;height:15px;display:flex;align-items:center;justify-content:center;flex-shrink:0;opacity:.7}
@@ -314,6 +314,9 @@
   @keyframes itemIn{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
   .item{animation:itemIn .42s cubic-bezier(.16,1,.3,1) both;animation-delay:calc(var(--i,0)*32ms)}
   @keyframes headIn{from{opacity:0}to{opacity:1}}
+  /* Subtle one-shot entrance on every view switch (re-armed by _animateView) */
+  @keyframes viewIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  #list.view-in{animation:viewIn .26s cubic-bezier(.16,1,.3,1)}
   .section-head,.routine-banner,.cal-grid{animation:headIn .4s ease both}
 
   /* Modal + detail entrance */
@@ -655,8 +658,9 @@
     .detail-modal,.modal{max-height:calc(100vh - 26px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));max-height:calc(100dvh - 26px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))}
     .tabbar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:80;background:color-mix(in srgb,var(--surface) 92%,transparent);backdrop-filter:saturate(140%) blur(12px);-webkit-backdrop-filter:saturate(140%) blur(12px);border-top:1px solid var(--border);padding-bottom:env(safe-area-inset-bottom,0px)}
     .tabbar button{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;color:var(--text-3);font-size:9.5px;font-weight:500;font-family:inherit;padding:7px 0 6px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:color var(--t)}
-    .tabbar button svg{width:21px;height:21px}
+    .tabbar button svg{width:21px;height:21px;transition:transform var(--t)}
     .tabbar button.active{color:var(--accent)}
+    .tabbar button.active svg{transform:scale(1.12) translateY(-1px)}
     .list-area{padding-bottom:calc(74px + env(safe-area-inset-bottom,0px))}
     .sidebar{position:fixed;left:0;top:0;bottom:0;z-index:300;transform:translateX(-100%);transition:transform .22s ease;box-shadow:0 0 40px rgba(0,0,0,.55);padding-top:env(safe-area-inset-top,0px);overscroll-behavior:contain}
     .app.nav-open .sidebar{transform:translateX(0)}
@@ -1001,6 +1005,8 @@
   .bd-chip.prio{color:var(--red);border-color:color-mix(in srgb,var(--red) 35%,var(--border))}
   .bd-del{margin-left:auto;background:none;border:none;color:var(--text-3);cursor:pointer;font-size:13px;padding:2px 6px;border-radius:5px;line-height:1}
   .bd-del:hover{background:var(--surface-hover);color:var(--red)}
+  /* "✦ inferred" chip — marks an AI/educated-guess description (uses the same gold AI accent) */
+  .desc-guess{display:inline-flex;align-items:center;font-size:9px;font-weight:600;letter-spacing:.04em;color:#e6c869;background:color-mix(in srgb,#e6c869 11%,transparent);border:1px solid color-mix(in srgb,#e6c869 26%,transparent);border-radius:20px;padding:1px 6px;margin-left:7px;vertical-align:1px;white-space:nowrap;cursor:help}
 
   /* ===== About JB — living memory ===== */
   .mem-sub{font-size:11.5px;color:var(--text-3);margin:2px 0 12px;line-height:1.5}
@@ -1379,7 +1385,7 @@
     </div>
 
     <div class="detail-section">
-      <div class="detail-section-title">Description</div>
+      <div class="detail-section-title">Description <span class="desc-guess" id="d-desc-guess" style="display:none">✦ inferred</span></div>
       <textarea id="d-description" class="detail-desc" placeholder="Add more detail, context, sub-tasks, links inline…"></textarea>
     </div>
 
@@ -1562,11 +1568,14 @@ const CATS = {
   shopping: {label:'Shopping',     color:'#fb923c', dim:'rgba(251,146,60,.12)'},
   grocery:  {label:'Grocery',      color:'#10b981', dim:'rgba(16,185,129,.12)'},
   errands:  {label:'Errands',      color:'#fb7185', dim:'rgba(251,113,133,.12)'},
-  lifestyle:{label:'Lifestyle',    color:'#a3e635', dim:'rgba(163,230,53,.12)'},
-  health:   {label:'Health',       color:'#2dd4bf', dim:'rgba(45,212,191,.12)'},
+  health:   {label:'Health and Fitness', color:'#2dd4bf', dim:'rgba(45,212,191,.12)'},
   musubi:   {label:'Musubi Strong',color:'#f87171', dim:'rgba(248,113,113,.12)'},
+  // 'general' is retired as a user-facing area — it never shows in nav/dropdowns/AI and is never
+  // assigned (defaults are 'personal'). It stays ONLY as an invisible fallback so the many
+  // defensive `CATS[c]||CATS.general` lookups never resolve to undefined.
   general:  {label:'General',      color:'#7e7e8c', dim:'rgba(126,126,140,.12)'},
 };
+const SELECTABLE_CATS = Object.keys(CATS).filter(k=>k!=='general'); // user-facing life areas (general hidden)
 
 // Graph "concept" nodes — entities (people, tools, efforts) extracted from item text so items
 // wire together through shared meaning, not just their category. A concept only appears when it
@@ -1613,13 +1622,13 @@ function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2
 function buildCatOptions(selId){
   const sel=document.getElementById(selId);
   if(!sel)return;
-  sel.innerHTML=Object.entries(CATS).map(([k,v])=>`<option value="${k}">${v.label}</option>`).join('');
-  if(CATS.general)sel.value='general';
+  sel.innerHTML=SELECTABLE_CATS.map(k=>`<option value="${k}">${CATS[k].label}</option>`).join('');
+  sel.value='personal';
 }
 
 function buildCatNav(){
   const el=document.getElementById('cat-nav');
-  el.innerHTML=Object.entries(CATS).map(([k,v])=>`
+  el.innerHTML=Object.entries(CATS).filter(([k])=>k!=='general').map(([k,v])=>`
     <div class="nav-item" id="nav-cat-${k}" data-cat="${k}" onclick="setFilter('${k}','cat')" role="button" tabindex="0"
          style="--cat-color:${v.color};--cat-dim:${v.dim}">
       <span class="cat-dot" style="background:${v.color}"></span>
@@ -1859,7 +1868,8 @@ function itemHTML(item, isArchiveView, idx){
   const srcIcon=item.source==='telegram'?'↗':item.source==='screenshot'?'📸':item.source==='braindump'?'🧠':'·';
   const src=`<span class="item-src">${srcIcon} ${esc(srcLabel)}</span>`;
   const sub=item.description?item.description:item.notes;
-  const notes=sub?`<div class="item-sub">${esc(sub)}</div>`:'';
+  const guessTag=(item.descGuess&&item.description)?`<span class="desc-guess" title="AI-inferred from what JB OS knows about you">✦ inferred</span>`:'';
+  const notes=sub?`<div class="item-sub">${esc(sub)}${guessTag}</div>`:'';
   const archivedDate=item.archivedAt?`<span class="item-date">done ${ageStr(item.archivedAt)}</span>`:'';
   // Detail indicators
   const indParts=[];
@@ -2053,9 +2063,9 @@ function updateCounts(){
     project:active.filter(x=>x.type==='project').length
   };
   Object.entries(c).forEach(([k,v])=>{const e=document.getElementById('cnt-'+k);if(e)e.textContent=v;});
-  Object.keys(CATS).forEach(k=>{
+  SELECTABLE_CATS.forEach(k=>{
     const e=document.getElementById('cnt-cat-'+k);
-    if(e)e.textContent=active.filter(x=>(x.category||'general')===k).length;
+    if(e)e.textContent=active.filter(x=>(x.category||'personal')===k).length;
   });
   PRIORITY_IDS.forEach(p=>{
     const e=document.getElementById('cnt-prio-'+p);
@@ -2103,7 +2113,7 @@ function cmdCommands(){
   add('Action','⤒','Import data','',function(){importJSON();});
   [['overdue','Overdue'],['soon','Due soon']].forEach(function(d){add('Due','⏰',d[1],'',function(){setView('list');setFilter(d[0],'due');});});
   PRIORITIES.forEach(function(p){add('Priority','◆',p.id==='in_progress'?p.label:p.label+' priority','',function(){setView('list');setFilter(p.id,'prio');});});
-  Object.keys(CATS).forEach(function(k){add('Life area',guessEmoji('',k),CATS[k].label,'',function(){setView('list');setFilter(k,'cat');});});
+  SELECTABLE_CATS.forEach(function(k){add('Life area',guessEmoji('',k),CATS[k].label,'',function(){setView('list');setFilter(k,'cat');});});
   [['task','Tasks'],['idea','Ideas'],['note','Notes'],['project','Projects']].forEach(function(t){add('Type','🏷️',t[1],'',function(){setView('list');setFilter(t[0],'type');});});
   load().filter(function(x){return !x.archived;}).forEach(function(it){add('Items',(it.emoji||'•'),it.text||'Untitled',(CATS[it.category||'general']||CATS.general).label,function(){setView('list');openDetail(it.id);});});
   return c;
@@ -2142,13 +2152,14 @@ function addFromModal(){
 }
 
 /* ===== Item Detail (Notion-style) — also used to CREATE new items (full editor) ===== */
-let detailId=null, _dAttach=[], _isNew=false, _draftItem=null;
+let detailId=null, _dAttach=[], _isNew=false, _draftItem=null, _dCatAuto=false; // _dCatAuto: a new item auto-categorizes from its title unless the user picks an area
 
 // Populate the detail editor from an item (existing or a fresh draft) and show it.
 function _fillDetail(it,isNew){
   _dAttach=(it.attachments||[]).map(a=>({...a}));
   document.getElementById('d-title').value=it.text||'';
   document.getElementById('d-description').value=it.description||it.notes||'';
+  var _dg=document.getElementById('d-desc-guess'); if(_dg)_dg.style.display=(it.descGuess&&it.description)?'':'none';
   document.getElementById('d-status').value=it.archived?'done':'active';
   document.getElementById('d-cat').value=it.category||'general';
   document.getElementById('d-type').value=normType(it.type||'task');
@@ -2170,7 +2181,8 @@ function _fillDetail(it,isNew){
     const updated=it.updatedAt?new Date(it.updatedAt).toLocaleString():created;
     document.getElementById('d-meta').innerHTML=`<span>Created ${esc(created)}</span><span>Last edited ${esc(updated)}</span><span>Source: ${esc(SRC_LABEL[it.source]||it.source||'manual')}</span>`;
   }
-  ['d-cat','d-type','d-priority','d-status'].forEach(sid=>{document.getElementById(sid).onchange=renderDetailBadges;});
+  ['d-type','d-priority','d-status'].forEach(sid=>{document.getElementById(sid).onchange=renderDetailBadges;});
+  document.getElementById('d-cat').onchange=function(){_dCatAuto=false;renderDetailBadges();}; // picking an area opts out of auto-detect
   document.getElementById('detail').classList.remove('hidden');
   setTimeout(()=>document.getElementById('d-title').focus(),50);
 }
@@ -2183,9 +2195,11 @@ function openDetail(id){
 // in memory and is only written to the store on Save — Cancel/Esc discards it cleanly.
 function openCreate(){
   _lastFocus=document.activeElement; _isNew=true;
+  const forced=(filterMode==='cat'&&CATS[filter]&&filter!=='general'); // opened from a life-area filter → use it
+  _dCatAuto=!forced; // otherwise auto-categorize from the title on save
   const it={id:uid(),text:'',type:(filterMode==='type')?normType(filter):'task',
     priority:(filterMode==='prio'&&PRIORITY_IDS.includes(filter))?filter:'normal',
-    category:(filterMode==='cat'&&CATS[filter])?filter:'general',
+    category:forced?filter:'personal',
     source:'browser',description:'',steps:[],links:[],attachments:[]};
   _draftItem=it; detailId=it.id;
   _fillDetail(it,true);
@@ -2341,6 +2355,7 @@ function saveDetail(){
   if(isNew && !title){ toast('Give it a title first'); document.getElementById('d-title').focus(); return; }
   it.text=title||it.text;
   it.description=document.getElementById('d-description').value.trim();
+  const wantDesc=isNew && !it.description; // new item with no description → auto-generate one after save
   it.category=document.getElementById('d-cat').value;
   it.type=document.getElementById('d-type').value;
   it.priority=document.getElementById('d-priority').value;
@@ -2356,7 +2371,7 @@ function saveDetail(){
   it.links=collectLinks();
   it.attachments=_dAttach;
   if(isNew){
-    if(!it.category||it.category==='general')it.category=guessCategory(it.text,it.description); // auto-organize if left General
+    if(_dCatAuto||!it.category||it.category==='general')it.category=guessCategory(it.text,it.description); // auto-categorize unless the user picked an area
     it.emoji=it.emoji||guessEmoji(it.text,it.category);
     it.done=!!it.done; it.archived=!!it.archived;
     it.createdAt=it.createdAt||new Date().toISOString();
@@ -2369,6 +2384,18 @@ function saveDetail(){
   catch(err){toast('Storage full — remove a large attachment and retry');return;}
   render();updateCounts();closeDetail();
   toast(isNew?('Added: '+it.text.slice(0,44)):'Saved');
+  if(wantDesc)generateDescription(it.id,it.text,it.type,it.category); // non-blocking AI description backfill
+}
+// Ask the AI for a richer description (using the About-JB profile) and backfill it onto the item.
+function generateDescription(id,title,type,category){
+  if(!SB||!_sbAuthed)return;
+  SB.functions.invoke('analyze-screenshot',{body:{describe:{title:title,type:type,category:category},profile:memProfileText()}}).then(function(res){
+    var data=res.data;
+    if(res.error||!data||data.error||!data.description)return;
+    var items=load(), it=items.find(function(x){return x.id===id;}); if(!it||it.description)return; // skip if gone or filled meanwhile
+    it.description=data.description; if(data.guess)it.descGuess=true; it.updatedAt=new Date().toISOString();
+    save(items); if(view==='list'||view==='dashboard')render(); updateCounts();
+  }).catch(function(){});
 }
 
 function deleteFromDetail(){
@@ -2467,7 +2494,7 @@ function guessCategory(text,notes){
     [/\bgym\b|workout|work ?out|\blift\b|\btrain(ing)?\b|cardio|\bdiet\b|protein|macros|doctor|dentist|appointment|checkup|therapy|\bsleep\b|stretch|mobility|\bmeds?\b|vitamin|supplement|deload|mesocycle|\bwalk\b|\bsteps?\b/,'health',2],
     [/grocer|\bmilk\b|\beggs?\b|\bbread\b|tuna|\bahi\b|poke|chicken|\bbeef\b|\brice\b|\bsnacks?\b|produce|\bfruit\b|veggie|trader joe|\bfood\b/,'grocery',2],
     [/errand|\bcoins?\b|key fob|\bfob\b|post office|\bdmv\b|dry clean|car wash|oil change|\breturn\b|drop ?off/,'errands',2],
-    [/\bmovie\b|\bshow\b|\bhobby\b|vacation|\btrip\b|\btravel\b|concert|\bsurf\b|\bbeach\b|leisure/,'lifestyle',2],
+    [/\bmovie\b|\bshow\b|\bhobby\b|vacation|\btrip\b|\btravel\b|concert|\bsurf\b|\bbeach\b|leisure/,'personal',2],
     [/haircut|barber|relationship|\badmin\b|password|reflect|self-?care|journal/,'personal',2],
     // generic verbs / weak cues
     [/\bbuy\b|\border\b|\bshop\b|purchase|amazon|\bcart\b|\bgear\b|accessor/,'shopping',1],
@@ -2480,7 +2507,7 @@ function guessCategory(text,notes){
   if(/\bAL\b/.test(raw)) score.work=(score.work||0)+3; // "AL" = AnswerLab (match uppercase on the raw text)
   let best=null,bestScore=0;
   for(const sig of SIG){ const v=score[sig[1]]||0; if(v>bestScore){bestScore=v;best=sig[1];} }
-  return best||'general';
+  return best||'personal'; // no 'general' fallback — always land in a real life area
 }
 function guessEmoji(text,category){
   const s=(text||'').toLowerCase();
@@ -2515,7 +2542,7 @@ function guessEmoji(text,category){
     [/idea|brainstorm|concept/,'💡']
   ];
   for(let i=0;i<map.length;i++){if(map[i][0].test(s))return map[i][1];}
-  const c={work:'💼',personal:'🌿',family:'👨‍👩‍👧',finance:'💰',tech:'💻',gaming:'🎮',shopping:'🛒',grocery:'🛒',errands:'🧾',lifestyle:'✨',health:'🩺',musubi:'🌺',general:'📌'};
+  const c={work:'💼',personal:'🌿',family:'👨‍👩‍👧',finance:'💰',tech:'💻',gaming:'🎮',shopping:'🛒',grocery:'🛒',errands:'🧾',health:'🩺',musubi:'🌺'};
   return c[category]||'📌';
 }
 
@@ -2581,7 +2608,7 @@ function createCapturedItem(r){
   const priority=(category==='grocery'||category==='errands')?'low':(r.priority==='high'?'high':'normal');
   const title=(r.title||'Screenshot').slice(0,120);
   const item={id:uid(),text:title,notes:'',description:r.body||'',type,priority,source:'screenshot',category,
-    emoji:guessEmoji(title,category),
+    emoji:guessEmoji(title,category),descGuess:r.guess===true,
     links:(r.link&&/^https?:\/\//i.test(r.link))?[{label:r.source_hint?('Open — '+r.source_hint):'Open link',url:r.link}]:[],
     attachments:r.imageUrl?[{name:'screenshot.jpg',type:'image/jpeg',url:r.imageUrl}]:[],
     done:false,archived:false,createdAt:now,updatedAt:now};
@@ -2636,11 +2663,11 @@ async function runBrainDump(){
 }
 function renderDumpPreview(items){
   const wrap=document.getElementById('bd-preview');
-  const catOpts=Object.entries(CATS).map(([k,v])=>'<option value="'+k+'">'+esc(v.label)+'</option>').join('');
+  const catOpts=SELECTABLE_CATS.map(k=>'<option value="'+k+'">'+esc(CATS[k].label)+'</option>').join('');
   wrap.innerHTML=items.map(it=>{
     const due=it.dueDate?'<span class="bd-chip">📅 '+esc(fmtDue(it.dueDate))+'</span>':'';
     const prio=it.priority==='high'?'<span class="bd-chip prio">● High</span>':'';
-    return '<div class="bd-item" data-due="'+esc(it.dueDate||'')+'" data-prio="'+(it.priority==='high'?'high':'normal')+'" data-notes="'+esc(it.notes||'')+'">'
+    return '<div class="bd-item" data-due="'+esc(it.dueDate||'')+'" data-prio="'+(it.priority==='high'?'high':'normal')+'" data-notes="'+esc(it.notes||'')+'" data-desc="'+esc(it.description||'')+'" data-guess="'+(it.guess?'1':'')+'">'
       +'<input class="bd-title" value="'+esc(it.title||'')+'" aria-label="Item title">'
       +'<div class="bd-meta">'
         +'<select class="bd-type" aria-label="Type"><option value="task"'+(it.type==='task'?' selected':'')+'>Task</option><option value="note"'+(it.type!=='task'?' selected':'')+'>Note</option></select>'
@@ -2650,7 +2677,7 @@ function renderDumpPreview(items){
       +'</div></div>';
   }).join('');
   // set each category select to its parsed value (fallback general)
-  [...wrap.querySelectorAll('.bd-item')].forEach((row,i)=>{row.querySelector('.bd-cat').value=CATS[items[i].category]?items[i].category:'general';});
+  [...wrap.querySelectorAll('.bd-item')].forEach((row,i)=>{row.querySelector('.bd-cat').value=(CATS[items[i].category]&&items[i].category!=='general')?items[i].category:'personal';});
   bdSync();
 }
 function bdSync(){const n=document.querySelectorAll('#bd-preview .bd-item').length;const s=document.getElementById('bd-save');if(s){s.textContent='Save all'+(n?' ('+n+')':'');s.style.display=n?'':'none';}}
@@ -2665,8 +2692,10 @@ function saveDumpItems(){
     const priority=(category==='grocery'||category==='errands')?'low':(row.getAttribute('data-prio')==='high'?'high':'normal');
     const dueDate=row.getAttribute('data-due')||'';
     const notes=row.getAttribute('data-notes')||'';
-    const item={id:uid(),text:title,notes:'',description:notes,type,priority,source:'braindump',category,
+    const description=row.getAttribute('data-desc')||notes;
+    const item={id:uid(),text:title,notes:'',description:description,type,priority,source:'braindump',category,
       emoji:guessEmoji(title,category),links:[],attachments:[],done:false,archived:false,createdAt:now,updatedAt:now};
+    if(row.getAttribute('data-guess'))item.descGuess=true;
     if(dueDate)item.dueDate=dueDate;
     arr.unshift(item); if(!firstId)firstId=item.id; saved++;
   });
@@ -2742,7 +2771,7 @@ function toast(msg,actionLabel,actionFn){
         .filter(x=>!localIds.has(x.id) && !_tombed(x,tomb))
         .map(x=>{
           const rawCat=catRemap[x.category]||x.category||'general';
-          const autoOrganize=!x.category||rawCat==='general';
+          const autoOrganize=!x.category||rawCat==='general'||rawCat==='lifestyle';
           const nextType=x.type||(autoOrganize?guessType(x.text,x.notes||x.description):'task');
           const nextCat=autoOrganize?guessCategory(x.text,x.notes||x.description):rawCat;
           const nextPrio=(nextCat==='grocery'||nextCat==='errands')?'low':(x.priority||'normal');
@@ -2784,7 +2813,7 @@ function toast(msg,actionLabel,actionFn){
         if(_tombed(s,tomb))return;
         var ex=byId[s.id];
         if(!ex){
-          store.templates.push(Object.assign({notes:'',priority:'normal',type:'task',category:'general',createdAt:new Date().toISOString()}, s));
+          store.templates.push(Object.assign({notes:'',priority:'normal',type:'task',category:'personal',createdAt:new Date().toISOString()}, s));
           changed=true;
         } else if(!ex.userEdited){
           // Seed updates un-edited items (streak log is keyed by id, so history is preserved).
@@ -2850,7 +2879,7 @@ function openRoutineEdit(scope,id){
   document.getElementById('rt-scope-word').textContent=scope==='daily'?'every day':'every month';
   document.getElementById('rt-text').value=t.text||'';
   document.getElementById('rt-notes').value=t.notes||'';
-  document.getElementById('rt-cat').value=t.category||'general';
+  document.getElementById('rt-cat').value=t.category||'personal';
   document.getElementById('rt-priority').value=t.priority||'normal';
   const del=document.getElementById('rt-delete'); if(del)del.style.display='';
   const sv=document.getElementById('rt-save'); if(sv)sv.textContent='Save changes';
@@ -2941,7 +2970,7 @@ function openRoutineNew(scope){
   document.getElementById('rt-scope-word').textContent=scope==='daily'?'every day':'every month';
   document.getElementById('rt-text').value='';
   document.getElementById('rt-notes').value='';
-  document.getElementById('rt-cat').value='general';
+  document.getElementById('rt-cat').value='personal';
   document.getElementById('rt-priority').value='normal';
   const del=document.getElementById('rt-delete'); if(del)del.style.display='none';
   const sv=document.getElementById('rt-save'); if(sv)sv.textContent='Add';
@@ -2950,13 +2979,15 @@ function openRoutineNew(scope){
 }
 function setView(v){
   closeNav();
-  if(v==='list'){view='list';applyViewChrome('list');setFilter(filter,filterMode);updateCounts();return;}
+  if(v==='list'){view='list';applyViewChrome('list');setFilter(filter,filterMode);updateCounts();_animateView();return;}
   view=v; syncWorkspaceNav(v); applyViewChrome(v);
   ['nav-all','nav-active','nav-archive','nav-task','nav-idea','nav-note','nav-project','nav-overdue','nav-soon'].forEach(id=>{const e=document.getElementById(id);if(e)e.classList.remove('active');});
   document.querySelectorAll('[id^="nav-prio-"]').forEach(e=>e.classList.remove('active'));
   document.querySelectorAll('[id^="nav-cat-"]').forEach(e=>e.classList.remove('active','cat-active'));
-  render(); updateCounts();
+  render(); updateCounts(); _animateView();
 }
+// Gentle one-shot fade/slide on every view switch — re-arms the CSS animation on #list.
+function _animateView(){var el=document.getElementById('list');if(!el)return;el.classList.remove('view-in');void el.offsetWidth;el.classList.add('view-in');}
 function setTitle(text,count){
   const pt=document.getElementById('page-title');
   document.getElementById('page-title-dot').style.display='none';
@@ -4139,6 +4170,16 @@ function purgeOldArchived(){
   if(purged){ saveTombMap(tomb); save(keep); }
   return purged;
 }
+// One-time re-sort: the retired 'lifestyle' / 'general' areas → a real life area via the keyword engine.
+var _DEAD_CATS={lifestyle:1,general:1};
+function migrateCategories(){
+  var items=load(), now=new Date().toISOString(), changed=0;
+  for(var i=0;i<items.length;i++){var it=items[i];
+    if(it&&_DEAD_CATS[it.category]){ it.category=guessCategory(it.text||'', (it.notes||'')+' '+(it.description||'')); it.updatedAt=now; changed++; }
+  }
+  if(changed)save(items);
+  return changed;
+}
 function _tombed(x,tomb){var t=tomb&&tomb[x&&x.id];return !!(t&&t>=_itemTs(x));} // dead unless item is newer than its tombstone
 function _mergeTomb(r,l){var o={};[r||{},l||{}].forEach(function(m){Object.keys(m).forEach(function(id){if(!o[id]||m[id]>o[id])o[id]=m[id];});});return o;}
 // Apply a merged tombstone map, then prune every store so removals propagate even
@@ -4352,6 +4393,7 @@ function sbAuthUI(user){
 
 if(load().length)_booting=false;
 purgeOldArchived(); // drop archived items older than ~1 month (tombstoned so sync won't bring them back)
+migrateCategories(); // re-sort any retired lifestyle/general items into a real life area
 // Defer the first render one tick so every top-level const (incl. the Musubi MZ_* data
 // the dashboard now previews) is initialized before renderDashboard runs — avoids a TDZ crash.
 setTimeout(function(){render();},0);
