@@ -44,6 +44,9 @@
     --accent-dim:rgba(232,160,32,.1);
     --accent-dim-h:rgba(232,160,32,.18);
     --accent-ring:rgba(232,160,32,.35);
+    /* Area identity: Tasks rides the brand amber, Notes shifts to a calm blue. --area follows the
+       active list area (set via the .area-notes class on .app) and tints area-identity chrome only. */
+    --area:var(--accent);--area-dim:var(--accent-dim);--area-dim-h:var(--accent-dim-h);--area-ring:var(--accent-ring);
     --green:#46d489;--green-dim:rgba(70,212,137,.1);
     --blue:#5b9df6;--blue-dim:rgba(91,157,246,.1);
     --purple:#a78bfa;--purple-dim:rgba(167,139,250,.1);
@@ -60,6 +63,9 @@
     --shadow-modal:0 30px 80px -24px rgba(0,0,0,.7);
     color-scheme:dark; /* native date picker, select popups, scrollbars render dark */
   }
+  /* Notes area: re-tint the area-identity surfaces (active nav, area switcher, faint content wash) to
+     blue. Brand amber (--accent) stays for the logo/primary button so the overall aesthetic holds. */
+  .app.area-notes{--area:var(--blue);--area-dim:var(--blue-dim);--area-dim-h:rgba(91,157,246,.18);--area-ring:rgba(91,157,246,.35)}
   html,body{height:100%;font-family:'Geist',system-ui,-apple-system,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
   ::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border-2);border-radius:3px}::-webkit-scrollbar-thumb:hover{background:var(--text-3)}
   ::selection{background:var(--accent-dim);color:var(--accent)}
@@ -95,12 +101,12 @@
 
   .nav-item{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:var(--radius);cursor:pointer;color:var(--text-2);transition:background var(--t),color var(--t),transform var(--t);font-size:13px;font-weight:450;user-select:none}
   .nav-item:hover{background:var(--surface-hover);color:var(--text);transform:translateX(2px)}
-  .nav-item.active{background:var(--accent-dim);color:var(--accent)}
-  .nav-item.active:hover{background:var(--accent-dim-h)}
+  .nav-item.active{background:var(--area-dim);color:var(--area)}
+  .nav-item.active:hover{background:var(--area-dim-h)}
   .nav-icon{width:15px;height:15px;display:flex;align-items:center;justify-content:center;flex-shrink:0;opacity:.7}
   .nav-item.active .nav-icon{opacity:1}
   .nav-count{margin-left:auto;font-size:11px;font-weight:500;background:var(--surface-hover);padding:1px 5px;border-radius:9px;color:var(--text-3);min-width:18px;text-align:center}
-  .nav-item.active .nav-count{background:var(--accent-dim-h);color:var(--accent)}
+  .nav-item.active .nav-count{background:var(--area-dim-h);color:var(--area)}
 
   /* Category nav items use a color dot instead of icon */
   .cat-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
@@ -659,7 +665,7 @@
     .tabbar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:80;background:color-mix(in srgb,var(--surface) 92%,transparent);backdrop-filter:saturate(140%) blur(12px);-webkit-backdrop-filter:saturate(140%) blur(12px);border-top:1px solid var(--border);padding-bottom:env(safe-area-inset-bottom,0px)}
     .tabbar button{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;color:var(--text-3);font-size:9.5px;font-weight:500;font-family:inherit;padding:7px 0 6px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:color var(--t)}
     .tabbar button svg{width:21px;height:21px;transition:transform var(--t)}
-    .tabbar button.active{color:var(--accent)}
+    .tabbar button.active{color:var(--area)}
     .tabbar button.active svg{transform:scale(1.12) translateY(-1px)}
     .list-area{padding-bottom:calc(74px + env(safe-area-inset-bottom,0px))}
     .sidebar{position:fixed;left:0;top:0;bottom:0;z-index:300;transform:translateX(-100%);transition:transform .22s ease;box-shadow:0 0 40px rgba(0,0,0,.55);padding-top:env(safe-area-inset-top,0px);overscroll-behavior:contain}
@@ -957,9 +963,20 @@
   .seg-group{display:inline-flex;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:2px;gap:2px}
   .seg{appearance:none;border:none;background:none;font-family:inherit;font-size:12.5px;font-weight:600;color:var(--text-2);padding:5px 14px;border-radius:6px;cursor:pointer;transition:background var(--t),color var(--t);white-space:nowrap}
   .seg:hover{color:var(--text)}
-  .seg.on{background:var(--accent-dim);color:var(--accent)}
+  .seg.on{background:var(--area-dim);color:var(--area)}
   .seg-bar .sort-select{margin-left:auto}
   @media(max-width:560px){.seg{flex:1;text-align:center;padding:7px 10px}.seg-group{flex:1}}
+  /* Top-of-app area switcher (Tasks | Notes) — the primary, color-coded identity control. */
+  .area-switch{display:flex;align-items:center;padding:0 24px 11px}
+  .area-switch-group{display:inline-flex;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:3px;gap:3px}
+  .area-tab{appearance:none;border:none;background:none;font-family:inherit;font-size:13px;font-weight:600;color:var(--text-2);padding:7px 17px;border-radius:6px;cursor:pointer;display:inline-flex;align-items:center;gap:7px;white-space:nowrap;transition:background var(--t),color var(--t)}
+  .area-tab svg{width:14px;height:14px;flex-shrink:0}
+  .area-tab:hover{color:var(--text)}
+  .area-tab.on{background:var(--area-dim);color:var(--area)}
+  .area-tab-count{font-size:11px;font-weight:600;opacity:.6;font-variant-numeric:tabular-nums}
+  /* Subtle "you're in Notes" wash — a soft blue fade across the top of the content, nothing jarring. */
+  .app.area-notes .list-area{background:linear-gradient(180deg,var(--blue-dim),transparent 240px)}
+  @media(max-width:560px){.area-switch{padding:0 16px 10px}.area-switch-group{flex:1}.area-tab{flex:1;justify-content:center;padding:8px 10px}}
 
   /* ===== Data menu (consolidated Import / Export) ===== */
   .data-menu-wrap{position:relative;display:inline-flex}
@@ -1100,9 +1117,13 @@
       <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 9.5L8 4l6 5.5"/><path d="M3.5 8.5V13a.5.5 0 0 0 .5.5h3v-3h2v3h3a.5.5 0 0 0 .5-.5V8.5"/></svg>
       Today
     </div>
-    <div class="nav-item" id="nav-view-list" onclick="setView('list')" role="button" tabindex="0">
-      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 4h9M5 8h9M5 12h9"/><circle cx="2.4" cy="4" r="1"/><circle cx="2.4" cy="8" r="1"/><circle cx="2.4" cy="12" r="1"/></svg>
-      Tasks &amp; Notes
+    <div class="nav-item" id="nav-view-tasks" onclick="setView('tasks')" role="button" tabindex="0">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6.5 4.5h8M6.5 8h8M6.5 11.5h8"/><path d="M2 4l1 1 1.6-1.8M2 7.5l1 1 1.6-1.8M2 11l1 1 1.6-1.8"/></svg>
+      Tasks <span class="nav-count" id="cnt-area-tasks">0</span>
+    </div>
+    <div class="nav-item" id="nav-view-notes" onclick="setView('notes')" role="button" tabindex="0">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 2.5h5l3 3v8a.5.5 0 0 1-.5.5H4.5a.5.5 0 0 1-.5-.5V3a.5.5 0 0 1 .5-.5z"/><path d="M9 2.5v3h3M6 8.5h4M6 11h4"/></svg>
+      Notes <span class="nav-count" id="cnt-area-notes">0</span>
     </div>
     <div class="nav-item" id="nav-view-daily" onclick="setView('daily')" role="button" tabindex="0">
       <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="3"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3 3l1.4 1.4M11.6 11.6L13 13M13 3l-1.4 1.4M4.4 11.6L3 13"/></svg>
@@ -1246,6 +1267,19 @@
     </div>
   </div>
 
+  <div class="area-switch" id="area-switch" style="display:none">
+    <div class="area-switch-group" role="group" aria-label="Switch between Tasks and Notes">
+      <button class="area-tab" id="area-tab-tasks" onclick="setView('tasks')" aria-pressed="false">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6.5 4.5h8M6.5 8h8M6.5 11.5h8"/><path d="M2 4l1 1 1.6-1.8M2 7.5l1 1 1.6-1.8M2 11l1 1 1.6-1.8"/></svg>
+        Tasks <span class="area-tab-count" id="area-cnt-tasks">0</span>
+      </button>
+      <button class="area-tab" id="area-tab-notes" onclick="setView('notes')" aria-pressed="false">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 2.5h5l3 3v8a.5.5 0 0 1-.5.5H4.5a.5.5 0 0 1-.5-.5V3a.5.5 0 0 1 .5-.5z"/><path d="M9 2.5v3h3M6 8.5h4M6 11h4"/></svg>
+        Notes <span class="area-tab-count" id="area-cnt-notes">0</span>
+      </button>
+    </div>
+  </div>
+
   </div>
 
   <div class="list-area" id="list" role="list"></div>
@@ -1253,8 +1287,8 @@
 
 <nav class="tabbar" id="tabbar" aria-label="Primary">
   <button id="tab-dashboard" onclick="setView('dashboard')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 9.5L8 4l6 5.5"/><path d="M3.5 8.5V13a.5.5 0 0 0 .5.5h3v-3h2v3h3a.5.5 0 0 0 .5-.5V8.5"/></svg>Today</button>
-  <button id="tab-list" onclick="setView('list')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 4h8M6 8h8M6 12h6"/><circle cx="3" cy="4" r="1" fill="currentColor" stroke="none"/><circle cx="3" cy="8" r="1" fill="currentColor" stroke="none"/><circle cx="3" cy="12" r="1" fill="currentColor" stroke="none"/></svg>List</button>
-  <button id="tab-daily" onclick="setView('daily')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="3"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3 3l1.4 1.4M11.6 11.6L13 13M13 3l-1.4 1.4M4.4 11.6L3 13"/></svg>Daily</button>
+  <button id="tab-tasks" onclick="setView('tasks')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6.5 4.5h8M6.5 8h8M6.5 11.5h8"/><path d="M2 4l1 1 1.6-1.8M2 7.5l1 1 1.6-1.8M2 11l1 1 1.6-1.8"/></svg>Tasks</button>
+  <button id="tab-notes" onclick="setView('notes')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 2.5h5l3 3v8a.5.5 0 0 1-.5.5H4.5a.5.5 0 0 1-.5-.5V3a.5.5 0 0 1 .5-.5z"/><path d="M9 2.5v3h3M6 8.5h4M6 11h4"/></svg>Notes</button>
   <button id="tab-journal" onclick="setView('journal')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3.5 2.5H10a1.5 1.5 0 0 1 1.5 1.5v9.5H5A1.5 1.5 0 0 1 3.5 12z"/><path d="M11.5 4H13v9.5M5.5 5.5h3M5.5 8h2"/></svg>Journal</button>
 </nav>
 
@@ -1614,8 +1648,13 @@ function load(){try{const a=JSON.parse(localStorage.getItem(KEY))||[];for(let i=
 function save(d){localStorage.setItem(KEY,JSON.stringify(d));if(typeof sbPushStore==='function'&&!_sbApplying)sbPushStore('todos');}
 
 let filter='all', filterMode='view', _booting=true, view='dashboard', sortBy='priority';
-let bucket='all'; // workspace split: 'all' | 'tasks' (task+project) | 'notes' (note+idea)
-function setBucket(b){bucket=b;render();}
+// Tasks and Notes are two distinct top-level areas. view==='tasks' shows task/project, view==='notes'
+// shows note/idea; isListView covers both. lastArea remembers which one to return to when a sidebar
+// filter (priority, life area, due, archive) is clicked from a non-list view.
+let lastArea='tasks';
+function isListView(v){return v==='tasks'||v==='notes';}
+function gotoList(){setView(lastArea||'tasks');}
+function areaForType(t){return (t==='task'||t==='project')?'tasks':'notes';}
 
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,5);}
 
@@ -1682,7 +1721,7 @@ function toggleNav(){const open=document.querySelector('.app').classList.toggle(
 function closeNav(){document.querySelector('.app').classList.remove('nav-open');const h=document.getElementById('nav-ham');if(h)h.setAttribute('aria-expanded','false');}
 
 function setFilter(f, mode){
-  filter=f; filterMode=mode; view='list';
+  filter=f; filterMode=mode; if(!isListView(view))view=lastArea||'tasks';
   closeNav();
   document.querySelectorAll('.nav-item').forEach(e=>{e.classList.remove('active');e.classList.remove('cat-active');});
   // Resolve the nav element id per mode so the active highlight lands on the right item
@@ -1691,7 +1730,7 @@ function setFilter(f, mode){
   if(el){
     if(mode==='cat'){el.classList.add('cat-active');}else{el.classList.add('active');}
   }
-  syncWorkspaceNav('list');
+  syncWorkspaceNav(view);
   const cat=CATS[f];
   const dot=document.getElementById('page-title-dot');
   if(mode==='cat'&&cat){
@@ -1709,8 +1748,9 @@ function setFilter(f, mode){
     document.getElementById('page-title').lastChild.textContent=' '+(dueTitles[f]||'Due');
   } else {
     dot.style.display='none';
-    const titles={all:'All Items',active:'Active Items',archive:'Archive',task:'Tasks',idea:'Ideas',note:'Notes',project:'Projects'};
-    document.getElementById('page-title').lastChild.textContent=titles[f]||'All Items';
+    const areaName=view==='notes'?'Notes':'Tasks';
+    const titles={all:areaName,active:'Active '+areaName,archive:'Archived '+areaName,task:'Tasks',idea:'Ideas',note:'Notes',project:'Projects'};
+    document.getElementById('page-title').lastChild.textContent=titles[f]||areaName;
   }
   // Sync the quick-add controls so new items default to the area you're viewing
   const qCat=document.getElementById('quick-cat');
@@ -1788,19 +1828,19 @@ function getFiltered(){
     }
     return mq&&mf;
   });
-  // Tasks/Notes split — a second axis layered on top of the active filter (skipped when a specific
-  // type is already being filtered, e.g. from a Graph type-node click, to avoid double-filtering).
+  // Scope to the active area (Tasks vs Notes). Applies to every filter incl. archive, so each area's
+  // archive is separate too. Skipped only when a specific type is already being filtered (e.g. a Graph
+  // type-node click), to avoid double-filtering.
   let arr=items;
-  if(view==='list'&&filter!=='archive'&&filterMode!=='type'){
-    if(bucket==='tasks')arr=arr.filter(i=>i.type==='task'||i.type==='project');
-    else if(bucket==='notes')arr=arr.filter(i=>i.type==='note'||i.type==='idea');
+  if(isListView(view)&&filterMode!=='type'){
+    arr=arr.filter(view==='tasks'?isTaskType:(i=>!isTaskType(i)));
   }
   return applySort(arr);
 }
 function isTaskType(i){return i.type==='task'||i.type==='project';}
-function segBarHTML(){
-  const seg=(k,l)=>'<button class="seg'+(bucket===k?' on':'')+'" onclick="setBucket(\''+k+'\')" aria-pressed="'+(bucket===k)+'">'+l+'</button>';
-  return '<div class="seg-bar"><div class="seg-group" role="group" aria-label="Filter by tasks or notes">'+seg('all','All')+seg('tasks','Tasks')+seg('notes','Notes')+'</div>'+sortControlHTML()+'</div>';
+function listControlsHTML(){
+  // Area switching lives in the top-of-app switcher + sidebar + mobile tabs; the list keeps just sort.
+  return '<div class="seg-bar">'+sortControlHTML()+'</div>';
 }
 function groupHTML(label,arr,offset){
   if(!arr.length)return '';
@@ -2001,12 +2041,12 @@ function itemHTML(item, isArchiveView, idx){
 })();
 
 function updateTabBar(){
-  ['dashboard','list','daily','journal'].forEach(function(v){var e=document.getElementById('tab-'+v);if(e){var on=view===v;e.classList.toggle('active',on);if(on)e.setAttribute('aria-current','page');else e.removeAttribute('aria-current');}});
+  ['dashboard','tasks','notes','journal'].forEach(function(v){var e=document.getElementById('tab-'+v);if(e){var on=view===v;e.classList.toggle('active',on);if(on)e.setAttribute('aria-current','page');else e.removeAttribute('aria-current');}});
 }
 function dismissA2HS(){localStorage.setItem('jbos_a2hs','1');var e=document.getElementById('a2hs');if(e)e.classList.remove('show');}
 function render(){
   updateTabBar();
-  if(view!=='list'){renderView();return;}
+  if(!isListView(view)){renderView();return;}
   const all=getFiltered();
   const el=document.getElementById('list');
   const isArchiveView=filter==='archive';
@@ -2023,28 +2063,24 @@ function render(){
     const icon=isArchiveView
       ?`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8h14v11a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1z"/><path d="M10 12h4"/></svg>`
       :`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 13l2.2-7.4A2 2 0 0 1 8.1 4h7.8a2 2 0 0 1 1.9 1.6L20 13v5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><path d="M4 13h4l1.5 2.5h5L16 13h4"/></svg>`;
-    const title=isArchiveView?'Archive is empty':(bucket==='tasks'?'No tasks here':bucket==='notes'?'No notes here':'Nothing here yet');
-    el.innerHTML=(isArchiveView?'':segBarHTML())+`<div class="empty-state">
+    const title=isArchiveView?'Archive is empty':(view==='notes'?'No notes here':'No tasks here');
+    el.innerHTML=(isArchiveView?'':listControlsHTML())+`<div class="empty-state">
       <div class="empty-icon">${icon}</div>
       <div class="empty-title">${title}</div>
       <div class="empty-hint">${hint}</div>
     </div>`;
     return;
   }
+  const areaName=view==='notes'?'Notes':'Tasks';
   let html='';
   if(isArchiveView){
-    html+=`<div class="section-head"><span class="section-head-label">Archived · ${all.length}</span><div class="section-head-line"></div>${sortControlHTML()}</div>`;
+    html+=`<div class="section-head"><span class="section-head-label">Archived ${areaName} · ${all.length}</span><div class="section-head-line"></div>${sortControlHTML()}</div>`;
     html+=all.map((i,idx)=>itemHTML(i,true,idx)).join('');
   } else {
     html+=reminderBar();
-    html+=segBarHTML();
-    if(bucket==='all'){
-      // Distinct organization: actionable Tasks first, then reference Notes/Ideas — each its own section.
-      const tasksArr=all.filter(isTaskType), notesArr=all.filter(i=>!isTaskType(i));
-      html+=groupHTML('Tasks',tasksArr,0)+groupHTML('Notes',notesArr,tasksArr.length);
-    } else {
-      html+=groupHTML(bucket==='tasks'?'Tasks':'Notes',all,0);
-    }
+    html+=listControlsHTML();
+    // Each area shows only its own type as a single list (the area itself is the Tasks/Notes division).
+    html+=groupHTML(areaName,all,0);
   }
   el.innerHTML=html;
 }
@@ -2063,6 +2099,9 @@ function updateCounts(){
     project:active.filter(x=>x.type==='project').length
   };
   Object.entries(c).forEach(([k,v])=>{const e=document.getElementById('cnt-'+k);if(e)e.textContent=v;});
+  // Area counts — sidebar badges + the top-of-app switcher.
+  const tasksN=active.filter(isTaskType).length, notesN=active.length-tasksN;
+  [['cnt-area-tasks',tasksN],['cnt-area-notes',notesN],['area-cnt-tasks',tasksN],['area-cnt-notes',notesN]].forEach(([id,v])=>{const e=document.getElementById(id);if(e)e.textContent=v;});
   SELECTABLE_CATS.forEach(k=>{
     const e=document.getElementById('cnt-cat-'+k);
     if(e)e.textContent=active.filter(x=>(x.category||'personal')===k).length;
@@ -2104,18 +2143,18 @@ var _cmdSel=0, _cmdList=[];
 function cmdCommands(){
   var c=[];
   function add(cat,ic,label,sub,run){c.push({cat:cat,ic:ic,label:label,sub:sub,run:run});}
-  [['dashboard','🏠','Today'],['list','🗒️','All items'],['daily','🔁','Daily'],['monthly','📆','Monthly'],['calendar','📅','Calendar'],['journal','📔','Journal'],['musubi','🌺','Musubi'],['graph','🕸️','Graph']].forEach(function(v){add('Go to',v[1],v[2],'',function(){setView(v[0]);});});
+  [['dashboard','🏠','Today'],['tasks','🗒️','Tasks'],['notes','📝','Notes'],['daily','🔁','Daily'],['monthly','📆','Monthly'],['calendar','📅','Calendar'],['journal','📔','Journal'],['musubi','🌺','Musubi'],['graph','🕸️','Graph']].forEach(function(v){add('Go to',v[1],v[2],'',function(){setView(v[0]);});});
   add('Action','➕','New item','',function(){openModal();});
   add('Action','📝','New journal entry','',function(){newJournalEntry();});
   add('Action','🔐','Sign in / account','',function(){openAuth();});
   add('Action','🔔','Enable reminders','',function(){requestReminders();});
   add('Action','⤓','Export data','',function(){exportJSON();});
   add('Action','⤒','Import data','',function(){importJSON();});
-  [['overdue','Overdue'],['soon','Due soon']].forEach(function(d){add('Due','⏰',d[1],'',function(){setView('list');setFilter(d[0],'due');});});
-  PRIORITIES.forEach(function(p){add('Priority','◆',p.id==='in_progress'?p.label:p.label+' priority','',function(){setView('list');setFilter(p.id,'prio');});});
-  SELECTABLE_CATS.forEach(function(k){add('Life area',guessEmoji('',k),CATS[k].label,'',function(){setView('list');setFilter(k,'cat');});});
-  [['task','Tasks'],['idea','Ideas'],['note','Notes'],['project','Projects']].forEach(function(t){add('Type','🏷️',t[1],'',function(){setView('list');setFilter(t[0],'type');});});
-  load().filter(function(x){return !x.archived;}).forEach(function(it){add('Items',(it.emoji||'•'),it.text||'Untitled',(CATS[it.category||'general']||CATS.general).label,function(){setView('list');openDetail(it.id);});});
+  [['overdue','Overdue'],['soon','Due soon']].forEach(function(d){add('Due','⏰',d[1],'',function(){gotoList();setFilter(d[0],'due');});});
+  PRIORITIES.forEach(function(p){add('Priority','◆',p.id==='in_progress'?p.label:p.label+' priority','',function(){gotoList();setFilter(p.id,'prio');});});
+  SELECTABLE_CATS.forEach(function(k){add('Life area',guessEmoji('',k),CATS[k].label,'',function(){gotoList();setFilter(k,'cat');});});
+  [['task','Tasks'],['idea','Ideas'],['note','Notes'],['project','Projects']].forEach(function(t){add('Type','🏷️',t[1],'',function(){setView(areaForType(t[0]));setFilter(t[0],'type');});});
+  load().filter(function(x){return !x.archived;}).forEach(function(it){add('Items',(it.emoji||'•'),it.text||'Untitled',(CATS[it.category||'general']||CATS.general).label,function(){setView(areaForType(it.type));openDetail(it.id);});});
   return c;
 }
 function renderCmd(){
@@ -2197,7 +2236,7 @@ function openCreate(){
   _lastFocus=document.activeElement; _isNew=true;
   const forced=(filterMode==='cat'&&CATS[filter]&&filter!=='general'); // opened from a life-area filter → use it
   _dCatAuto=!forced; // otherwise auto-categorize from the title on save
-  const it={id:uid(),text:'',type:(filterMode==='type')?normType(filter):'task',
+  const it={id:uid(),text:'',type:(filterMode==='type')?normType(filter):(view==='notes'?'note':'task'),
     priority:(filterMode==='prio'&&PRIORITY_IDS.includes(filter))?filter:'normal',
     category:forced?filter:'personal',
     source:'browser',description:'',steps:[],links:[],attachments:[]};
@@ -2382,7 +2421,10 @@ function saveDetail(){
   if(isNew)items.unshift(it);
   try{save(items);}
   catch(err){toast('Storage full — remove a large attachment and retry');return;}
-  render();updateCounts();closeDetail();
+  // A new item lands in its type's area — if that's not where we are, hop there so JB sees it.
+  if(isNew && isListView(view) && areaForType(it.type)!==view){ setView(areaForType(it.type)); }
+  else { render(); }
+  updateCounts();closeDetail();
   toast(isNew?('Added: '+it.text.slice(0,44)):'Saved');
   if(wantDesc)generateDescription(it.id,it.text,it.type,it.category); // non-blocking AI description backfill
 }
@@ -2394,7 +2436,7 @@ function generateDescription(id,title,type,category){
     if(res.error||!data||data.error||!data.description)return;
     var items=load(), it=items.find(function(x){return x.id===id;}); if(!it||it.description)return; // skip if gone or filled meanwhile
     it.description=data.description; if(data.guess)it.descGuess=true; it.updatedAt=new Date().toISOString();
-    save(items); if(view==='list'||view==='dashboard')render(); updateCounts();
+    save(items); if(isListView(view)||view==='dashboard')render(); updateCounts();
   }).catch(function(){});
 }
 
@@ -2413,7 +2455,7 @@ document.addEventListener('keydown',e=>{
   if(e.key==='Escape'){if(!document.getElementById('journal-modal').classList.contains('hidden')&&(!document.getElementById('j-question-menu').classList.contains('hidden')||!document.getElementById('j-template-menu').classList.contains('hidden'))){closeAllJMenus();return;}closeModal();closeDetail();closeJournal();closePrompts();closeRoutine();closeNav();closeCmd();closeCapture();closeBrainDump();closeMemModal();}
   if((e.metaKey||e.ctrlKey)&&(e.key==='k'||e.key==='K')){e.preventDefault();openCmd();return;}
   if((e.metaKey||e.ctrlKey)&&e.key==='n'){e.preventDefault();view==='journal'?newJournalEntry():primaryAdd();}
-  if((e.metaKey||e.ctrlKey)&&e.key==='f'&&view==='list'){e.preventDefault();document.getElementById('search').focus();}
+  if((e.metaKey||e.ctrlKey)&&e.key==='f'&&isListView(view)){e.preventDefault();document.getElementById('search').focus();}
   if((e.key==='Enter'||e.key===' ')&&e.target&&e.target.classList&&e.target.classList.contains('nav-item')){e.preventDefault();e.target.click();}
 });
 
@@ -2597,7 +2639,7 @@ async function captureScreenshots(files){
     }catch(err){logCapture(null,'Could not process that image.');}
   }
   zone.classList.remove('busy'); resetCaptureZoneBody(); _captureBusy=false;
-  if(saved){const opener=firstId;toast('Saved '+saved+' screenshot'+(saved>1?'s':'')+' to your notes','Open',()=>{closeCapture();setView('list');setBucket('all');if(opener)openDetail(opener);});}
+  if(saved){const opener=firstId;toast('Saved '+saved+' screenshot'+(saved>1?'s':'')+' to your notes','Open',()=>{closeCapture();setView('notes');if(opener)openDetail(opener);});}
 }
 function resetCaptureZoneBody(){const body=document.getElementById('capture-zone-body');if(body)body.innerHTML='<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M7 6l1.4-2h7.2L17 6h3a1.5 1.5 0 0 1 1.5 1.5v11A1.5 1.5 0 0 1 20 20H4a1.5 1.5 0 0 1-1.5-1.5v-11A1.5 1.5 0 0 1 4 6z"/><circle cx="12" cy="12.5" r="3.5"/></svg><div class="capture-zone-main">Drop, paste (⌘V), or <button type="button" class="capture-pick" onclick="event.stopPropagation();document.getElementById(\'capture-file\').click()">choose a screenshot</button></div><div class="capture-sub">Claude files each one into Notes (or Tasks) automatically.</div>';}
 // Map the model's structured result onto a JB OS item (Notes-first; image lives in Supabase Storage)
@@ -2706,7 +2748,7 @@ function saveDumpItems(){
   });
   save(arr); render(); updateCounts();
   const opener=firstId; closeBrainDump();
-  if(saved)toast('Saved '+saved+' item'+(saved>1?'s':'')+' to your list','Open',()=>{setView('list');setBucket('all');if(opener)openDetail(opener);});
+  if(saved)toast('Saved '+saved+' item'+(saved>1?'s':'')+' to your list','Open',()=>{const it=load().find(x=>x.id===opener);setView(it?areaForType(it.type):'tasks');if(opener)openDetail(opener);});
 }
 function renderBdBudget(b){const el=document.getElementById('bd-budget');if(!el||!b)return;const cap=b.cap||1,spend=b.spend||0,pct=Math.min(100,Math.round(spend/cap*100)),col=spend>=cap*0.95?'var(--red)':spend>=cap*0.75?'var(--yellow)':'var(--green)';el.innerHTML='Today: $'+spend.toFixed(2)+' of $'+cap.toFixed(2)+' used<div class="cb-bar"><div class="cb-fill" style="width:'+pct+'%;background:'+col+'"></div></div>';}
 
@@ -2919,11 +2961,11 @@ function closeRoutine(){document.getElementById('routine-modal').classList.add('
 function closeRoutineOutside(e){if(e.target.id==='routine-modal')closeRoutine();}
 
 /* ===== View switching ===== */
-function syncWorkspaceNav(v){['dashboard','list','daily','monthly','calendar','journal','musubi','graph'].forEach(k=>{const e=document.getElementById('nav-view-'+k);if(e)e.classList.toggle('active',k===v);});['musubi','graph'].forEach(k=>{const e=document.getElementById('hdr-'+k);if(e)e.classList.toggle('active',k===v);});}
+function syncWorkspaceNav(v){['dashboard','tasks','notes','daily','monthly','calendar','journal','musubi','graph'].forEach(k=>{const e=document.getElementById('nav-view-'+k);if(e)e.classList.toggle('active',k===v);});['musubi','graph'].forEach(k=>{const e=document.getElementById('hdr-'+k);if(e)e.classList.toggle('active',k===v);});}
 /* ===== Global item search: live typeahead dropdown; click or Enter opens the item ===== */
 var _searchSel=-1;
 function searchInput(){
-  if(view==='list')render(); // keep inline filtering of the List view
+  if(isListView(view))render(); // keep inline filtering of the active area
   renderSearchResults();
 }
 function renderSearchResults(){
@@ -2958,10 +3000,20 @@ function applyViewChrome(v){
   const la=document.querySelector('.header-list-actions');if(la)la.style.display=(v==='journal'||v==='musubi'||v==='graph')?'none':'';
   // The single add button adapts to the page it's on
   const nl=document.getElementById('newitem-label');
-  const nlText=(v==='daily')?'New habit':(v==='monthly')?'New monthly':'New Item';
+  const nlText=(v==='daily')?'New habit':(v==='monthly')?'New monthly':(v==='notes')?'New Note':(v==='tasks')?'New Task':'New Item';
   if(nl)nl.textContent=nlText;
   const nb=document.getElementById('newitem-btn');if(nb)nb.setAttribute('aria-label',nlText); // keep the accessible name in sync (label is hidden on mobile)
+  syncAreaSwitch(v);
 }
+// The top-of-app Tasks|Notes switcher: visible only in a list area, the active side filled with --area.
+function syncAreaSwitch(v){
+  const as=document.getElementById('area-switch'); if(as)as.style.display=isListView(v)?'':'none';
+  const t=document.getElementById('area-tab-tasks'), n=document.getElementById('area-tab-notes');
+  if(t){t.classList.toggle('on',v==='tasks');t.setAttribute('aria-pressed',v==='tasks');}
+  if(n){n.classList.toggle('on',v==='notes');n.setAttribute('aria-pressed',v==='notes');}
+}
+// Subtle per-area identity: the Notes area gets the blue tint (via --area), everything else stays amber.
+function applyAreaTheme(v){const app=document.querySelector('.app');if(app)app.classList.toggle('area-notes',v==='notes');}
 // One context-aware add: a habit on Daily/Monthly, otherwise the full item modal (which already
 // pre-fills life-area/type/priority from the current filter).
 function primaryAdd(){
@@ -2985,8 +3037,8 @@ function openRoutineNew(scope){
 }
 function setView(v){
   closeNav();
-  if(v==='list'){view='list';applyViewChrome('list');setFilter(filter,filterMode);updateCounts();_animateView();return;}
-  view=v; syncWorkspaceNav(v); applyViewChrome(v);
+  if(isListView(v)){view=v;lastArea=v;applyAreaTheme(v);applyViewChrome(v);setFilter(filter,filterMode);updateCounts();_animateView();return;}
+  view=v; applyAreaTheme(v); syncWorkspaceNav(v); applyViewChrome(v);
   ['nav-all','nav-active','nav-archive','nav-task','nav-idea','nav-note','nav-project','nav-overdue','nav-soon'].forEach(id=>{const e=document.getElementById(id);if(e)e.classList.remove('active');});
   document.querySelectorAll('[id^="nav-prio-"]').forEach(e=>e.classList.remove('active'));
   document.querySelectorAll('[id^="nav-cat-"]').forEach(e=>e.classList.remove('active','cat-active'));
@@ -3243,7 +3295,7 @@ function renderGraph(){
   }
   function up(){pinch=null;if(!moved){var n=drag||hit(last.x,last.y);if(n){selectNode(n);}else{selected=null;hideInfo();}}drag=null;panning=false;}
   function dbl(e){var p=pos(e);var n=hit(p.x,p.y);if(!n)return;if(n.kind==='hub'){focusNode=null;fitView(true);return;}focusNode=n;selectNode(n);var s={};var rel=[n];edges.forEach(function(ed){if(ed[0]===n)rel.push(ed[1]);if(ed[1]===n)rel.push(ed[0]);});frameTo(rel,120,2.2,true);}
-  function act(n){if(!n)return;if(n.kind==='item')openDetail(n.ref.id);else if(n.kind==='cat'){setView('list');setFilter(n.ref.cat,'cat');}else if(n.kind==='type'){setView('list');setFilter(n.ref.type,'type');}else if(n.kind==='journal')openJournal(n.ref.jid);else if(n.kind==='jhub')setView('journal');else if(n.kind==='habit'||n.kind==='hhub')setView('daily');else if(n.kind==='hub'){focusNode=null;fitView();}}
+  function act(n){if(!n)return;if(n.kind==='item')openDetail(n.ref.id);else if(n.kind==='cat'){gotoList();setFilter(n.ref.cat,'cat');}else if(n.kind==='type'){setView(areaForType(n.ref.type));setFilter(n.ref.type,'type');}else if(n.kind==='journal')openJournal(n.ref.jid);else if(n.kind==='jhub')setView('journal');else if(n.kind==='habit'||n.kind==='hhub')setView('daily');else if(n.kind==='hub'){focusNode=null;fitView();}}
   function selectNode(n){selected=n;showInfo(n);}
   function aiConnHTML(id){if(!Array.isArray(_graphAI)||!_graphAI.length)return '';var its=load();
     var rows=_graphAI.filter(function(c){return c.a===id||c.b===id;}).slice(0,6).map(function(c){var oid=c.a===id?c.b:c.a;var o=its.find(function(z){return z.id===oid;});if(!o)return '';
@@ -3887,10 +3939,11 @@ function renderDashboard(){
     +(maxStreak>0?'<span class="dstreak">'+J_FLAME+maxStreak+'-day streak</span>':'<span class="dstreak cold">no streak yet</span>')
     +'<button class="dcard-cta" onclick="setView(\'daily\')">Open daily checklist →</button></div>';
 
-  const tasksCard='<div class="dcard"><div class="dcard-label"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="2"/><path d="M5 8l2 2 4-4"/></svg>Tasks</div>'
-    +'<div class="dstat-row"><span class="dstat-big">'+active.length+'</span><span class="dstat-unit">open</span></div>'
-    +'<div class="dstat-sub">'+doneToday+' done today'+(dueToday.length?' · '+dueToday.length+' due':'')+(overdue.length?' · <span class="over">'+overdue.length+' overdue</span>':'')+'</div>'
-    +'<button class="dcard-cta" onclick="setView(\'list\')">Open tasks →</button></div>';
+  const openTasks=active.filter(isTaskType).length, openNotes=active.length-openTasks;
+  const tasksCard='<div class="dcard"><div class="dcard-label"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="2"/><path d="M5 8l2 2 4-4"/></svg>Tasks &amp; Notes</div>'
+    +'<div class="dstat-row"><span class="dstat-big">'+openTasks+'</span><span class="dstat-unit">open task'+(openTasks===1?'':'s')+'</span></div>'
+    +'<div class="dstat-sub">'+openNotes+' note'+(openNotes===1?'':'s')+' · '+doneToday+' done today'+(dueToday.length?' · '+dueToday.length+' due':'')+(overdue.length?' · <span class="over">'+overdue.length+' overdue</span>':'')+'</div>'
+    +'<div style="display:flex;gap:8px"><button class="dcard-cta" onclick="setView(\'tasks\')">Open tasks →</button><button class="dcard-cta" onclick="setView(\'notes\')">Notes →</button></div></div>';
 
   const journalCard='<div class="dcard"><div class="dcard-label"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3.5 2.5H10a1.5 1.5 0 0 1 1.5 1.5v9.5H5A1.5 1.5 0 0 1 3.5 12z"/><path d="M11.5 4H13v9.5M5.5 5.5h3M5.5 8h2"/></svg>Journal</div>'
     +'<div class="dstat-row"><span class="dstat-big">'+jStreak+'</span><span class="dstat-unit">day streak</span></div>'
@@ -4430,7 +4483,7 @@ window.addEventListener('online',updOnline);window.addEventListener('offline',up
   var startX=0,startY=0,cur=null,inner=null,dx=0,axis=null;
   function reset(){if(cur){cur.classList.remove('sw-active','sw-right','sw-left');if(inner)inner.style.transform='';}cur=null;inner=null;dx=0;axis=null;}
   listEl.addEventListener('touchstart',function(e){
-    if(view!=='list'||filter==='archive'||e.touches.length>1){cur=null;return;}
+    if(!isListView(view)||filter==='archive'||e.touches.length>1){cur=null;return;}
     var item=e.target.closest('.item'); if(!item){cur=null;return;}
     cur=item;inner=item.querySelector('.item-inner');startX=e.touches[0].clientX;startY=e.touches[0].clientY;dx=0;axis=null;
   },{passive:true});
