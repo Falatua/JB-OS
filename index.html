@@ -2128,7 +2128,9 @@ function updateCounts(){
 // filter while in a list area (Work → 8/2, High → high tasks/notes, etc.); on overview views they
 // show global active totals. Refreshed from updateCounts() and on every render (filter/search/sort).
 function updateAreaCounts(){
-  const base = isListView(view) ? getFilteredBase() : load().filter(x=>!x.archived);
+  // In a list area, show the type-split of the current filter; on overviews (or during a type-filter,
+  // which is itself area-like) fall back to global active totals so neither side reads a misleading 0.
+  const base = (isListView(view) && filterMode!=='type') ? getFilteredBase() : load().filter(x=>!x.archived);
   const tN = base.filter(isTaskType).length, nN = base.length - tN;
   [['cnt-area-tasks',tN],['cnt-area-notes',nN],['area-cnt-tasks',tN],['area-cnt-notes',nN]]
     .forEach(([id,v])=>{const e=document.getElementById(id);if(e)e.textContent=v;});
@@ -3049,7 +3051,11 @@ function openRoutineNew(scope){
 }
 function setView(v){
   closeNav();
-  if(isListView(v)){view=v;lastArea=v;applyAreaTheme(v);applyViewChrome(v);setFilter(filter,filterMode);updateCounts();_animateView();return;}
+  if(isListView(v)){view=v;lastArea=v;
+    // A `type` filter (from a Graph/command-palette type click) is area-like; switching areas clears it
+    // so the area itself governs — otherwise you'd land in Tasks but still see Notes.
+    if(filterMode==='type'){filter='all';filterMode='view';}
+    applyAreaTheme(v);applyViewChrome(v);setFilter(filter,filterMode);updateCounts();_animateView();return;}
   view=v; applyAreaTheme(v); syncWorkspaceNav(v); applyViewChrome(v);
   ['nav-all','nav-active','nav-archive','nav-task','nav-idea','nav-note','nav-project','nav-overdue','nav-soon'].forEach(id=>{const e=document.getElementById(id);if(e)e.classList.remove('active');});
   document.querySelectorAll('[id^="nav-prio-"]').forEach(e=>e.classList.remove('active'));
