@@ -50,8 +50,10 @@ LINK: if the screenshot shows or implies a useful URL, return it. For a place/re
 
 BODY: a fuller 1-3 sentence description of what it contains and why it matters to JB — add genuinely useful context or a sensible next step. You MAY make an EDUCATED GUESS using what we know about JB (below). If you inferred anything beyond what the screenshot literally shows, set "guess":true; otherwise "guess":false.
 
+DATES: if the screenshot clearly shows a date or date range (an event, reservation, appointment, deadline), set dueDate=YYYY-MM-DD. For a RANGE (e.g. a trip or multi-day event) also set endDate=YYYY-MM-DD (≥ dueDate) so it becomes a calendar span. Resolve relative wording against the "Today is ..." date provided. If no clear date, both null.
+
 Respond with ONLY a valid JSON object — no preamble, no markdown fences, no commentary — matching exactly:
-{"routing":"note|task","type":"note|idea|task|project","title":"<=60 chars","body":"1-3 sentence context","category":"<one of the set>","priority":"normal|high","confidence":"high|medium|low","source_hint":"e.g. Instagram post, Google Maps, product page","link":"a URL or empty string","guess":true|false}`;
+{"routing":"note|task","type":"note|idea|task|project","title":"<=60 chars","body":"1-3 sentence context","category":"<one of the set>","priority":"normal|high","confidence":"high|medium|low","source_hint":"e.g. Instagram post, Google Maps, product page","link":"a URL or empty string","dueDate":"YYYY-MM-DD or null","endDate":"YYYY-MM-DD or null","guess":true|false}`;
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -75,13 +77,13 @@ RULES:
   ${ENTITY_RULES}
   Also: work = AnswerLab + freelance design (Heber); family includes kids (Archie/Gigi); gaming = video games/consoles/PC gaming/ROMs; tech = coding/AI/devices/JB OS; health = Health and Fitness (training/diet/medical/leisure-sport); grocery = food; shopping = non-food goods; errands = run-around-town chores; personal = self/relationships/admin/leisure/hobbies/travel. There is NO general/catch-all — always pick the single best-fitting area; if nothing else fits, use personal.
 - PRIORITY: "high" ONLY if money is at stake, there's a hard deadline, or it blocks something; otherwise "normal". Never mark a grocery or errands item "high" — those are always low priority (the app sets that automatically).
-- DUEDATE: resolve any time phrase ("today","tomorrow","Friday","next week","the 9th","Jun 9-11") to an absolute YYYY-MM-DD using today=${today}. For a range, use the START date. If no date is implied, null.
+- DUEDATE / ENDDATE: resolve any time phrase to an absolute YYYY-MM-DD using today=${today}. For a DATE RANGE ("June 7 to June 11", "Jun 7-11", "next Mon–Wed", "the 9th through the 11th"), set dueDate=START and endDate=END — this makes it a multi-day calendar span. For a single date, set dueDate and leave endDate null. If no date is implied, both null. endDate must be ≥ dueDate.
 - NOTES: a SHORT one-line extra detail ONLY if the user gave more than the title needs — no padding. Usually "".
 - DESCRIPTION: a fuller 1-2 sentence description that adds genuinely useful context — what it likely means, why it matters to JB, or a sensible next step. You MAY make an EDUCATED GUESS using what we know about JB (below). Don't restate the title and don't pad. If you inferred anything beyond what the text literally says, set "guess":true; if it's purely literal, "guess":false.
 - TITLE: clean, short, scannable.
 
 Respond with ONLY valid JSON — no preamble, no markdown fences:
-{"items":[{"title":"...","type":"task|note","category":"<one of the set>","priority":"normal|high","dueDate":"YYYY-MM-DD or null","notes":"short or empty","description":"1-2 sentence context","guess":true|false}]}`;
+{"items":[{"title":"...","type":"task|note","category":"<one of the set>","priority":"normal|high","dueDate":"YYYY-MM-DD or null","endDate":"YYYY-MM-DD or null","notes":"short or empty","description":"1-2 sentence context","guess":true|false}]}`;
 
 async function brainDump(text: string, admin: any, ANTHROPIC_KEY: string, profile?: string) {
   const today = todayKey();
@@ -129,6 +131,7 @@ async function brainDump(text: string, admin: any, ANTHROPIC_KEY: string, profil
     category: cats.includes(it.category) ? it.category : "personal",
     priority: it.priority === "high" ? "high" : "normal",
     dueDate: (typeof it.dueDate === "string" && /^\d{4}-\d{2}-\d{2}$/.test(it.dueDate)) ? it.dueDate : null,
+    endDate: (typeof it.endDate === "string" && /^\d{4}-\d{2}-\d{2}$/.test(it.endDate) && typeof it.dueDate === "string" && it.endDate >= it.dueDate) ? it.endDate : null,
     notes: String(it.notes || "").slice(0, 300).trim(),
     description: String(it.description || "").slice(0, 400).trim(),
     guess: it.guess === true,
@@ -356,7 +359,7 @@ Deno.serve(async (req) => {
           role: "user",
           content: [
             { type: "image", source: { type: "base64", media_type: "image/jpeg", data: image } },
-            { type: "text", text: "Analyze this screenshot and route it to a note or task. JSON only." },
+            { type: "text", text: "Today is " + todayKey() + ". Analyze this screenshot and route it to a note or task. JSON only." },
           ],
         }],
       }),
@@ -398,6 +401,8 @@ Deno.serve(async (req) => {
     confidence: result.confidence || "medium",
     source_hint: String(result.source_hint || payload.source_hint || ""),
     link: typeof result.link === "string" ? result.link : "",
+    dueDate: (typeof result.dueDate === "string" && /^\d{4}-\d{2}-\d{2}$/.test(result.dueDate)) ? result.dueDate : "",
+    endDate: (typeof result.endDate === "string" && /^\d{4}-\d{2}-\d{2}$/.test(result.endDate)) ? result.endDate : "",
     imageUrl,
     budget: { spend: budget.spend, cap: DAILY_CAP },
   };
@@ -414,6 +419,8 @@ Deno.serve(async (req) => {
         id, text: out.title, notes: "", description: out.body, descGuess: out.guess,
         type: out.type, priority: (validCat === "grocery" || validCat === "errands") ? "low" : out.priority, source: "screenshot", category: validCat,
         emoji: "📸",
+        ...(out.dueDate ? { dueDate: out.dueDate } : {}),
+        ...(out.endDate && out.endDate >= out.dueDate ? { endDate: out.endDate } : {}),
         links: /^https?:\/\//i.test(out.link) ? [{ label: out.source_hint ? "Open — " + out.source_hint : "Open link", url: out.link }] : [],
         attachments: imageUrl ? [{ name: "screenshot.jpg", type: "image/jpeg", url: imageUrl }] : [],
         done: false, archived: false, createdAt: now, updatedAt: now,

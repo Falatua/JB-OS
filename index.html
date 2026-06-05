@@ -2612,6 +2612,8 @@ function createCapturedItem(r){
     links:(r.link&&/^https?:\/\//i.test(r.link))?[{label:r.source_hint?('Open — '+r.source_hint):'Open link',url:r.link}]:[],
     attachments:r.imageUrl?[{name:'screenshot.jpg',type:'image/jpeg',url:r.imageUrl}]:[],
     done:false,archived:false,createdAt:now,updatedAt:now};
+  if(r.dueDate&&/^\d{4}-\d{2}-\d{2}$/.test(r.dueDate))item.dueDate=r.dueDate;
+  if(r.endDate&&/^\d{4}-\d{2}-\d{2}$/.test(r.endDate)&&item.dueDate&&r.endDate>=item.dueDate)item.endDate=r.endDate;
   const items=load(); items.unshift(item); save(items); render(); updateCounts();
   return item;
 }
@@ -2665,9 +2667,10 @@ function renderDumpPreview(items){
   const wrap=document.getElementById('bd-preview');
   const catOpts=SELECTABLE_CATS.map(k=>'<option value="'+k+'">'+esc(CATS[k].label)+'</option>').join('');
   wrap.innerHTML=items.map(it=>{
-    const due=it.dueDate?'<span class="bd-chip">📅 '+esc(fmtDue(it.dueDate))+'</span>':'';
+    const isSpan=it.endDate&&it.endDate>it.dueDate;
+    const due=it.dueDate?'<span class="bd-chip">📅 '+esc(isSpan?calRangeLabel(it.dueDate,it.endDate):fmtDue(it.dueDate))+'</span>':'';
     const prio=it.priority==='high'?'<span class="bd-chip prio">● High</span>':'';
-    return '<div class="bd-item" data-due="'+esc(it.dueDate||'')+'" data-prio="'+(it.priority==='high'?'high':'normal')+'" data-notes="'+esc(it.notes||'')+'" data-desc="'+esc(it.description||'')+'" data-guess="'+(it.guess?'1':'')+'">'
+    return '<div class="bd-item" data-due="'+esc(it.dueDate||'')+'" data-end="'+esc(it.endDate||'')+'" data-prio="'+(it.priority==='high'?'high':'normal')+'" data-notes="'+esc(it.notes||'')+'" data-desc="'+esc(it.description||'')+'" data-guess="'+(it.guess?'1':'')+'">'
       +'<input class="bd-title" value="'+esc(it.title||'')+'" aria-label="Item title">'
       +'<div class="bd-meta">'
         +'<select class="bd-type" aria-label="Type"><option value="task"'+(it.type==='task'?' selected':'')+'>Task</option><option value="note"'+(it.type!=='task'?' selected':'')+'>Note</option></select>'
@@ -2693,10 +2696,12 @@ function saveDumpItems(){
     const dueDate=row.getAttribute('data-due')||'';
     const notes=row.getAttribute('data-notes')||'';
     const description=row.getAttribute('data-desc')||notes;
+    const endDate=row.getAttribute('data-end')||'';
     const item={id:uid(),text:title,notes:'',description:description,type,priority,source:'braindump',category,
       emoji:guessEmoji(title,category),links:[],attachments:[],done:false,archived:false,createdAt:now,updatedAt:now};
     if(row.getAttribute('data-guess'))item.descGuess=true;
     if(dueDate)item.dueDate=dueDate;
+    if(endDate&&dueDate&&endDate>=dueDate)item.endDate=endDate;
     arr.unshift(item); if(!firstId)firstId=item.id; saved++;
   });
   save(arr); render(); updateCounts();
@@ -2832,6 +2837,7 @@ function toast(msg,actionLabel,actionFn){
 function pad(n){return String(n).padStart(2,'0');}
 function dateKey(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());}
 function monthKey(d){return d.getFullYear()+'-'+pad(d.getMonth()+1);}
+function _daysLeftInMonth(){var n=new Date(),last=new Date(n.getFullYear(),n.getMonth()+1,0).getDate();return Math.max(0,last-n.getDate());}
 function fmtDue(s){const p=s.split('-').map(Number);return new Date(p[0],p[1]-1,p[2]).toLocaleDateString('en-US',{month:'short',day:'numeric'});}
 function dueClass(s){const today=dateKey(new Date());if(s<today)return 'overdue';const diff=(new Date(s+'T00:00:00')-new Date(today+'T00:00:00'))/86400000;return diff<=2?'soon':'';}
 
@@ -3348,7 +3354,7 @@ function renderRoutine(scope){
     const remptyIcon=daily
       ?`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2.6M12 19.4V22M2 12h2.6M19.4 12H22M4.9 4.9l1.9 1.9M17.2 17.2l1.9 1.9M19.1 4.9l-1.9 1.9M6.8 17.2l-1.9 1.9"/></svg>`
       :`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4.5" width="18" height="16.5" rx="2"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4M12 12.5v3l2 1.3"/></svg>`;
-    el.innerHTML=`<div class="empty-state"><div class="empty-icon">${remptyIcon}</div><div class="empty-title">${daily?'No daily habits yet':'No monthly items yet'}</div><div class="empty-hint">Add ${daily?'a daily habit':'a monthly item'} above. It resets ${daily?'every day at midnight':'on the 1st of each month'} and tracks your streak.</div></div>`;
+    el.innerHTML=`<div class="empty-state"><div class="empty-icon">${remptyIcon}</div><div class="empty-title">${daily?'No daily habits yet':'No monthly items yet'}</div><div class="empty-hint">Add ${daily?'a daily habit':'a monthly item'} above. It resets ${daily?'every day at midnight':'at the end of every month (the last day)'} and tracks your streak.</div></div>`;
     return;
   }
   const tpl=store.templates.slice().sort((a,b)=>{
@@ -3367,7 +3373,7 @@ function renderRoutine(scope){
       <div class="routine-banner-title">${n} of ${total} done ${daily?'today':'this month'}</div>
       <div class="routine-banner-sub">${n===total?'All done — nice work.':'Check items off as you complete them.'}</div>
     </div>
-    <div class="routine-reset">${daily?'Resets daily · midnight':'Resets monthly · the 1st'}</div>
+    <div class="routine-reset">${daily?'Resets daily · midnight':(()=>{const d=_daysLeftInMonth();return 'Resets at month-end · '+(d===0?'today':d+' day'+(d===1?'':'s')+' left');})()}</div>
   </div><div class="task-list">${tpl.map(t=>routineItemHTML(scope,t,done.has(t.id))).join('')}</div>`;
   el.innerHTML=html;
 }
@@ -4180,6 +4186,18 @@ function migrateCategories(){
   if(changed)save(items);
   return changed;
 }
+// Extra layer for the daily/monthly checklists: drop stale completion logs so a new period always
+// starts clean (daily keeps ~70 days, monthly ~13 months — enough for streaks). The reset itself is
+// driven by the period key (today / this-month), so the current checklist is always empty on a new period.
+function purgeOldRoutineLogs(){
+  var dailyCut=dateKey(new Date(Date.now()-70*864e5));
+  var mn=new Date(); var monCut=monthKey(new Date(mn.getFullYear(),mn.getMonth()-13,1));
+  [['daily',dailyCut],['monthly',monCut]].forEach(function(pair){
+    var scope=pair[0], cut=pair[1], s=rStore(scope), ch=false;
+    ['log','logTs'].forEach(function(k){ if(s[k]) Object.keys(s[k]).forEach(function(pk){ if(pk<cut){ delete s[k][pk]; ch=true; } }); });
+    if(ch)rSave(scope,s);
+  });
+}
 function _tombed(x,tomb){var t=tomb&&tomb[x&&x.id];return !!(t&&t>=_itemTs(x));} // dead unless item is newer than its tombstone
 function _mergeTomb(r,l){var o={};[r||{},l||{}].forEach(function(m){Object.keys(m).forEach(function(id){if(!o[id]||m[id]>o[id])o[id]=m[id];});});return o;}
 // Apply a merged tombstone map, then prune every store so removals propagate even
@@ -4394,6 +4412,7 @@ function sbAuthUI(user){
 if(load().length)_booting=false;
 purgeOldArchived(); // drop archived items older than ~1 month (tombstoned so sync won't bring them back)
 migrateCategories(); // re-sort any retired lifestyle/general items into a real life area
+purgeOldRoutineLogs(); // clear stale daily/monthly completion logs so each period resets clean
 // Defer the first render one tick so every top-level const (incl. the Musubi MZ_* data
 // the dashboard now previews) is initialized before renderDashboard runs — avoids a TDZ crash.
 setTimeout(function(){render();},0);

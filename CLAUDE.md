@@ -60,14 +60,21 @@ habit, a monthly recurring item, a journaling prompt, or a dated calendar event.
 }
 ```
 
-Optional fields: `dueDate` ("YYYY-MM-DD"), `endDate` ("YYYY-MM-DD"), `links` ([]),
-`attachments` ([]), `updatedAt`, `archivedAt`. Keep `description` to the things that aren't
-obvious from the title; don't pad.
+Optional fields: `dueDate` ("YYYY-MM-DD"), `endDate` ("YYYY-MM-DD"), `descGuess` (bool), `links` ([]),
+`attachments` ([]), `updatedAt`, `archivedAt`.
 
-**Date spans** — set `endDate` (≥ `dueDate`) to make an item span multiple days on the calendar
-(Google/Outlook-style bar), e.g. *"Dad in town Jun 7–11"* → `dueDate:"2026-06-07"`,
-`endDate:"2026-06-11"`. For a single day, leave `endDate` unset. Spans are color-coded by category
-and stack into lanes; they also export to the Google feed (`.ics`) as multi-day events.
+**`description` (write it richer now).** Give every item a genuinely useful 1–2 sentence
+description — what it means, why it matters to JB, or a sensible next step — drawing on §5 and the
+living "About JB" memory (below). It's fine to make an **educated guess**; when the description
+infers beyond the literal input, set **`descGuess: true`** (the app shows a subtle "✦ inferred"
+chip). Don't pad or restate the title. (The brain-dump / screenshot Edge Function already does this
+on capture; match its depth when you file things by hand.)
+
+**Date spans (always set both for a range).** When JB names a **date range** ("Dad in town Jun
+7–11", "Maui Jul 3–9", "the 9th through the 11th"), set BOTH `dueDate` = start AND `endDate` = end
+(≥ `dueDate`) so it becomes a multi-day calendar bar — don't just capture the start. For a single
+day, leave `endDate` unset. Spans are color-coded by category, stack into lanes, and export to the
+Google feed (`.ics`) as multi-day events.
 
 **Progress steps** — any item (task/idea/note/project) can carry an optional ordered
 `steps` array for phasic, multi-stage things (e.g. "emailed → waiting → shipped → received"):
@@ -157,9 +164,11 @@ When a Musubi brand task also names a kid (e.g. *"Musubi: order Archie's shoot g
 1. **Parse & smart-split.** If JB's message contains several distinct things, file each as its
    own item. If it's clearly one thing, keep it one. When genuinely unsure whether it's one or
    many, ask.
-2. **Classify** with §3 (type, category, priority, dueDate, emoji).
-3. **Write** a clean `text` + `notes` (+ `description` if there's useful context). Use JB's
-   context (§5) to enrich — e.g. tie a Musubi idea to existing Musubi direction.
+2. **Classify** with §3 (type, category, priority, `dueDate`+`endDate` for ranges, emoji).
+3. **Write** a clean `text` + a **richer `description`** (1–2 sentences of real context / why it
+   matters / next step), using §5 **and the living "About JB" memory** to make educated guesses —
+   set `descGuess: true` when you infer beyond the literal input. Tie things to existing direction
+   (e.g. a Musubi idea to the on-file Musubi directions). `notes` stays a short one-liner.
 4. **Append** to the right file with a unique `id`; **validate the JSON** (`python3 -m json.tool`).
 5. **Commit to `main` and push** (no PR). Use a clear commit message.
 6. **Recap** in 1–2 lines: what was filed, its type/category, and that it's live.
@@ -189,6 +198,11 @@ Never push malformed JSON — it breaks the whole list render.
 - **Family:** Dad visits periodically.
 
 > If any of the above is wrong, JB will correct it — update this section when he does.
+
+**Living "About JB" memory.** The app also keeps an *auto-distilled* profile of JB (durable facts +
+entities + patterns, in the `memory` Supabase store, refreshed by the `analyze-screenshot` Edge
+Function). It's what powers smarter categorization, the graph's concept nodes, and the educated-guess
+descriptions. §5 here is the hand-maintained anchor; the living memory is the dynamic layer on top.
 
 ---
 

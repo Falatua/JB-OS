@@ -77,9 +77,15 @@ Select multiple screenshots and share them all at once — the Repeat loop handl
 - **Task only on a clear action** — a checkout/cart, a reservation, a bill to pay, a reply to send →
   lands in the **Tasks** bucket.
 - It also extracts a **useful link** when it can (a Maps link for a place, the product/article URL).
+- It **auto-writes a richer description** (using the "About JB" memory for context); when that
+  description is an educated guess it's flagged with a subtle **✦ inferred** chip you can keep or clear.
+- If the screenshot shows a **date or date range** (an event, reservation, trip), it sets the
+  `dueDate` (and `endDate` for a range → a multi-day calendar span).
+- **The original screenshot is kept with the item.** It's uploaded to the `screenshots` storage
+  bucket and saved as an **attachment** on the note/task (visible in the detail panel) — so the media
+  travels with the item, not just the AI's read of it.
 - Everything is editable after the fact — recategorize by dragging onto a Life Area, or convert
-  note↔task in the detail panel. Each captured item keeps the original screenshot attached and a
-  📸 "via screenshot" marker.
+  note↔task in the detail panel. Each captured item carries a 📸 "via screenshot" marker.
 
 ## Files
 - `supabase/functions/analyze-screenshot/index.ts` — the Edge Function (proxy + vision + routing + cap + storage)
