@@ -126,7 +126,9 @@
     "dueDate": "2026-06-07",
     "createdAt": "2026-05-30T23:42:48Z",
     "endDate": "2026-06-11",
-    "updatedAt": "2026-06-04T15:26:47Z"
+    "updatedAt": "2026-06-05T18:47:24Z",
+    "description": "JB's dad is in town Jun 7–11 — a multi-day visit to block out family time and plan around (Dad visits periodically).",
+    "descGuess": true
   },
   {
     "id": "tg-016",
@@ -140,7 +142,9 @@
     "done": false,
     "archived": false,
     "createdAt": "2026-05-30T21:43:04Z",
-    "updatedAt": "2026-06-04T15:17:06Z"
+    "updatedAt": "2026-06-05T18:47:24Z",
+    "description": "Restock tuna — likely the ahi/poke staple — on the next grocery run.",
+    "descGuess": true
   },
   {
     "id": "tg-015",
@@ -169,7 +173,9 @@
     "done": false,
     "archived": false,
     "createdAt": "2026-05-30T02:49:58Z",
-    "updatedAt": "2026-06-04T15:14:42Z"
+    "updatedAt": "2026-06-05T18:47:24Z",
+    "description": "Move JB's 3DS and Switch game files/backups into his personal Dropbox so the library is consolidated and safely backed up.",
+    "descGuess": true
   },
   {
     "id": "c-coins-cash",
@@ -183,7 +189,9 @@
     "done": false,
     "archived": false,
     "createdAt": "2026-05-29T21:03:04Z",
-    "updatedAt": "2026-06-04T15:17:06Z"
+    "updatedAt": "2026-06-05T18:47:24Z",
+    "description": "Cash in the loose-coin jar at a Coinstar or the bank — a quick run-around-town errand.",
+    "descGuess": true
   },
   {
     "id": "tg-013",
@@ -196,7 +204,10 @@
     "source": "telegram",
     "done": false,
     "archived": false,
-    "createdAt": "2026-05-29T20:43:57Z"
+    "createdAt": "2026-05-29T20:43:57Z",
+    "description": "Make JB OS installable as a PWA (Add to Home Screen) so it behaves like a native app on his phone — it's already a single-page web app on GitHub Pages, so mostly a manifest + service-worker pass.",
+    "descGuess": true,
+    "updatedAt": "2026-06-05T18:47:24Z"
   },
   {
     "id": "tg-014",
@@ -209,7 +220,10 @@
     "source": "telegram",
     "done": false,
     "archived": false,
-    "createdAt": "2026-05-29T20:43:57Z"
+    "createdAt": "2026-05-29T20:43:57Z",
+    "description": "Find which AnswerLab platforms allow mobile login so JB can write his end-of-day reports with Whisper Flow voice dictation, without routing through IT.",
+    "descGuess": true,
+    "updatedAt": "2026-06-05T18:47:24Z"
   },
   {
     "id": "c-heber-designs",
@@ -256,7 +270,10 @@
     "source": "telegram",
     "done": false,
     "archived": false,
-    "createdAt": "2026-05-29T08:27:08Z"
+    "createdAt": "2026-05-29T08:27:08Z",
+    "description": "Research how Obsidian (JB's note vault) can plug into Claude Code and other AI tools — e.g. as a knowledge base / second brain the agents can read.",
+    "descGuess": true,
+    "updatedAt": "2026-06-05T18:47:24Z"
   },
   {
     "id": "tg-001",
@@ -270,7 +287,10 @@
     "done": false,
     "archived": false,
     "dueDate": "2026-06-01",
-    "createdAt": "2026-05-28T01:51:32Z"
+    "createdAt": "2026-05-28T01:51:32Z",
+    "description": "Pay the hospital bill from the birth — due early next month; clear it before it lapses.",
+    "descGuess": true,
+    "updatedAt": "2026-06-05T18:47:24Z"
   },
   {
     "id": "tg-010",
@@ -306,7 +326,9 @@
         "done": false
       }
     ],
-    "updatedAt": "2026-06-01T00:00:00Z"
+    "updatedAt": "2026-06-05T18:47:24Z",
+    "description": "Request replacement filters for the LARQ self-cleaning water bottle, expedited sooner than the usual cadence.",
+    "descGuess": true
   },
   {
     "id": "tg-002",
@@ -319,7 +341,9 @@
     "source": "telegram",
     "done": false,
     "archived": false,
-    "createdAt": "2026-05-28T01:51:32Z"
+    "createdAt": "2026-05-28T01:51:32Z",
+    "description": "Research investment options with an eye on the capital-gains-tax implications before committing.",
+    "updatedAt": "2026-06-05T18:47:24Z"
   },
   {
     "id": "tg-003",
@@ -332,7 +356,9 @@
     "source": "telegram",
     "done": false,
     "archived": false,
-    "createdAt": "2026-05-28T02:01:29Z"
+    "createdAt": "2026-05-28T02:01:29Z",
+    "description": "Make a charitable donation to John Brock's cancer GoFundMe — check the link and give.",
+    "updatedAt": "2026-06-05T18:47:24Z"
   },
   {
     "id": "tg-004",
@@ -346,7 +372,9 @@
     "done": false,
     "archived": false,
     "createdAt": "2026-05-29T19:11:00Z",
-    "updatedAt": "2026-06-04T15:14:42Z"
+    "updatedAt": "2026-06-05T18:47:24Z",
+    "description": "Order the grip and accessories for the AYN Thor handheld — better ergonomics for handheld gaming sessions.",
+    "descGuess": true
   },
   {
     "id": "tg-005",
@@ -359,7 +387,10 @@
     "source": "telegram",
     "done": false,
     "archived": false,
-    "createdAt": "2026-05-29T19:11:00Z"
+    "createdAt": "2026-05-29T19:11:00Z",
+    "description": "Stand up a VPS (virtual private server) — likely to self-host projects/tools or run JB OS-adjacent services.",
+    "descGuess": true,
+    "updatedAt": "2026-06-05T18:47:24Z"
   },
   {
     "id": "tg-007",
@@ -372,7 +403,10 @@
     "source": "telegram",
     "done": false,
     "archived": false,
-    "createdAt": "2026-05-29T19:11:00Z"
+    "createdAt": "2026-05-29T19:11:00Z",
+    "description": "Explore Claude's Connections integrations + skills to set up on JB's work computer for the AnswerLab job.",
+    "descGuess": true,
+    "updatedAt": "2026-06-05T18:47:24Z"
   },
   {
     "id": "tg-008",
@@ -386,7 +420,9 @@
     "done": false,
     "archived": false,
     "createdAt": "2026-05-29T19:11:00Z",
-    "updatedAt": "2026-06-04T15:14:42Z"
+    "updatedAt": "2026-06-05T18:47:24Z",
+    "description": "Swap the dead battery in Mackenzie's car key fob so her remote works again — a quick fix.",
+    "descGuess": true
   },
   {
     "id": "tg-009",
@@ -400,7 +436,9 @@
     "done": false,
     "archived": false,
     "createdAt": "2026-05-29T19:11:00Z",
-    "updatedAt": "2026-06-04T15:14:42Z"
+    "updatedAt": "2026-06-05T18:47:24Z",
+    "description": "Track down Mackenzie's electric breast pumps (baby gear) — locate or reorder them.",
+    "descGuess": true
   },
   {
     "id": "tg-011",
@@ -414,7 +452,9 @@
     "done": false,
     "archived": false,
     "createdAt": "2026-05-29T19:17:00Z",
-    "updatedAt": "2026-06-04T15:14:42Z"
+    "updatedAt": "2026-06-05T18:47:24Z",
+    "description": "Pull the game ROMs off Karen's old phone, then wipe the phone clean before passing it on.",
+    "descGuess": true
   },
   {
     "id": "tg-006",
@@ -428,7 +468,10 @@
     "done": true,
     "archived": true,
     "archivedAt": "2026-05-29T07:45:00Z",
-    "createdAt": "2026-05-29T19:11:00Z"
+    "createdAt": "2026-05-29T19:11:00Z",
+    "description": "Build the to-do web app (JB OS) and deploy it on GitHub Pages — effectively done; JB OS is live.",
+    "descGuess": true,
+    "updatedAt": "2026-06-05T18:47:24Z"
   },
   {
     "id": "c-ay-thor-sticker",
