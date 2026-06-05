@@ -1733,19 +1733,21 @@ function setFilter(f, mode){
   syncWorkspaceNav(view);
   const cat=CATS[f];
   const dot=document.getElementById('page-title-dot');
+  // Append the active area so a filtered view is unambiguous, e.g. "Work · Notes", "High Priority · Tasks".
+  const areaSuffix=' · '+(view==='notes'?'Notes':'Tasks');
   if(mode==='cat'&&cat){
     dot.style.display='block';dot.style.background=cat.color;
-    document.getElementById('page-title').lastChild.textContent=' '+cat.label;
+    document.getElementById('page-title').lastChild.textContent=' '+cat.label+areaSuffix;
   } else if(mode==='prio'){
     const prioColors={high:'var(--red)',in_progress:'var(--teal)',normal:'var(--text-2)',low:'var(--text-3)'};
     const prioTitles={high:'High Priority',in_progress:'Work in Progress',normal:'Normal Priority',low:'Low Priority'};
     dot.style.display='block';dot.style.background=prioColors[f]||'var(--text-3)';
-    document.getElementById('page-title').lastChild.textContent=' '+prioTitles[f];
+    document.getElementById('page-title').lastChild.textContent=' '+prioTitles[f]+areaSuffix;
   } else if(mode==='due'){
     const dueColors={overdue:'var(--red)',soon:'var(--accent)'};
     const dueTitles={overdue:'Overdue',soon:'Due Soon'};
     dot.style.display='block';dot.style.background=dueColors[f]||'var(--text-3)';
-    document.getElementById('page-title').lastChild.textContent=' '+(dueTitles[f]||'Due');
+    document.getElementById('page-title').lastChild.textContent=' '+(dueTitles[f]||'Due')+areaSuffix;
   } else {
     dot.style.display='none';
     const areaName=view==='notes'?'Notes':'Tasks';
