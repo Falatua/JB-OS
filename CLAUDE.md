@@ -130,7 +130,7 @@ it's a **note**.
 - **note** — reference info, an FYI, context, or an event/fact without a direct done-state.
   *"Dad in town Jun 7–11"* is a note, not a task.
 - **project** — a multi-step ongoing effort. **JB's preference: do NOT create umbrella
-  project items.** Big efforts (Musubi Strong, JB OS, Roman TD) are tracked as discrete
+  project items.** Big efforts (Musubi Strong, JB OS, Rome TD) are tracked as discrete
   tasks/ideas/notes tagged to a category instead. Only use `project` if JB explicitly asks.
 
 ### `category` (fixed set — never invent new ones)
@@ -138,8 +138,8 @@ it's a **note**.
 |----------|---------|
 | `musubi` | Anything for the **Musubi Strong** brand (product, content, IG/Instagram, store, designs, shoots). All Musubi brand work lives here — **not** in `work`. |
 | `work` | **AnswerLab** (day job) + JB's side/freelance **design** work (e.g. Heber). Nothing Musubi-related. |
-| `tech` | Coding, AI tools (Claude/Manus), devices, the JB OS app, servers/VPS, Obsidian. *(Games/ROMs/Roman TD now live in `gaming`.)* |
-| `gaming` | Video games, consoles & handhelds, PC gaming, **ROMs**/emulation, Pokémon, **AYN Thor**, **Roman TD**, World of Warcraft. **Gaming items default to `type: note`** (hobby/reference → Notes area, low priority) — overridable per item if something is genuinely a task. |
+| `tech` | Coding, AI tools (Claude/Manus), devices, the JB OS app, servers/VPS, Obsidian. *(Games/ROMs/Rome TD now live in `gaming`.)* |
+| `gaming` | Video games, consoles & handhelds, PC gaming, **ROMs**/emulation, Pokémon, **AYN Thor**, **Rome TD**, World of Warcraft. **Gaming items default to `type: note`** (hobby/reference → Notes area, low priority) — overridable per item if something is genuinely a task. |
 | `finance` | Bills, taxes, investing, rent, payments |
 | `family` | Mackenzie/Kenzie (partner), **Archie & Gigi** (kids), baby gear/pumps/nursery, JB's dad, extended family |
 | `health` | **Health and Fitness** — training/hypertrophy, diet, medical, appointments, leisure-sport |
@@ -157,7 +157,7 @@ invisible render fallback — never assign it.)
 - **AnswerLab** or **"AL"** → `work`
 - **Kenzie / Mackenzie, Archie, or Gigi** → `family`
 - **Musubi / Musubi Strong / Instagram** → `musubi`
-- **Pokémon · ROM/ROMs · emulation · consoles/handhelds (Nintendo/Switch/PlayStation/Xbox/3DS/AYN Thor) · Roman TD · World of Warcraft** → `gaming`
+- **Pokémon · ROM/ROMs · emulation · consoles/handhelds (Nintendo/Switch/PlayStation/Xbox/3DS/AYN Thor) · Rome TD · World of Warcraft** → `gaming`
 
 When a Musubi brand task also names a kid (e.g. *"Musubi: order Archie's shoot gear"*) it stays `musubi` — the brand is the subject. The keyword engine lives in `index.html`'s `guessCategory()`; the screenshot/brain-dump rules live in the `analyze-screenshot` Edge Function. Update **all three** together when these rules change.
 
@@ -219,7 +219,7 @@ Never push malformed JSON — it breaks the whole list render.
   Instagram growth + original designs; own tab and `musubi` category. Content directions on file:
   more real models, region-realistic (island) mockups, "auntie's favorite tee", Throwback Thursdays.
 - **Day job:** **AnswerLab** (writes reports / end-of-day updates).
-- **Side dev:** **Roman TD** (a tower-defense game he ships) and **JB OS** itself.
+- **Side dev:** **Rome TD** (a tower-defense game he ships) and **JB OS** itself.
 - **Fitness:** hypertrophy / weight training; follows Mike Israetel / RP.
 - **Tech stack & interests:** Claude Code, GitHub Pages, VPS, Obsidian, AI agents (Manus),
   retro-game emulation (3DS/Switch ROMs, Dropbox backups).

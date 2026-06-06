@@ -1066,9 +1066,22 @@
   .mem-addrow input:focus{border-color:var(--accent)}
   .mem-foot-note{flex:1;min-width:0;font-size:10.5px;color:var(--text-3);line-height:1.4}
   /* dashboard card */
-  .dmem-facts{display:flex;flex-direction:column;gap:5px;margin-bottom:4px}
-  .dmem-fact{font-size:12.5px;color:var(--text-2);line-height:1.45;padding-left:12px;position:relative;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .dmem-fact::before{content:'•';position:absolute;left:2px;color:var(--accent)}
+  .dmem-groups{display:flex;flex-direction:column;gap:10px;margin-bottom:6px}
+  .dmem-group{display:flex;flex-direction:column;gap:3px}
+  .dmem-cat{display:flex;align-items:center;gap:6px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3)}
+  .dmem-cat-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+  .dmem-fact{font-size:12.5px;color:var(--text-2);line-height:1.5;padding-left:13px;position:relative}
+  .dmem-fact::before{content:'';position:absolute;left:3px;top:7px;width:3px;height:3px;border-radius:50%;background:var(--text-3)}
+  /* From-your-vault cards: priorities + guardrails */
+  .dbrain-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:9px}
+  .dbrain-list li{display:flex;gap:9px;align-items:flex-start}
+  .dbrain-n{flex-shrink:0;width:18px;height:18px;border-radius:50%;background:var(--accent-dim);color:var(--accent);font-size:10.5px;font-weight:700;display:flex;align-items:center;justify-content:center;margin-top:1px;font-variant-numeric:tabular-nums}
+  .dbrain-t{font-size:12.5px;font-weight:600;color:var(--text);line-height:1.35}
+  .dbrain-note{font-size:11.5px;color:var(--text-3);line-height:1.45;margin-top:2px}
+  .dbrain-guards{display:flex;flex-direction:column;gap:7px}
+  .dbrain-guard{font-size:12px;color:var(--text-2);line-height:1.45;padding-left:16px;position:relative}
+  .dbrain-guard::before{content:'';position:absolute;left:3px;top:6px;width:5px;height:5px;border-radius:1.5px;background:var(--accent);opacity:.75}
+  .dbrain-src{font-size:10.5px;color:var(--text-3);margin-top:10px;display:flex;align-items:center;gap:5px}
 
   /* ===== Drag to reorder / recategorize ===== */
   .item-grip{display:flex;align-items:center;justify-content:center;align-self:stretch;width:18px;margin-right:-2px;color:var(--text-3);cursor:grab;opacity:0;transition:opacity var(--t),color var(--t);touch-action:none;flex-shrink:0;-webkit-tap-highlight-color:transparent}
@@ -1655,7 +1668,7 @@ const CONCEPTS = [
   // efforts / brands
   {key:'musubi',label:'Musubi',re:/\bmusubi\b/i},
   {key:'jbos',label:'JB OS',re:/jb ?os|to-?do (list )?(web )?app|daily (to-?do|task)/i},
-  {key:'romantd',label:'Roman TD',re:/roman ?td/i},
+  {key:'romantd',label:'Rome TD',re:/rom(?:an|e) ?td/i},
   {key:'answerlab',label:'AnswerLab',re:/answer ?lab/i},
   // gaming hardware / emulation
   {key:'aynthor',label:'AYN Thor',re:/ayn thor|anythor|\bthor\b/i},
@@ -2610,7 +2623,7 @@ function guessCategory(text,notes){
   // Strong identity/brand cues (weight 3) outscore generic verbs (weight 1), so
   // "order Archie a onesie" → family and "ship Musubi tees" → musubi (not shopping).
   // Entity rules JB set: AnswerLab/AL → work · Kenzie/Archie/Gigi → family · Musubi/Instagram
-  // → musubi · ROM/Pokémon/consoles/Roman TD/WoW → gaming. [regex, category, weight]
+  // → musubi · ROM/Pokémon/consoles/Rome TD/WoW → gaming. [regex, category, weight]
   const SIG=[
     // strong identity / proper nouns
     [/\bmusubi\b|musubi strong|musubistrong|\binstagram\b|throwback thursday|auntie'?s favou?rite/,'musubi',3],
@@ -3936,6 +3949,14 @@ function closePrompts(){document.getElementById('prompts-modal').classList.add('
 function closePromptsOutside(e){if(e.target.id==='prompts-modal')closePrompts();}
 
 /* ===== Today dashboard ===== */
+// Curated, non-sensitive snapshot of JB's Obsidian "second brain" (priorities + brand guardrails),
+// served as a static file. Loaded once; re-renders the dashboard when it arrives.
+var _brain=null;
+function loadBrain(){
+  fetch('brain.json',{cache:'no-store'}).then(function(r){return r.ok?r.json():null;}).then(function(d){
+    if(d){_brain=d; if(view==='dashboard')render();}
+  }).catch(function(){});
+}
 // Quick count-up for hero stat numbers (elements tagged data-countup). Reduced-motion → set final at once.
 function animateCountUps(root){
   const els=(root||document).querySelectorAll('[data-countup]'); if(!els.length)return;
@@ -4165,11 +4186,38 @@ function renderDashboard(){
       +'<div class="dmz-cta">Open Musubi →</div></div></div>';
   })();
 
-  // ---- "About JB" living-memory card ----
+  // ---- "About JB" living-memory card — grouped by category for an organized, cohesive read ----
   var _mem=memLoad(), _mf=_mem.facts||[];
+  var _memBody;
+  if(_mf.length){
+    var _mgOrder=Object.keys(MEM_CAT_LABEL), _mg={};
+    _mf.forEach(function(f){(_mg[f.category||'personal']=_mg[f.category||'personal']||[]).push(f);});
+    var _shown=0, _MEMMAX=7; // cap total facts shown on the card
+    _memBody='<div class="dmem-groups">'+_mgOrder.filter(function(c){return _mg[c];}).map(function(c){
+      if(_shown>=_MEMMAX)return '';
+      var cc=CATS[c]||CATS.general, take=_mg[c].slice(0,Math.min(_mg[c].length,_MEMMAX-_shown));
+      if(!take.length)return ''; _shown+=take.length;
+      return '<div class="dmem-group"><div class="dmem-cat"><span class="dmem-cat-dot" style="background:'+(cc.color||'#888')+'"></span>'+esc(MEM_CAT_LABEL[c]||c)+'</div>'
+        +take.map(function(f){return '<div class="dmem-fact">'+esc(f.text)+'</div>';}).join('')+'</div>';
+    }).join('')+'</div>';
+  } else {
+    _memBody='<div class="dempty">A living profile of who you are and how you work, distilled from your items, journal and history, and used to sharpen the graph and AI features.</div>';
+  }
+  // ---- "From your second brain" — priorities + guardrails synced from the Obsidian vault ----
+  var brainSection='';
+  if(_brain&&((_brain.priorities||[]).length||(_brain.guardrails||[]).length)){
+    var _bsrc='<div class="dbrain-src"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2.5c-1.5 0-2.5 1-2.5 2.3V13M8 2.5c1.5 0 2.5 1 2.5 2.3V13M3 13h10"/></svg>From your Obsidian second brain'+(_brain.updated?' · updated '+esc(_brain.updated):'')+'</div>';
+    var prios=(_brain.priorities||[]).slice(0,5);
+    var prioCard='<div class="dcard"><div class="dcard-label"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 2.5h10M3 8h10M3 13.5h6"/></svg>Current priorities</div>'
+      +'<ol class="dbrain-list">'+prios.map(function(p,i){return '<li><span class="dbrain-n">'+(i+1)+'</span><div><div class="dbrain-t">'+esc(p.title)+'</div>'+(p.note?'<div class="dbrain-note">'+esc(p.note)+'</div>':'')+'</div></li>';}).join('')+'</ol>'+_bsrc+'</div>';
+    var guards=(_brain.guardrails||[]);
+    var guardCard='<div class="dcard"><div class="dcard-label"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1.8l5 2v3.3c0 3-2.1 5.2-5 7.1-2.9-1.9-5-4.1-5-7.1V3.8z"/></svg>Standing guardrails</div>'
+      +'<div class="dbrain-guards">'+guards.map(function(g){return '<div class="dbrain-guard">'+esc(g)+'</div>';}).join('')+'</div>'+_bsrc+'</div>';
+    brainSection='<div class="dash-sec">From your second brain</div><div class="dins-row">'+prioCard+guardCard+'</div>';
+  }
   var memCard='<div class="dcard dmem dcard-click" role="button" tabindex="0" title="What JB OS has learned about you" onclick="openMemModal()" onkeydown="if(event.key===\'Enter\')openMemModal()">'
     +'<div class="dcard-label"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M8 2.2c-2 0-3.4 1.3-3.4 3 0 .4-.3.6-.6.9-.7.6-1 1.4-1 2.2 0 .9.5 1.6 1.2 2 .1 1.4 1.2 2.5 2.6 2.5M8 2.2c2 0 3.4 1.3 3.4 3 0 .4.3.6.6.9.7.6 1 1.4 1 2.2 0 .9-.5 1.6-1.2 2-.1 1.4-1.2 2.5-2.6 2.5M8 2.2v11.5"/></svg>What JB OS knows about you'+(_mf.length?' · '+_mf.length:'')+'</div>'
-    +(_mf.length?'<div class="dmem-facts">'+_mf.slice(0,5).map(function(f){return '<div class="dmem-fact">'+esc(f.text)+'</div>';}).join('')+'</div>':'<div class="dempty">A living profile of who you are and how you work — distilled from your items, journal &amp; history, and used to sharpen the graph and AI features.</div>')
+    +_memBody
     +'<button class="dcard-cta" onclick="event.stopPropagation();openMemModal()">'+(_mf.length?'View &amp; edit →':'Build it →')+'</button></div>';
 
   document.getElementById('list').innerHTML='<div class="dash-wrap">'
@@ -4177,6 +4225,7 @@ function renderDashboard(){
     +'<div class="cond" id="cond-strip"></div>'
     +reminderBar()
     +'<div class="dash-hero">'+habitCard+tasksCard+journalCard+'</div>'
+    +brainSection
     +musubiCard
     +'<div class="dash-sec">Now</div>'
     +'<div class="dins-row">'+focusCard+upCard+'</div>'
@@ -4619,6 +4668,7 @@ migrateCategories(); // re-sort any retired lifestyle/general items into a real 
 migrateNotePriorities(); // one-time: existing Normal notes → Low (type-default rule)
 migrateGamingType(); // one-time: existing gaming items → notes (overridable thereafter)
 purgeOldRoutineLogs(); // clear stale daily/monthly completion logs so each period resets clean
+loadBrain(); // pull the curated Obsidian priorities/guardrails snapshot for the dashboard
 // Defer the first render one tick so every top-level const (incl. the Musubi MZ_* data
 // the dashboard now previews) is initialized before renderDashboard runs — avoids a TDZ crash.
 setTimeout(function(){render();},0);

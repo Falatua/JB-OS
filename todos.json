@@ -148,11 +148,11 @@
   },
   {
     "id": "tg-015",
-    "text": "Roman TD: clarify intro instructions (prospects → towers → combo towers, and 'tile' vs 'map')",
+    "text": "Rome TD: clarify intro instructions (prospects → towers → combo towers, and 'tile' vs 'map')",
     "type": "note",
     "emoji": "🎮",
     "notes": "Player feedback: people are confused about prospects, how they become towers, and how towers become combo towers, and by the term 'tile' (maybe call it 'map'). Reword the start-of-game instructions to be clearer.",
-    "description": "Roman TD onboarding feedback from players. Confusion points: (1) what a 'prospect' is, (2) how a prospect becomes a tower, (3) how a tower becomes a combo tower, (4) how to place and save prospects so they turn into towers. Action: rework the beginning-of-game instructions to explain prospects, their placement, and the prospect to tower to combo-tower progression more clearly, efficiently, and effectively. Separately, players are confused by the term 'tile' — consider renaming it to 'map', or clarifying what a tile is.",
+    "description": "Rome TD onboarding feedback from players. Confusion points: (1) what a 'prospect' is, (2) how a prospect becomes a tower, (3) how a tower becomes a combo tower, (4) how to place and save prospects so they turn into towers. Action: rework the beginning-of-game instructions to explain prospects, their placement, and the prospect to tower to combo-tower progression more clearly, efficiently, and effectively. Separately, players are confused by the term 'tile' — consider renaming it to 'map', or clarifying what a tile is.",
     "priority": "low",
     "category": "gaming",
     "source": "telegram",

@@ -32,7 +32,7 @@ const ENTITY_RULES = `ENTITY RULES (always apply, they override generic guesses)
 - AnswerLab or "AL" -> work.
 - Kenzie/Mackenzie, Archie, or Gigi -> family.
 - Musubi, Musubi Strong, or Instagram -> musubi.
-- Pokémon, ROM/ROMs, emulation, game consoles or handhelds (Nintendo/Switch/PlayStation/Xbox/3DS/AYN Thor), Roman TD, or World of Warcraft -> gaming.`;
+- Pokémon, ROM/ROMs, emulation, game consoles or handhelds (Nintendo/Switch/PlayStation/Xbox/3DS/AYN Thor), Rome TD, or World of Warcraft -> gaming.`;
 
 const SYSTEM_PROMPT = `You are a screenshot analysis assistant embedded in JB OS, a personal productivity operating system. Read one iOS screenshot and decide whether it should become a NOTE or a TASK, then generate its content.
 
@@ -143,7 +143,7 @@ async function brainDump(text: string, admin: any, ANTHROPIC_KEY: string, profil
 // ===== Graph connections: surface non-obvious links across JB's items (knowledge-graph insight) =====
 const CONNECTIONS_PROMPT = `You are mapping the deep structure of JB's personal task/note system to surface NON-OBVIOUS connections — pairs of items that relate thematically, could be done together, build on one another, or reveal a pattern in how he works and who he is.
 
-About JB: runs Musubi Strong (a Hawaiʻi / Pacific-Islander apparel brand — Shopify + Instagram growth + original designs). Day job at AnswerLab (UX research; writes reports/end-of-day updates). Builds Roman TD (a tower-defense game) and JB OS (this very app). Into hypertrophy training (Mike Israetel / RP). Heavy on AI tooling (Claude, Manus, Higgsfield), Obsidian, and retro gaming/emulation (AYN Thor, 3DS/Switch ROMs). Family: partner Mackenzie, kids Archie & Gigi.
+About JB: runs Musubi Strong (a Hawaiʻi / Pacific-Islander apparel brand — Shopify + Instagram growth + original designs). Day job at AnswerLab (UX research; writes reports/end-of-day updates). Builds Rome TD (a tower-defense game) and JB OS (this very app). Into hypertrophy training (Mike Israetel / RP). Heavy on AI tooling (Claude, Manus, Higgsfield), Obsidian, and retro gaming/emulation (AYN Thor, 3DS/Switch ROMs). Family: partner Mackenzie, kids Archie & Gigi.
 
 Given the items (each: id, text, category), return up to 12 of the STRONGEST connections. Favor links that cross categories or reveal a real insight (e.g. an AI tool that could serve Musubi, two tasks that share a hidden dependency, a recurring theme). Skip trivial same-topic pairings unless genuinely illuminating. Each connection = the two item ids + a SHORT reason (≤ 10 words, concrete).
 

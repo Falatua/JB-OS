@@ -1,0 +1,35 @@
+{
+  "updated": "2026-06-06",
+  "source": "Obsidian second brain",
+  "priorities": [
+    {
+      "title": "Musubi Strong growth & brand continuity",
+      "note": "The highest-priority lane. Preserve the brand system across content, products, ads, and site; reduce the content bottleneck; grow Instagram while keeping cultural integrity."
+    },
+    {
+      "title": "Shared AI memory",
+      "note": "Keep one source of truth across assistants and distill conversations into durable memory instead of raw transcripts."
+    },
+    {
+      "title": "Broader life & work context",
+      "note": "Grow the brain beyond Musubi so it also supports work, game dev, articles, and personal context, keeping anything sensitive protected."
+    },
+    {
+      "title": "Game development (Rome TD)",
+      "note": "Keep Rome TD in a clear lane so specs, decisions, and gameplay validation persist and can resume without re-briefing."
+    },
+    {
+      "title": "Professional UX research",
+      "note": "Enough context to support reports, synthesis, and career materials, without exposing confidential client detail."
+    }
+  ],
+  "guardrails": [
+    "No em dashes, ever.",
+    "Be honest, push back when warranted, and quality-check before delivering.",
+    "Musubi voice: quiet pride, cultural respect, family, food, Hawaiʻi roots, strength without gym-hype.",
+    "JB has Hawaiʻi family roots but is SoCal diaspora, not kamaʻāina. Never position him as a local insider.",
+    "No gatekeeping, no tourist-shaming, no “real local” policing.",
+    "Palette restraint: Black + Bone + Hibiscus Red + at most one supporting color.",
+    "The 5% Maui Strong donation is a fact, not a sales pitch."
+  ]
+}
