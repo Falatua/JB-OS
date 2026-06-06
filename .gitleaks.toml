@@ -1,0 +1,15 @@
+# gitleaks config for JB-OS.
+# JB-OS is a public GitHub Pages app, so the client needs two PUBLIC-by-design keys in
+# index.html: the Supabase publishable key (sb_publishable_*) and the VAPID public key.
+# Neither is a secret, so allowlist them to stop the global pre-commit hook from
+# false-flagging normal commits. Real secrets (sb_secret_*, private keys, tokens) are
+# still caught because only these specific public values are allowlisted.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "JB-OS public-by-design client keys (Supabase publishable + VAPID public)"
+regexes = [
+  '''sb_publishable_[A-Za-z0-9_-]+''',
+  '''BPHY242LozXdvyrrIBmaVa7xz5IIaEGJLGsi1Io4aDPrxCeT_p_NdqAs91OyNymekaW0XL3a0GuMjbhQBhyxP9A''',
+]

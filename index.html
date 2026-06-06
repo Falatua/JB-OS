@@ -2,6 +2,10 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<!-- Content-Security-Policy. Allowed external origins below: Supabase (data, realtime, edge functions),
+     open-meteo (weather widget), YouTube (video embeds), jsDelivr (supabase-js), Google Fonts.
+     IF YOU ADD a new external API, CDN, font host, or embed, add its origin here or that feature WILL be blocked. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://jdkfafvfczzgtzhtynjr.supabase.co wss://jdkfafvfczzgtzhtynjr.supabase.co https://api.open-meteo.com https://marine-api.open-meteo.com; frame-src https://www.youtube.com; manifest-src 'self'; worker-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'; frame-ancestors 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>JB's OS</title>
 <link rel="manifest" href="manifest.json">
@@ -2018,7 +2022,7 @@ function itemHTML(item, isArchiveView, idx){
       ${isArchiveView?'':`<div class="item-grip" data-grip="${item.id}" title="Drag to reorder, or onto a Life Area to recategorize" aria-hidden="true"><svg width="10" height="16" viewBox="0 0 10 16" fill="currentColor"><circle cx="3" cy="4" r="1.15"/><circle cx="7" cy="4" r="1.15"/><circle cx="3" cy="8" r="1.15"/><circle cx="7" cy="8" r="1.15"/><circle cx="3" cy="12" r="1.15"/><circle cx="7" cy="12" r="1.15"/></svg></div>`}
       ${checkEl}
       <div class="item-body" onclick="openDetail('${item.id}')" role="button" tabindex="0" aria-label="Open details: ${esc(item.text||'')}" onkeydown="if(event.key==='Enter'){openDetail('${item.id}');event.preventDefault()}" title="Click to open & edit details">
-        <div class="item-text" style="${isArchiveView?'text-decoration:line-through;color:var(--text-3)':''}"><span class="item-emoji">${item.emoji||guessEmoji(item.text||'',item.category)}</span> ${esc(item.text||'Untitled')}</div>
+        <div class="item-text" style="${isArchiveView?'text-decoration:line-through;color:var(--text-3)':''}"><span class="item-emoji">${esc(item.emoji||guessEmoji(item.text||'',item.category))}</span> ${esc(item.text||'Untitled')}</div>
         ${notes}
         ${progressHTML(item)}
         <div class="item-meta">${catBadge}${typeBadge}${prio}${dueChip}${indicators}${isArchiveView?archivedDate:`<span class="item-date">${ageStr(item.createdAt)}</span>`}${src}</div>
@@ -3499,7 +3503,7 @@ function routineItemHTML(scope,t,isDone){
         <svg class="cb-check" width="9" height="9" viewBox="0 0 10 10" fill="none" stroke="#111" stroke-width="2.2"><path d="M1.5 5l2.8 2.8 4.2-5"/></svg>
       </div>
       <div class="item-body" role="button" tabindex="0" onclick="openRoutineEdit('${scope}','${t.id}')" onkeydown="if(event.key==='Enter'){openRoutineEdit('${scope}','${t.id}');event.preventDefault()}" aria-label="Edit: ${esc(t.text)}" title="Click to edit — applies to all future ${scope==='daily'?'days':'months'}">
-        <div class="item-text"><span class="item-emoji">${em}</span> ${esc(t.text)}</div>
+        <div class="item-text"><span class="item-emoji">${esc(em)}</span> ${esc(t.text)}</div>
         ${notes}
         <div class="item-meta">${catBadge}${streakChip}</div>
       </div>
@@ -4106,7 +4110,7 @@ function renderDashboard(){
     const cat=CATS[i.category||'general']||CATS.general;
     const tagHTML=tag==='overdue'?'<span class="due-chip overdue">'+fmtDue(i.dueDate)+'</span>':tag==='today'?'<span class="due-chip soon">today</span>':priorityBadgeHTML(tag);
     return '<div class="dfocus" onclick="openDetail(\''+i.id+'\')"><div class="cb" onclick="event.stopPropagation();toggleDone(\''+i.id+'\')" role="checkbox" aria-checked="false" aria-label="Mark done: '+esc(i.text||'')+'" tabindex="0" onkeydown="if(event.key===\' \'||event.key===\'Enter\'){event.stopPropagation();toggleDone(\''+i.id+'\');event.preventDefault()}"><svg class="cb-check" width="9" height="9" viewBox="0 0 10 10" fill="none" stroke="#111" stroke-width="2.2"><path d="M1.5 5l2.8 2.8 4.2-5"/></svg></div>'
-      +'<div class="dfocus-body"><div class="dfocus-text"><span class="item-emoji">'+(i.emoji||guessEmoji(i.text||'',i.category))+'</span> '+esc(i.text||'')+'</div><div class="dfocus-meta"><span class="badge-cat" style="background:'+cat.dim+';color:'+cat.color+'">'+cat.label+'</span>'+tagHTML+'</div></div></div>';
+      +'<div class="dfocus-body"><div class="dfocus-text"><span class="item-emoji">'+esc(i.emoji||guessEmoji(i.text||'',i.category))+'</span> '+esc(i.text||'')+'</div><div class="dfocus-meta"><span class="badge-cat" style="background:'+cat.dim+';color:'+cat.color+'">'+cat.label+'</span>'+tagHTML+'</div></div></div>';
   }).join(''):'<div class="dempty">No high-priority items. Nice and clear.</div>';
   const focusCard='<div class="dcard dlist-card"><div class="dcard-label"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 2v12M4 3h8l-1.5 2.5L12 8H4"/></svg>High-priority focus</div>'+focusHTML+'</div>';
 
@@ -4349,8 +4353,9 @@ fetchJournalSeeds();
    and a realtime subscription + boot pull merge changes from your other devices. Falls back to
    local-only silently if not configured or offline — never breaks the app. */
 var SB=null, SB_CFG=null, SB_CLIENT=Math.random().toString(36).slice(2), _sbApplying=false, _sbT={}, _sbAuthed=false, _sbChannel=null, _sbStarted=false;
-// Cloud sync config is baked in so every device auto-connects on load — no in-app setup.
-// The publishable key is meant to be public; the jbos_sync table runs with RLS disabled per JB's "no-login" choice.
+// Cloud sync config (publishable URL + key) is baked in; the key is public by design.
+// Access is gated by Supabase email/password auth + RLS (authenticated role only): the
+// anon/publishable key cannot read jbos_sync (verified 2026-06-06, returns 401). Sign in to sync.
 var SB_EMBED={url:'https://jdkfafvfczzgtzhtynjr.supabase.co',key:'sb_publishable_QFHs4u69thMisxqLi35Zjw_0AX4BkTT',space:'main'};
 function sbGetCfg(){return SB_EMBED;}
 var _pillT=null;
