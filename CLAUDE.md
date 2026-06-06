@@ -120,6 +120,9 @@ checks the item off himself. Add `steps` when JB describes a process with phases
 **Notes** area (see §1). Getting task-vs-note right is therefore what files it in the correct place, so
 be deliberate: if there's a clear thing-to-do, it's a **task**; if it's reference/knowledge to revisit,
 it's a **note**.
+- **Gaming → note by default.** Anything in the `gaming` category defaults to `type: note` (hobby/
+  reference, low priority). It's a default, not a force — flip a specific gaming item back to `task` if
+  it's genuinely actionable, and it sticks.
 - **task** — a concrete action with a clear done-state. *"Buy more tuna", "Pay birth bill".*
 - **task** also includes investigation/action prompts such as *"Look into Obsidian"*,
   *"Research second-brain tools"*, or *"Check out X"*.
@@ -136,7 +139,7 @@ it's a **note**.
 | `musubi` | Anything for the **Musubi Strong** brand (product, content, IG/Instagram, store, designs, shoots). All Musubi brand work lives here — **not** in `work`. |
 | `work` | **AnswerLab** (day job) + JB's side/freelance **design** work (e.g. Heber). Nothing Musubi-related. |
 | `tech` | Coding, AI tools (Claude/Manus), devices, the JB OS app, servers/VPS, Obsidian. *(Games/ROMs/Roman TD now live in `gaming`.)* |
-| `gaming` | Video games, consoles & handhelds, PC gaming, **ROMs**/emulation, Pokémon, **AYN Thor**, **Roman TD**, World of Warcraft |
+| `gaming` | Video games, consoles & handhelds, PC gaming, **ROMs**/emulation, Pokémon, **AYN Thor**, **Roman TD**, World of Warcraft. **Gaming items default to `type: note`** (hobby/reference → Notes area, low priority) — overridable per item if something is genuinely a task. |
 | `finance` | Bills, taxes, investing, rent, payments |
 | `family` | Mackenzie/Kenzie (partner), **Archie & Gigi** (kids), baby gear/pumps/nursery, JB's dad, extended family |
 | `health` | **Health and Fitness** — training/hypertrophy, diet, medical, appointments, leisure-sport |

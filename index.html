@@ -1682,6 +1682,7 @@ function addItem(text, type='task', notes='', source='browser', priority='normal
   const autoOrganize=!category||category==='general';
   if(autoOrganize&&type==='task')type=guessType(text,notes);
   if(autoOrganize)category=guessCategory(text,notes);
+  type=defaultTypeForCategory(category,type); // gaming defaults to note
   priority=defaultPriorityForType(type,category,priority==='normal'?null:priority); // type default (notes→low); grocery/errands force low
   const items=load();
   const now=new Date().toISOString();
@@ -1782,6 +1783,12 @@ function defaultPriorityForType(type, category, hint){
   if(hint==='in_progress') return 'in_progress';
   if(hint==='high') return 'high';
   return (type==='note'||type==='idea') ? 'low' : 'normal';
+}
+// Creation-time default type by category: gaming is a hobby/reference domain, so gaming items default to
+// note (land in the Notes area). A default, not a force — JB can flip a specific gaming item back to a
+// task in the editor and it sticks. Apply this BEFORE defaultPriorityForType so gaming → low note.
+function defaultTypeForCategory(category, type){
+  return category==='gaming' ? 'note' : type;
 }
 function priorityInfo(priority){
   return PRIORITIES.find(p=>p.id===(priority||'normal'))||PRIORITIES[2];
@@ -2065,6 +2072,7 @@ function updateTabBar(){
 function dismissA2HS(){localStorage.setItem('jbos_a2hs','1');var e=document.getElementById('a2hs');if(e)e.classList.remove('show');}
 function render(){
   migrateNotePriorities(); // one-time (self-gated): runs the moment data is loaded; no-ops thereafter
+  migrateGamingType();     // one-time (self-gated): existing gaming items → notes
   updateTabBar();
   updateAreaCounts();
   if(!isListView(view)){renderView();return;}
@@ -2258,7 +2266,17 @@ function _fillDetail(it,isNew){
       if(pr.value!=='high'&&pr.value!=='in_progress')pr.value=defaultPriorityForType(this.value,document.getElementById('d-cat').value,null);}
     renderDetailBadges();
   };
-  document.getElementById('d-cat').onchange=function(){_dCatAuto=false;renderDetailBadges();}; // picking an area opts out of auto-detect
+  document.getElementById('d-cat').onchange=function(){
+    _dCatAuto=false; // picking an area opts out of auto-detect
+    // Gaming defaults to a Note (overridable — JB can flip the type back after). Nudge type, and for a
+    // new item re-default the priority to match (low), preserving a deliberate High/WIP.
+    if(this.value==='gaming'){
+      const ty=document.getElementById('d-type'); if(ty.value!=='note'){ty.value='note';
+        if(_isNew){const pr=document.getElementById('d-priority');
+          if(pr.value!=='high'&&pr.value!=='in_progress')pr.value=defaultPriorityForType('note','gaming',null);}}
+    }
+    renderDetailBadges();
+  };
   document.getElementById('detail').classList.remove('hidden');
   setTimeout(()=>document.getElementById('d-title').focus(),50);
 }
@@ -2450,6 +2468,10 @@ function saveDetail(){
   it.attachments=_dAttach;
   if(isNew){
     if(_dCatAuto||!it.category||it.category==='general')it.category=guessCategory(it.text,it.description); // auto-categorize unless the user picked an area
+    if(_dCatAuto&&it.category==='gaming'){ // auto-landed in gaming → default to a low note (overridable on next edit)
+      it.type='note';
+      if(it.priority!=='high'&&it.priority!=='in_progress')it.priority=defaultPriorityForType('note','gaming',null);
+    }
     it.emoji=it.emoji||guessEmoji(it.text,it.category);
     it.done=!!it.done; it.archived=!!it.archived;
     it.createdAt=it.createdAt||new Date().toISOString();
@@ -2684,8 +2706,8 @@ function resetCaptureZoneBody(){const body=document.getElementById('capture-zone
 // Map the model's structured result onto a JB OS item (Notes-first; image lives in Supabase Storage)
 function createCapturedItem(r){
   const now=new Date().toISOString();
-  const type=['task','idea','note','project'].includes(r.type)?r.type:(r.routing==='task'?'task':'note');
   const category=CATS[r.category]?r.category:guessCategory((r.title||'')+' '+(r.body||''));
+  const type=defaultTypeForCategory(category,['task','idea','note','project'].includes(r.type)?r.type:(r.routing==='task'?'task':'note'));
   const priority=defaultPriorityForType(type,category,r.priority);
   const title=(r.title||'Screenshot').slice(0,120);
   const item={id:uid(),text:title,notes:'',description:r.body||'',type,priority,source:'screenshot',category,
@@ -2751,10 +2773,11 @@ function renderDumpPreview(items){
     const isSpan=it.endDate&&it.endDate>it.dueDate;
     const due=it.dueDate?'<span class="bd-chip">📅 '+esc(isSpan?calRangeLabel(it.dueDate,it.endDate):fmtDue(it.dueDate))+'</span>':'';
     const prio=it.priority==='high'?'<span class="bd-chip prio">● High</span>':'';
+    const dtype=defaultTypeForCategory(it.category,it.type); // gaming defaults to note; JB can flip it here
     return '<div class="bd-item" data-due="'+esc(it.dueDate||'')+'" data-end="'+esc(it.endDate||'')+'" data-prio="'+(it.priority==='high'?'high':'normal')+'" data-notes="'+esc(it.notes||'')+'" data-desc="'+esc(it.description||'')+'" data-guess="'+(it.guess?'1':'')+'">'
       +'<input class="bd-title" value="'+esc(it.title||'')+'" aria-label="Item title">'
       +'<div class="bd-meta">'
-        +'<select class="bd-type" aria-label="Type"><option value="task"'+(it.type==='task'?' selected':'')+'>Task</option><option value="note"'+(it.type!=='task'?' selected':'')+'>Note</option></select>'
+        +'<select class="bd-type" aria-label="Type"><option value="task"'+(dtype==='task'?' selected':'')+'>Task</option><option value="note"'+(dtype!=='task'?' selected':'')+'>Note</option></select>'
         +'<select class="bd-cat" aria-label="Life area">'+catOpts+'</select>'
         +due+prio
         +'<button class="bd-del" onclick="this.closest(\'.bd-item\').remove();bdSync()" title="Remove" aria-label="Remove">✕</button>'
@@ -2858,10 +2881,10 @@ function toast(msg,actionLabel,actionFn){
         .map(x=>{
           const rawCat=catRemap[x.category]||x.category||'general';
           const autoOrganize=!x.category||rawCat==='general'||rawCat==='lifestyle';
-          const nextType=x.type||(autoOrganize?guessType(x.text,x.notes||x.description):'task');
           const nextCat=autoOrganize?guessCategory(x.text,x.notes||x.description):rawCat;
-          // Fresh server item (incl. iOS-shortcut captures): apply the type default unless a deliberate
-          // non-normal priority was set. Existing items are handled by the userEdited-aware branch below.
+          // Fresh server item (incl. iOS-shortcut captures): default gaming → note, then the type default
+          // for priority. Overridable later (existing items use the userEdited-aware branch below).
+          const nextType=defaultTypeForCategory(nextCat,x.type||(autoOrganize?guessType(x.text,x.notes||x.description):'task'));
           const nextPrio=(x.priority&&x.priority!=='normal')?x.priority:defaultPriorityForType(nextType,nextCat,null);
           return {...x,category:nextCat,priority:nextPrio,source:x.source||'telegram',type:nextType};
         });
@@ -4301,6 +4324,25 @@ function migrateNotePriorities(){
   try{localStorage.setItem('jbos_migr_noteprio_v1','1');}catch(e){}
   return changed;
 }
+// One-time: existing gaming items become notes (gaming is a hobby/reference domain). task/project → note,
+// and a normal priority drops to low to match (High/WIP preserved). Flag-guarded + data-gated like above,
+// so it runs once — a gaming item JB later flips back to a task is never re-converted.
+function migrateGamingType(){
+  if(localStorage.getItem('jbos_migr_gamingnote_v1'))return 0;
+  var items=load();
+  if(!items.length)return 0;
+  var now=new Date().toISOString(), changed=0;
+  for(var i=0;i<items.length;i++){var it=items[i];
+    if(it&&it.category==='gaming'&&(it.type==='task'||it.type==='project')){
+      it.type='note';
+      if((it.priority||'normal')==='normal')it.priority='low';
+      it.updatedAt=now; changed++;
+    }
+  }
+  if(changed)save(items);
+  try{localStorage.setItem('jbos_migr_gamingnote_v1','1');}catch(e){}
+  return changed;
+}
 // Extra layer for the daily/monthly checklists: drop stale completion logs so a new period always
 // starts clean (daily keeps ~70 days, monthly ~13 months — enough for streaks). The reset itself is
 // driven by the period key (today / this-month), so the current checklist is always empty on a new period.
@@ -4528,6 +4570,7 @@ if(load().length)_booting=false;
 purgeOldArchived(); // drop archived items older than ~1 month (tombstoned so sync won't bring them back)
 migrateCategories(); // re-sort any retired lifestyle/general items into a real life area
 migrateNotePriorities(); // one-time: existing Normal notes → Low (type-default rule)
+migrateGamingType(); // one-time: existing gaming items → notes (overridable thereafter)
 purgeOldRoutineLogs(); // clear stale daily/monthly completion logs so each period resets clean
 // Defer the first render one tick so every top-level const (incl. the Musubi MZ_* data
 // the dashboard now previews) is initialized before renderDashboard runs — avoids a TDZ crash.
