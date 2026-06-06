@@ -4229,7 +4229,6 @@ function renderDashboard(){
     +'<div class="cond" id="cond-strip"></div>'
     +reminderBar()
     +'<div class="dash-hero">'+habitCard+tasksCard+journalCard+'</div>'
-    +brainSection
     +musubiCard
     +'<div class="dash-sec">Now</div>'
     +'<div class="dins-row">'+focusCard+upCard+'</div>'
@@ -4240,6 +4239,7 @@ function renderDashboard(){
     +'<div class="dash-sec">About you</div>'
     +'<div class="dins-row" style="grid-template-columns:1fr">'+memCard+'</div>'
     +'<div class="dash-sec">Reflections</div>'+reflectSection
+    +brainSection
     +'</div>';
   animateCountUps(document.getElementById('list')); // hero numbers count up on each Today render
   loadConditions();
