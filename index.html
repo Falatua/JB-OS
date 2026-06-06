@@ -550,6 +550,18 @@
   .dgraph-line{stroke:color-mix(in srgb,var(--text-1) 15%,transparent);stroke-width:1}
   .dgraph-stat{font-size:12px;color:var(--text-3);line-height:1.5}
   .dgraph-stat b{color:var(--text-2);font-weight:600}
+  /* "Living" graph preview: pulsing hub + radar ping, breathing category nodes, twinkling/drifting leaves */
+  .dgraph-svg circle{transform-box:fill-box;transform-origin:center}
+  @keyframes dgHub{0%,100%{transform:scale(1)}50%{transform:scale(1.14)}}
+  @keyframes dgPing{0%{transform:scale(1);opacity:.45}70%{transform:scale(2.4);opacity:0}100%{transform:scale(2.4);opacity:0}}
+  @keyframes dgBreathe{0%,100%{transform:scale(.9);opacity:.72}50%{transform:scale(1.1);opacity:1}}
+  @keyframes dgTwinkle{0%,100%{opacity:.4}50%{opacity:.9}}
+  @keyframes dgDrift{0%,100%{transform:translate(0,0)}50%{transform:translate(.8px,-1.1px)}}
+  .dg-hub{animation:dgHub 2.6s ease-in-out infinite}
+  .dg-ping{animation:dgPing 2.6s ease-out infinite}
+  .dg-cat{animation:dgBreathe 3.4s ease-in-out infinite}
+  .dg-leaf{animation:dgTwinkle 2.8s ease-in-out infinite,dgDrift 5.5s ease-in-out infinite}
+  .dgraph:hover .dg-cat{animation-duration:2.2s}.dgraph:hover .dg-hub{animation-duration:1.7s} /* leans in on hover */
 
   .dmz{--r:#C8443A;--g:#E5B23A;--t2:#2E8090;--cr:#F2EAD8;position:relative;overflow:hidden;cursor:pointer;border:1px solid var(--border);border-radius:var(--radius-lg);background:linear-gradient(120deg,rgba(200,68,58,.14),rgba(30,77,92,.10) 58%,transparent);padding:17px 20px;margin-top:13px;transition:border-color var(--t),transform var(--t),box-shadow var(--t)}
   .dmz:hover{border-color:var(--g);transform:translateY(-2px);box-shadow:0 14px 38px -18px rgba(0,0,0,.85)}
@@ -4117,15 +4129,17 @@ function renderDashboard(){
   var graphCard;
   (function(){
     var cx=160,cy=64,R=44,cols=gCats.slice(0,7).map(function(c){return CATS[c]||CATS.general;}),k=cols.length||1;
-    var linesSvg='',nodesSvg='';
+    var linesSvg='',nodesSvg='',li=0;
     cols.forEach(function(cc,i){
       var ang=(-Math.PI/2)+(i*2*Math.PI/k),x=cx+Math.cos(ang)*R,y=cy+Math.sin(ang)*R*0.82;
       linesSvg+='<line class="dgraph-line" x1="'+cx+'" y1="'+cy+'" x2="'+x.toFixed(1)+'" y2="'+y.toFixed(1)+'"/>';
       for(var j=0;j<3;j++){var a2=ang+(j-1)*0.44,rr=17+j*4,lx=x+Math.cos(a2)*rr,ly=y+Math.sin(a2)*rr;
-        if(lx>7&&lx<313&&ly>7&&ly<121){linesSvg+='<line class="dgraph-line" x1="'+x.toFixed(1)+'" y1="'+y.toFixed(1)+'" x2="'+lx.toFixed(1)+'" y2="'+ly.toFixed(1)+'" style="opacity:.45"/>';nodesSvg+='<circle cx="'+lx.toFixed(1)+'" cy="'+ly.toFixed(1)+'" r="2.4" fill="'+cc.color+'" opacity=".8"/>';}}
-      nodesSvg+='<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="5.5" fill="'+cc.color+'"/>';
+        if(lx>7&&lx<313&&ly>7&&ly<121){linesSvg+='<line class="dgraph-line" x1="'+x.toFixed(1)+'" y1="'+y.toFixed(1)+'" x2="'+lx.toFixed(1)+'" y2="'+ly.toFixed(1)+'" style="opacity:.45"/>';nodesSvg+='<circle class="dg-leaf" style="animation-delay:'+(li*180%2520)+'ms,'+(li*230%3300)+'ms" cx="'+lx.toFixed(1)+'" cy="'+ly.toFixed(1)+'" r="2.4" fill="'+cc.color+'" opacity=".8"/>';li++;}}
+      nodesSvg+='<circle class="dg-cat" style="animation-delay:'+(i*240)+'ms" cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="5.5" fill="'+cc.color+'"/>';
     });
-    var hubC='<circle cx="'+cx+'" cy="'+cy+'" r="14" fill="none" stroke="var(--accent)" stroke-opacity=".18" stroke-width="2"/><circle cx="'+cx+'" cy="'+cy+'" r="8" fill="var(--accent)"/>';
+    var hubC='<circle class="dg-ping" cx="'+cx+'" cy="'+cy+'" r="13" fill="none" stroke="var(--accent)" stroke-width="1.5"/>'
+      +'<circle cx="'+cx+'" cy="'+cy+'" r="14" fill="none" stroke="var(--accent)" stroke-opacity=".18" stroke-width="2"/>'
+      +'<circle class="dg-hub" cx="'+cx+'" cy="'+cy+'" r="8" fill="var(--accent)"/>';
     graphCard='<div class="dcard dgraph dcard-click" role="button" tabindex="0" title="Open the relationship graph" onclick="setView(\'graph\')" onkeydown="if(event.key===\'Enter\')setView(\'graph\')">'
       +'<div class="dcard-label"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="3.5" cy="8" r="2"/><circle cx="12.5" cy="4" r="2"/><circle cx="12.5" cy="12" r="2"/><path d="M5.3 7.1l5.4-2.5M5.3 8.9l5.4 2.5"/></svg>Graph</div>'
       +'<svg class="dgraph-svg" viewBox="0 0 320 128" preserveAspectRatio="xMidYMid meet" aria-hidden="true">'+linesSvg+nodesSvg+hubC+'</svg>'
