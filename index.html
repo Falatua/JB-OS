@@ -2201,12 +2201,15 @@ function updateCounts(){
 // filter while in a list area (Work → 8/2, High → high tasks/notes, etc.); on overview views they
 // show global active totals. Refreshed from updateCounts() and on every render (filter/search/sort).
 function updateAreaCounts(){
-  // In a list area, show the type-split of the current filter; on overviews (or during a type-filter,
-  // which is itself area-like) fall back to global active totals so neither side reads a misleading 0.
-  const base = (isListView(view) && filterMode!=='type') ? getFilteredBase() : load().filter(x=>!x.archived);
-  const tN = base.filter(isTaskType).length, nN = base.length - tN;
-  [['cnt-area-tasks',tN],['cnt-area-notes',nN],['area-cnt-tasks',tN],['area-cnt-notes',nN]]
-    .forEach(([id,v])=>{const e=document.getElementById(id);if(e)e.textContent=v;});
+  const active=load().filter(x=>!x.archived);
+  // Sidebar Tasks/Notes badges are STABLE global totals — like All Items / Active / life areas.
+  const gT=active.filter(isTaskType).length, gN=active.length-gT;
+  [['cnt-area-tasks',gT],['cnt-area-notes',gN]].forEach(([id,v])=>{const e=document.getElementById(id);if(e)e.textContent=v;});
+  // The top-of-app switcher shows the type-split of the CURRENT filter while in a list area (so a life
+  // area / priority narrows it); on overviews or during a type-filter it falls back to the global totals.
+  const base = (isListView(view) && filterMode!=='type') ? getFilteredBase() : active;
+  const cT=base.filter(isTaskType).length, cN=base.length-cT;
+  [['area-cnt-tasks',cT],['area-cnt-notes',cN]].forEach(([id,v])=>{const e=document.getElementById(id);if(e)e.textContent=v;});
 }
 
 
