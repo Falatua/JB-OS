@@ -161,9 +161,16 @@ When a Musubi brand task also names a kid (e.g. *"Musubi: order Archie's shoot g
 ### `priority`
 - **high** — money is at stake, there's a hard deadline, or it blocks something else.
 - **in_progress** — actively being worked, handed off, or waiting on a current next step.
-- **normal** — everything else (the default).
-- **low** — someday, nice-to-have, or intentionally de-emphasized.
-- **Grocery & errands are always `low`.** Any item in the `grocery` or `errands` category is set to `priority: low` automatically (enforced in app entry, brain dump, screenshots, and sync). Don't mark them higher.
+- **normal** — the default for **tasks** (`task`/`project`) — things to *do*.
+- **low** — someday, nice-to-have, de-emphasized — and the default for **notes** (`note`/`idea`), since
+  notes are a reference/knowledge base, not action items.
+- **Type defaults (a creation-time default, "unless changed").** Notes/ideas default to **low**, tasks/
+  projects to **normal**; **`in_progress` always stays `in_progress`**; an explicit **high** is respected.
+  Implemented by `defaultPriorityForType()` in `index.html` and applied at every entry point (manual add,
+  brain dump, screenshots, sync). A user/Claude edit can still set any priority and it sticks. When filing
+  a note by hand, set `priority: low` unless it's genuinely high/in-progress.
+- **Grocery & errands are always `low`.** Any item in the `grocery` or `errands` category is set to
+  `priority: low` automatically (it's a hard force that wins over the type default). Don't mark them higher.
 
 ### `dueDate`
 - Set it whenever JB names a date or window. A range → use the **start** date

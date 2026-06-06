@@ -1682,7 +1682,7 @@ function addItem(text, type='task', notes='', source='browser', priority='normal
   const autoOrganize=!category||category==='general';
   if(autoOrganize&&type==='task')type=guessType(text,notes);
   if(autoOrganize)category=guessCategory(text,notes);
-  if(category==='grocery'||category==='errands')priority='low'; // groceries & errands are always low priority
+  priority=defaultPriorityForType(type,category,priority==='normal'?null:priority); // type default (notes→low); grocery/errands force low
   const items=load();
   const now=new Date().toISOString();
   items.unshift({id:uid(),text:text.trim(),notes:notes.trim(),type,priority,source,category,done:false,
@@ -1774,6 +1774,15 @@ const PRIORITIES=[
 ];
 const PRIORITY_IDS=PRIORITIES.map(p=>p.id);
 const PRIO_ORDER=Object.fromEntries(PRIORITIES.map(p=>[p.id,p.order]));
+// Creation-time default priority by type: notes (reference/knowledge) default to low, tasks (action)
+// to normal. grocery/errands are always low (hard force); in_progress and an explicit high are kept.
+// `hint` = any explicit priority signal at that entry point; 'normal' counts as "no hint" (old default).
+function defaultPriorityForType(type, category, hint){
+  if(category==='grocery'||category==='errands') return 'low';
+  if(hint==='in_progress') return 'in_progress';
+  if(hint==='high') return 'high';
+  return (type==='note'||type==='idea') ? 'low' : 'normal';
+}
 function priorityInfo(priority){
   return PRIORITIES.find(p=>p.id===(priority||'normal'))||PRIORITIES[2];
 }
@@ -2055,6 +2064,7 @@ function updateTabBar(){
 }
 function dismissA2HS(){localStorage.setItem('jbos_a2hs','1');var e=document.getElementById('a2hs');if(e)e.classList.remove('show');}
 function render(){
+  migrateNotePriorities(); // one-time (self-gated): runs the moment data is loaded; no-ops thereafter
   updateTabBar();
   updateAreaCounts();
   if(!isListView(view)){renderView();return;}
@@ -2240,7 +2250,14 @@ function _fillDetail(it,isNew){
     const updated=it.updatedAt?new Date(it.updatedAt).toLocaleString():created;
     document.getElementById('d-meta').innerHTML=`<span>Created ${esc(created)}</span><span>Last edited ${esc(updated)}</span><span>Source: ${esc(SRC_LABEL[it.source]||it.source||'manual')}</span>`;
   }
-  ['d-type','d-priority','d-status'].forEach(sid=>{document.getElementById(sid).onchange=renderDetailBadges;});
+  ['d-priority','d-status'].forEach(sid=>{document.getElementById(sid).onchange=renderDetailBadges;});
+  // Switching Task↔Note on a NEW item re-defaults the priority (Note→Low, Task→Normal) unless it was
+  // deliberately set to High or Work-in-progress. Existing items keep whatever priority they have.
+  document.getElementById('d-type').onchange=function(){
+    if(_isNew){const pr=document.getElementById('d-priority');
+      if(pr.value!=='high'&&pr.value!=='in_progress')pr.value=defaultPriorityForType(this.value,document.getElementById('d-cat').value,null);}
+    renderDetailBadges();
+  };
   document.getElementById('d-cat').onchange=function(){_dCatAuto=false;renderDetailBadges();}; // picking an area opts out of auto-detect
   document.getElementById('detail').classList.remove('hidden');
   setTimeout(()=>document.getElementById('d-title').focus(),50);
@@ -2256,9 +2273,11 @@ function openCreate(){
   _lastFocus=document.activeElement; _isNew=true;
   const forced=(filterMode==='cat'&&CATS[filter]&&filter!=='general'); // opened from a life-area filter → use it
   _dCatAuto=!forced; // otherwise auto-categorize from the title on save
-  const it={id:uid(),text:'',type:(filterMode==='type')?normType(filter):(view==='notes'?'note':'task'),
-    priority:(filterMode==='prio'&&PRIORITY_IDS.includes(filter))?filter:'normal',
-    category:forced?filter:'personal',
+  const _t=(filterMode==='type')?normType(filter):(view==='notes'?'note':'task');
+  const _cat=forced?filter:'personal';
+  const it={id:uid(),text:'',type:_t,
+    priority:defaultPriorityForType(_t,_cat,(filterMode==='prio'&&PRIORITY_IDS.includes(filter))?filter:null),
+    category:_cat,
     source:'browser',description:'',steps:[],links:[],attachments:[]};
   _draftItem=it; detailId=it.id;
   _fillDetail(it,true);
@@ -2667,7 +2686,7 @@ function createCapturedItem(r){
   const now=new Date().toISOString();
   const type=['task','idea','note','project'].includes(r.type)?r.type:(r.routing==='task'?'task':'note');
   const category=CATS[r.category]?r.category:guessCategory((r.title||'')+' '+(r.body||''));
-  const priority=(category==='grocery'||category==='errands')?'low':(r.priority==='high'?'high':'normal');
+  const priority=defaultPriorityForType(type,category,r.priority);
   const title=(r.title||'Screenshot').slice(0,120);
   const item={id:uid(),text:title,notes:'',description:r.body||'',type,priority,source:'screenshot',category,
     emoji:guessEmoji(title,category),descGuess:r.guess===true,
@@ -2754,7 +2773,7 @@ function saveDumpItems(){
     const title=row.querySelector('.bd-title').value.trim(); if(!title)return;
     const type=row.querySelector('.bd-type').value==='task'?'task':'note';
     let category=row.querySelector('.bd-cat').value; if(!CATS[category])category=guessCategory(title);
-    const priority=(category==='grocery'||category==='errands')?'low':(row.getAttribute('data-prio')==='high'?'high':'normal');
+    const priority=defaultPriorityForType(type,category,row.getAttribute('data-prio'));
     const dueDate=row.getAttribute('data-due')||'';
     const notes=row.getAttribute('data-notes')||'';
     const description=row.getAttribute('data-desc')||notes;
@@ -2841,7 +2860,9 @@ function toast(msg,actionLabel,actionFn){
           const autoOrganize=!x.category||rawCat==='general'||rawCat==='lifestyle';
           const nextType=x.type||(autoOrganize?guessType(x.text,x.notes||x.description):'task');
           const nextCat=autoOrganize?guessCategory(x.text,x.notes||x.description):rawCat;
-          const nextPrio=(nextCat==='grocery'||nextCat==='errands')?'low':(x.priority||'normal');
+          // Fresh server item (incl. iOS-shortcut captures): apply the type default unless a deliberate
+          // non-normal priority was set. Existing items are handled by the userEdited-aware branch below.
+          const nextPrio=(x.priority&&x.priority!=='normal')?x.priority:defaultPriorityForType(nextType,nextCat,null);
           return {...x,category:nextCat,priority:nextPrio,source:x.source||'telegram',type:nextType};
         });
       // For existing items: sync server field edits (dueDate, priority, etc.) unless the user edited it in-app, and pick up server done-state
@@ -4263,6 +4284,23 @@ function migrateCategories(){
   if(changed)save(items);
   return changed;
 }
+// One-time: bring existing notes in line with the type-default rule — notes/ideas at the old default
+// (normal) become low. High / existing low / work-in-progress are left as deliberate choices. Guarded
+// by a flag so it runs ONCE (otherwise it would keep yanking any note JB later sets back to Normal).
+function migrateNotePriorities(){
+  if(localStorage.getItem('jbos_migr_noteprio_v1'))return 0;
+  var items=load();
+  if(!items.length)return 0; // data not loaded/synced yet — defer (flag stays unset so a later call retries)
+  var now=new Date().toISOString(), changed=0;
+  for(var i=0;i<items.length;i++){var it=items[i];
+    if(it&&(it.type==='note'||it.type==='idea')&&(it.priority||'normal')==='normal'&&it.category!=='grocery'&&it.category!=='errands'){
+      it.priority='low'; it.updatedAt=now; changed++;
+    }
+  }
+  if(changed)save(items);
+  try{localStorage.setItem('jbos_migr_noteprio_v1','1');}catch(e){}
+  return changed;
+}
 // Extra layer for the daily/monthly checklists: drop stale completion logs so a new period always
 // starts clean (daily keeps ~70 days, monthly ~13 months — enough for streaks). The reset itself is
 // driven by the period key (today / this-month), so the current checklist is always empty on a new period.
@@ -4489,6 +4527,7 @@ function sbAuthUI(user){
 if(load().length)_booting=false;
 purgeOldArchived(); // drop archived items older than ~1 month (tombstoned so sync won't bring them back)
 migrateCategories(); // re-sort any retired lifestyle/general items into a real life area
+migrateNotePriorities(); // one-time: existing Normal notes → Low (type-default rule)
 purgeOldRoutineLogs(); // clear stale daily/monthly completion logs so each period resets clean
 // Defer the first render one tick so every top-level const (incl. the Musubi MZ_* data
 // the dashboard now previews) is initialized before renderDashboard runs — avoids a TDZ crash.
