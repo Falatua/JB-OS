@@ -1163,11 +1163,11 @@
       <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 9.5L8 4l6 5.5"/><path d="M3.5 8.5V13a.5.5 0 0 0 .5.5h3v-3h2v3h3a.5.5 0 0 0 .5-.5V8.5"/></svg>
       Today
     </div>
-    <div class="nav-item" id="nav-view-tasks" onclick="setView('tasks')" role="button" tabindex="0">
+    <div class="nav-item" id="nav-view-tasks" onclick="gotoType('tasks')" role="button" tabindex="0">
       <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6.5 4.5h8M6.5 8h8M6.5 11.5h8"/><path d="M2 4l1 1 1.6-1.8M2 7.5l1 1 1.6-1.8M2 11l1 1 1.6-1.8"/></svg>
       Tasks <span class="nav-count" id="cnt-area-tasks">0</span>
     </div>
-    <div class="nav-item" id="nav-view-notes" onclick="setView('notes')" role="button" tabindex="0">
+    <div class="nav-item" id="nav-view-notes" onclick="gotoType('notes')" role="button" tabindex="0">
       <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 2.5h5l3 3v8a.5.5 0 0 1-.5.5H4.5a.5.5 0 0 1-.5-.5V3a.5.5 0 0 1 .5-.5z"/><path d="M9 2.5v3h3M6 8.5h4M6 11h4"/></svg>
       Notes <span class="nav-count" id="cnt-area-notes">0</span>
     </div>
@@ -1320,12 +1320,15 @@
   </div>
 
   <div class="area-switch" id="area-switch" style="display:none">
-    <div class="area-switch-group" role="group" aria-label="Switch between Tasks and Notes">
-      <button class="area-tab" id="area-tab-tasks" onclick="setView('tasks')" aria-pressed="false">
+    <div class="area-switch-group" role="group" aria-label="Filter by all, tasks, or notes">
+      <button class="area-tab" id="area-tab-all" onclick="setTypeFilter('all')" aria-pressed="true">
+        All <span class="area-tab-count" id="area-cnt-all">0</span>
+      </button>
+      <button class="area-tab" id="area-tab-tasks" onclick="setTypeFilter('tasks')" aria-pressed="false">
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6.5 4.5h8M6.5 8h8M6.5 11.5h8"/><path d="M2 4l1 1 1.6-1.8M2 7.5l1 1 1.6-1.8M2 11l1 1 1.6-1.8"/></svg>
         Tasks <span class="area-tab-count" id="area-cnt-tasks">0</span>
       </button>
-      <button class="area-tab" id="area-tab-notes" onclick="setView('notes')" aria-pressed="false">
+      <button class="area-tab" id="area-tab-notes" onclick="setTypeFilter('notes')" aria-pressed="false">
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 2.5h5l3 3v8a.5.5 0 0 1-.5.5H4.5a.5.5 0 0 1-.5-.5V3a.5.5 0 0 1 .5-.5z"/><path d="M9 2.5v3h3M6 8.5h4M6 11h4"/></svg>
         Notes <span class="area-tab-count" id="area-cnt-notes">0</span>
       </button>
@@ -1339,8 +1342,8 @@
 
 <nav class="tabbar" id="tabbar" aria-label="Primary">
   <button id="tab-dashboard" onclick="setView('dashboard')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 9.5L8 4l6 5.5"/><path d="M3.5 8.5V13a.5.5 0 0 0 .5.5h3v-3h2v3h3a.5.5 0 0 0 .5-.5V8.5"/></svg>Today</button>
-  <button id="tab-tasks" onclick="setView('tasks')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6.5 4.5h8M6.5 8h8M6.5 11.5h8"/><path d="M2 4l1 1 1.6-1.8M2 7.5l1 1 1.6-1.8M2 11l1 1 1.6-1.8"/></svg>Tasks</button>
-  <button id="tab-notes" onclick="setView('notes')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 2.5h5l3 3v8a.5.5 0 0 1-.5.5H4.5a.5.5 0 0 1-.5-.5V3a.5.5 0 0 1 .5-.5z"/><path d="M9 2.5v3h3M6 8.5h4M6 11h4"/></svg>Notes</button>
+  <button id="tab-tasks" onclick="gotoType('tasks')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6.5 4.5h8M6.5 8h8M6.5 11.5h8"/><path d="M2 4l1 1 1.6-1.8M2 7.5l1 1 1.6-1.8M2 11l1 1 1.6-1.8"/></svg>Tasks</button>
+  <button id="tab-notes" onclick="gotoType('notes')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 2.5h5l3 3v8a.5.5 0 0 1-.5.5H4.5a.5.5 0 0 1-.5-.5V3a.5.5 0 0 1 .5-.5z"/><path d="M9 2.5v3h3M6 8.5h4M6 11h4"/></svg>Notes</button>
   <button id="tab-journal" onclick="setView('journal')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3.5 2.5H10a1.5 1.5 0 0 1 1.5 1.5v9.5H5A1.5 1.5 0 0 1 3.5 12z"/><path d="M11.5 4H13v9.5M5.5 5.5h3M5.5 8h2"/></svg>Journal</button>
 </nav>
 
@@ -1701,14 +1704,27 @@ function load(){try{const a=JSON.parse(localStorage.getItem(KEY))||[];for(let i=
 function save(d){localStorage.setItem(KEY,JSON.stringify(d));if(typeof sbPushStore==='function'&&!_sbApplying)sbPushStore('todos');}
 
 let filter='all', filterMode='view', _booting=true, view='dashboard', sortBy='priority';
-// Tasks and Notes are two distinct top-level areas. view==='tasks' shows task/project, view==='notes'
-// shows note/idea; isListView covers both. lastArea remembers which one to return to when a sidebar
-// filter (priority, life area, due, archive) is clicked from a non-list view.
-let lastArea='tasks';
-// The three list-style views: the two areas (tasks/notes) plus the standalone filter view ('list').
-function isListView(v){return v==='tasks'||v==='notes'||v==='list';}
-function isAreaView(v){return v==='tasks'||v==='notes';}
+// The item list lives in one view ('list'). A separate TYPE LENS — typeFilter: all | tasks | notes — is
+// the Tasks/Notes split, controlled by the top switcher and available inside EVERY sidebar filter, so
+// e.g. "Work" can be flipped to Work Tasks or Work Notes. The sidebar stays single-select (one highlight);
+// the type lens persists as you move between filters.
+let typeFilter='all';
+function isListView(v){return v==='list';}
 function areaForType(t){return (t==='task'||t==='project')?'tasks':'notes';}
+function setTypeFilter(t){
+  typeFilter=(t==='tasks'||t==='notes')?t:'all';
+  // On the base item list (no specific filter), the lens IS the selection — reflect it in the sidebar
+  // highlight + title. Inside a real filter (Work, High…), leave the filter selected and just re-lens.
+  if(filterMode==='view'&&filter==='all'){
+    document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('active','cat-active'));
+    var navEl=document.getElementById(typeFilter==='tasks'?'nav-view-tasks':typeFilter==='notes'?'nav-view-notes':'nav-all');
+    if(navEl)navEl.classList.add('active');
+    var dot=document.getElementById('page-title-dot');
+    if(typeFilter==='all'){if(dot)dot.style.display='none';document.getElementById('page-title').lastChild.textContent='All Items';}
+    else{if(dot){dot.style.display='block';dot.style.background='var(--area)';}document.getElementById('page-title').lastChild.textContent=(typeFilter==='notes'?'Notes':'Tasks');}
+  }
+  applyAreaTheme();applyViewChrome('list');render();updateCounts();_animateView();
+}
 
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,5);}
 
@@ -1783,10 +1799,10 @@ function toggleNav(){const open=document.querySelector('.app').classList.toggle(
 function closeNav(){document.querySelector('.app').classList.remove('nav-open');const h=document.getElementById('nav-ham');if(h)h.setAttribute('aria-expanded','false');}
 
 function setFilter(f, mode){
-  // A sidebar filter is a STANDALONE view: it shows all matching items (Tasks + Notes mixed), and it
-  // is not combined with the Tasks/Notes areas. Selecting one replaces whatever was selected.
+  // A sidebar filter is single-select (one highlight). The Tasks/Notes split is the separate top switcher
+  // (typeFilter), which PERSISTS here so you can flip the type lens inside any filter (e.g. Work → Notes).
   filter=f; filterMode=mode; view='list';
-  applyAreaTheme('list'); applyViewChrome('list'); // neutral chrome, no area tint or switcher
+  applyAreaTheme(); applyViewChrome('list'); // chrome incl. the All/Tasks/Notes switcher
   closeNav();
   document.querySelectorAll('.nav-item').forEach(e=>{e.classList.remove('active');e.classList.remove('cat-active');});
   const navId=mode==='cat'?'nav-cat-'+f:mode==='prio'?'nav-prio-'+f:mode==='wip'?'nav-wip':'nav-'+f;
@@ -1913,8 +1929,8 @@ function getFiltered(){
   // Type scope applies ONLY in the Tasks/Notes areas. A standalone filter view ('list') shows all
   // matching items mixed, with no area scope.
   let arr=getFilteredBase();
-  if(view==='tasks') arr=arr.filter(isTaskType);
-  else if(view==='notes') arr=arr.filter(i=>!isTaskType(i));
+  if(typeFilter==='tasks') arr=arr.filter(isTaskType);
+  else if(typeFilter==='notes') arr=arr.filter(i=>!isTaskType(i));
   return applySort(arr);
 }
 function isTaskType(i){return i.type==='task'||i.type==='project';}
@@ -2122,7 +2138,9 @@ function itemHTML(item, isArchiveView, idx){
 })();
 
 function updateTabBar(){
-  ['dashboard','tasks','notes','journal'].forEach(function(v){var e=document.getElementById('tab-'+v);if(e){var on=view===v;e.classList.toggle('active',on);if(on)e.setAttribute('aria-current','page');else e.removeAttribute('aria-current');}});
+  // Tasks/Notes tabs reflect the type lens while in the list; Today/Journal reflect the view.
+  const st={dashboard:view==='dashboard',journal:view==='journal',tasks:view==='list'&&typeFilter==='tasks',notes:view==='list'&&typeFilter==='notes'};
+  ['dashboard','tasks','notes','journal'].forEach(function(k){var e=document.getElementById('tab-'+k);if(e){var on=!!st[k];e.classList.toggle('active',on);if(on)e.setAttribute('aria-current','page');else e.removeAttribute('aria-current');}});
 }
 function dismissA2HS(){localStorage.setItem('jbos_a2hs','1');var e=document.getElementById('a2hs');if(e)e.classList.remove('show');}
 function render(){
@@ -2149,7 +2167,7 @@ function render(){
     const icon=isArchiveView
       ?`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8h14v11a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1z"/><path d="M10 12h4"/></svg>`
       :`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 13l2.2-7.4A2 2 0 0 1 8.1 4h7.8a2 2 0 0 1 1.9 1.6L20 13v5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><path d="M4 13h4l1.5 2.5h5L16 13h4"/></svg>`;
-    const title=isArchiveView?'Archive is empty':(view==='tasks'?'No tasks here':view==='notes'?'No notes here':'Nothing matches this view');
+    const title=isArchiveView?'Archive is empty':(typeFilter==='tasks'?'No tasks here':typeFilter==='notes'?'No notes here':'Nothing here yet');
     el.innerHTML=(isArchiveView?'':listControlsHTML())+`<div class="empty-state">
       <div class="empty-icon">${icon}</div>
       <div class="empty-title">${title}</div>
@@ -2168,10 +2186,8 @@ function render(){
   }
   el.innerHTML=html;
 }
-// Label for the current list view: the area name, or the standalone filter's title.
+// Label for the current list section — the active sidebar filter's title.
 function currentViewLabel(){
-  if(view==='tasks')return 'Tasks';
-  if(view==='notes')return 'Notes';
   const cat=CATS[filter];
   if(filterMode==='cat'&&cat)return cat.label;
   if(filterMode==='prio')return ({high:'High priority',normal:'Normal priority',low:'Low priority'})[filter]||'Priority';
@@ -2224,11 +2240,11 @@ function updateAreaCounts(){
   // Sidebar Tasks/Notes badges are STABLE global totals — like All Items / Active / life areas.
   const gT=active.filter(isTaskType).length, gN=active.length-gT;
   [['cnt-area-tasks',gT],['cnt-area-notes',gN]].forEach(([id,v])=>{const e=document.getElementById(id);if(e)e.textContent=v;});
-  // The top-of-app switcher shows the type-split of the CURRENT filter while in a list area (so a life
-  // area / priority narrows it); on overviews or during a type-filter it falls back to the global totals.
-  const base = (isListView(view) && filterMode!=='type') ? getFilteredBase() : active;
+  // The top switcher shows the All/Tasks/Notes split WITHIN the current sidebar filter (e.g. Work → 8/2),
+  // so you can see how many of each before flipping. On non-list views it falls back to global totals.
+  const base = (view==='list') ? getFilteredBase() : active;
   const cT=base.filter(isTaskType).length, cN=base.length-cT;
-  [['area-cnt-tasks',cT],['area-cnt-notes',cN]].forEach(([id,v])=>{const e=document.getElementById(id);if(e)e.textContent=v;});
+  [['area-cnt-all',base.length],['area-cnt-tasks',cT],['area-cnt-notes',cN]].forEach(([id,v])=>{const e=document.getElementById(id);if(e)e.textContent=v;});
 }
 
 
@@ -2263,8 +2279,8 @@ function cmdCommands(){
   PRIORITIES.forEach(function(p){add('Priority','◆',p.label+' priority','',function(){setFilter(p.id,'prio');});});
   add('Status','⏳','Work in progress','',function(){setFilter('wip','wip');});
   SELECTABLE_CATS.forEach(function(k){add('Life area',guessEmoji('',k),CATS[k].label,'',function(){setFilter(k,'cat');});});
-  [['task','Tasks'],['idea','Ideas'],['note','Notes'],['project','Projects']].forEach(function(t){add('Type','🏷️',t[1],'',function(){setView(areaForType(t[0]));setFilter(t[0],'type');});});
-  load().filter(function(x){return !x.archived;}).forEach(function(it){add('Items',(it.emoji||'•'),it.text||'Untitled',(CATS[it.category||'general']||CATS.general).label,function(){setView(areaForType(it.type));openDetail(it.id);});});
+  [['tasks','Tasks'],['notes','Notes']].forEach(function(t){add('Type','🏷️',t[1],'',function(){gotoType(t[0]);});});
+  load().filter(function(x){return !x.archived;}).forEach(function(it){add('Items',(it.emoji||'•'),it.text||'Untitled',(CATS[it.category||'general']||CATS.general).label,function(){openDetail(it.id);});});
   return c;
 }
 function renderCmd(){
@@ -2364,7 +2380,7 @@ function openCreate(){
   _lastFocus=document.activeElement; _isNew=true;
   const forced=(filterMode==='cat'&&CATS[filter]&&filter!=='general'); // opened from a life-area filter → use it
   _dCatAuto=!forced; // otherwise auto-categorize from the title on save
-  const _t=(filterMode==='type')?normType(filter):(view==='notes'?'note':'task');
+  const _t=(filterMode==='type')?normType(filter):(typeFilter==='notes'?'note':'task');
   const _cat=forced?filter:'personal';
   const it={id:uid(),text:'',type:_t,
     priority:defaultPriorityForType(_t,_cat,(filterMode==='prio'&&PRIORITY_IDS.includes(filter))?filter:null),
@@ -2562,9 +2578,9 @@ function saveDetail(){
   if(isNew)items.unshift(it);
   try{save(items);}
   catch(err){toast('Storage full — remove a large attachment and retry');return;}
-  // A new item lands in its type's area — if that's not where we are, hop there so JB sees it.
-  if(isNew && isListView(view) && areaForType(it.type)!==view){ setView(areaForType(it.type)); }
-  else { render(); }
+  // If a new item's type is hidden by the current type lens, widen the lens to All so JB sees it.
+  if(isNew && view==='list' && typeFilter!=='all' && typeFilter!==areaForType(it.type)){ typeFilter='all'; applyAreaTheme(); applyViewChrome('list'); }
+  render();
   updateCounts();closeDetail();
   toast(isNew?('Added: '+it.text.slice(0,44)):'Saved');
   if(wantDesc)generateDescription(it.id,it.text,it.type,it.category); // non-blocking AI description backfill
@@ -2780,7 +2796,7 @@ async function captureScreenshots(files){
     }catch(err){logCapture(null,'Could not process that image.');}
   }
   zone.classList.remove('busy'); resetCaptureZoneBody(); _captureBusy=false;
-  if(saved){const opener=firstId;toast('Saved '+saved+' screenshot'+(saved>1?'s':'')+' to your notes','Open',()=>{closeCapture();setView('notes');if(opener)openDetail(opener);});}
+  if(saved){const opener=firstId;toast('Saved '+saved+' screenshot'+(saved>1?'s':'')+' to your notes','Open',()=>{closeCapture();gotoType('notes');if(opener)openDetail(opener);});}
 }
 function resetCaptureZoneBody(){const body=document.getElementById('capture-zone-body');if(body)body.innerHTML='<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M7 6l1.4-2h7.2L17 6h3a1.5 1.5 0 0 1 1.5 1.5v11A1.5 1.5 0 0 1 20 20H4a1.5 1.5 0 0 1-1.5-1.5v-11A1.5 1.5 0 0 1 4 6z"/><circle cx="12" cy="12.5" r="3.5"/></svg><div class="capture-zone-main">Drop, paste (⌘V), or <button type="button" class="capture-pick" onclick="event.stopPropagation();document.getElementById(\'capture-file\').click()">choose a screenshot</button></div><div class="capture-sub">Claude files each one into Notes (or Tasks) automatically.</div>';}
 // Map the model's structured result onto a JB OS item (Notes-first; image lives in Supabase Storage)
@@ -2890,7 +2906,7 @@ function saveDumpItems(){
   });
   save(arr); render(); updateCounts();
   const opener=firstId; closeBrainDump();
-  if(saved)toast('Saved '+saved+' item'+(saved>1?'s':'')+' to your list','Open',()=>{const it=load().find(x=>x.id===opener);setView(it?areaForType(it.type):'tasks');if(opener)openDetail(opener);});
+  if(saved)toast('Saved '+saved+' item'+(saved>1?'s':'')+' to your list','Open',()=>{const it=load().find(x=>x.id===opener);gotoType(it?areaForType(it.type):'tasks');if(opener)openDetail(opener);});
 }
 function renderBdBudget(b){const el=document.getElementById('bd-budget');if(!el||!b)return;const cap=b.cap||1,spend=b.spend||0,pct=Math.min(100,Math.round(spend/cap*100)),col=spend>=cap*0.95?'var(--red)':spend>=cap*0.75?'var(--yellow)':'var(--green)';el.innerHTML='Today: $'+spend.toFixed(2)+' of $'+cap.toFixed(2)+' used<div class="cb-bar"><div class="cb-fill" style="width:'+pct+'%;background:'+col+'"></div></div>';}
 
@@ -3142,22 +3158,20 @@ function applyViewChrome(v){
   sw.style.display=''; sw.classList.add('solo'); // global search on every view; full rounded card now the quick-add bar is gone
   // Capture / Data / New Item apply to item views; hide on journal/musubi/graph
   const la=document.querySelector('.header-list-actions');if(la)la.style.display=(v==='journal'||v==='musubi'||v==='graph')?'none':'';
-  // The single add button adapts to the page it's on
+  // The single add button adapts to the page it's on (and to the active type lens in the list).
   const nl=document.getElementById('newitem-label');
-  const nlText=(v==='daily')?'New habit':(v==='monthly')?'New monthly':(v==='notes')?'New Note':(v==='tasks')?'New Task':'New Item';
+  const nlText=(v==='daily')?'New habit':(v==='monthly')?'New monthly':(v==='list'&&typeFilter==='notes')?'New Note':(v==='list'&&typeFilter==='tasks')?'New Task':'New Item';
   if(nl)nl.textContent=nlText;
   const nb=document.getElementById('newitem-btn');if(nb)nb.setAttribute('aria-label',nlText); // keep the accessible name in sync (label is hidden on mobile)
-  syncAreaSwitch(v);
+  syncAreaSwitch();
 }
-// The top-of-app Tasks|Notes switcher: visible only in a list area, the active side filled with --area.
-function syncAreaSwitch(v){
-  const as=document.getElementById('area-switch'); if(as)as.style.display=isAreaView(v)?'':'none';
-  const t=document.getElementById('area-tab-tasks'), n=document.getElementById('area-tab-notes');
-  if(t){t.classList.toggle('on',v==='tasks');t.setAttribute('aria-pressed',v==='tasks');}
-  if(n){n.classList.toggle('on',v==='notes');n.setAttribute('aria-pressed',v==='notes');}
+// The top-of-app All·Tasks·Notes switcher: shown in every list view; the active lens filled with --area.
+function syncAreaSwitch(){
+  const as=document.getElementById('area-switch'); if(as)as.style.display=(view==='list')?'':'none';
+  ['all','tasks','notes'].forEach(function(k){var b=document.getElementById('area-tab-'+k);if(b){var on=typeFilter===k;b.classList.toggle('on',on);b.setAttribute('aria-pressed',on?'true':'false');}});
 }
-// Subtle per-area identity: the Notes area gets the blue tint (via --area), everything else stays amber.
-function applyAreaTheme(v){const app=document.querySelector('.app');if(!app)return;app.classList.toggle('area-notes',v==='notes');app.classList.toggle('area-tasks',v==='tasks');}
+// Subtle per-area identity: Notes lens → blue, Tasks lens → amber, All/other → neutral.
+function applyAreaTheme(){const app=document.querySelector('.app');if(!app)return;const onList=(view==='list');app.classList.toggle('area-notes',onList&&typeFilter==='notes');app.classList.toggle('area-tasks',onList&&typeFilter==='tasks');}
 // One context-aware add: a habit on Daily/Monthly, otherwise the full item modal (which already
 // pre-fills life-area/type/priority from the current filter).
 function primaryAdd(){
@@ -3179,19 +3193,22 @@ function openRoutineNew(scope){
   document.getElementById('routine-modal').classList.remove('hidden');
   setTimeout(()=>document.getElementById('rt-text').focus(),50);
 }
+// Sidebar/tab Tasks or Notes: jump to the full item list with the type lens set (and no other filter).
+function gotoType(t){
+  closeNav();
+  view='list'; filter='all'; filterMode='view'; typeFilter=(t==='notes')?'notes':'tasks';
+  document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('active','cat-active'));
+  const navEl=document.getElementById(typeFilter==='notes'?'nav-view-notes':'nav-view-tasks'); if(navEl)navEl.classList.add('active');
+  applyAreaTheme(); applyViewChrome('list');
+  const dot=document.getElementById('page-title-dot'); if(dot){dot.style.display='block';dot.style.background='var(--area)';}
+  document.getElementById('page-title').lastChild.textContent=(typeFilter==='notes'?'Notes':'Tasks');
+  render(); updateCounts(); _animateView();
+}
 function setView(v){
   closeNav();
   // Clear any sidebar filter selection so exactly one thing is active at a time.
   document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('active','cat-active'));
-  if(v==='tasks'||v==='notes'){
-    // A Tasks/Notes area is a standalone view of ALL items of that type — reset any active filter.
-    view=v; lastArea=v; filter='all'; filterMode='view';
-    applyAreaTheme(v); syncWorkspaceNav(v); applyViewChrome(v);
-    const dot=document.getElementById('page-title-dot'); if(dot){dot.style.display='block';dot.style.background='var(--area)';}
-    document.getElementById('page-title').lastChild.textContent=(v==='notes'?'Notes':'Tasks');
-    render(); updateCounts(); _animateView(); return;
-  }
-  view=v; applyAreaTheme(v); syncWorkspaceNav(v); applyViewChrome(v);
+  view=v; applyAreaTheme(); syncWorkspaceNav(v); applyViewChrome(v);
   render(); updateCounts(); _animateView();
 }
 // Gentle one-shot fade/slide on every view switch — re-arms the CSS animation on #list.
