@@ -267,6 +267,11 @@
   .prop-label{display:flex;align-items:center;gap:7px;width:118px;min-width:118px;color:var(--text-2);font-size:12.5px}
   .prop-row select{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:6px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none;cursor:pointer;transition:border-color var(--t)}
   .prop-row select:focus{border-color:var(--accent)}
+  .wip-toggle{flex:1;text-align:left;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:7px 11px;color:var(--text-2);font-size:13px;font-family:inherit;cursor:pointer;transition:background var(--t),color var(--t),border-color var(--t);display:flex;align-items:center;gap:8px}
+  .wip-toggle::before{content:'';width:9px;height:9px;border-radius:50%;background:var(--border-2);flex-shrink:0;transition:background var(--t),box-shadow var(--t)}
+  .wip-toggle:hover{border-color:var(--border-2)}
+  .wip-toggle.on{color:var(--teal);background:var(--teal-dim);border-color:color-mix(in srgb,var(--teal) 45%,var(--border))}
+  .wip-toggle.on::before{background:var(--teal);box-shadow:0 0 0 3px color-mix(in srgb,var(--teal) 22%,transparent)}
 
   .detail-section{padding:13px 22px;border-top:1px solid var(--border)}
   .detail-section-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--text-3);margin-bottom:9px}
@@ -1232,9 +1237,15 @@
       <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="5" fill="var(--text-3)" stroke="none" opacity=".35"/></svg>
       Low <span class="nav-count" id="cnt-prio-low">0</span>
     </div>
-    <div class="nav-item" id="nav-prio-in_progress" onclick="setFilter('in_progress','prio')" role="button" tabindex="0">
-      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="5" fill="var(--teal)" stroke="none" opacity=".85"/></svg>
-      <span style="color:var(--teal)">Work in progress</span> <span class="nav-count" id="cnt-prio-in_progress">0</span>
+  </div>
+
+  <div class="sb-divider"></div>
+
+  <div class="sb-section">
+    <div class="sb-label">Status</div>
+    <div class="nav-item" id="nav-wip" onclick="setFilter('wip','wip')" role="button" tabindex="0">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 4.5v3.5l2.2 1.3"/></svg>
+      <span style="color:var(--teal)">Work in progress</span> <span class="nav-count" id="cnt-wip">0</span>
     </div>
   </div>
 
@@ -1401,7 +1412,6 @@
           <option value="high">High</option>
           <option value="normal" selected>Normal</option>
           <option value="low">Low</option>
-          <option value="in_progress">Work in progress</option>
         </select>
       </div>
     </div>
@@ -1446,8 +1456,11 @@
           <option value="high">High</option>
           <option value="normal">Normal</option>
           <option value="low">Low</option>
-          <option value="in_progress">Work in progress</option>
         </select>
+      </div>
+      <div class="prop-row">
+        <span class="prop-label"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 4.5v3.5l2.2 1.3"/></svg> Work in progress</span>
+        <button type="button" id="d-wip" class="wip-toggle" aria-pressed="false" onclick="toggleDwip()">Not in progress</button>
       </div>
       <div class="prop-row">
         <span class="prop-label"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 6.5h12M5 2v2M11 2v2"/></svg> Due date</span>
@@ -1573,7 +1586,6 @@
           <option value="high">High</option>
           <option value="normal">Normal</option>
           <option value="low">Low</option>
-          <option value="in_progress">Work in progress</option>
         </select>
       </div>
     </div>
@@ -1693,8 +1705,9 @@ let filter='all', filterMode='view', _booting=true, view='dashboard', sortBy='pr
 // shows note/idea; isListView covers both. lastArea remembers which one to return to when a sidebar
 // filter (priority, life area, due, archive) is clicked from a non-list view.
 let lastArea='tasks';
-function isListView(v){return v==='tasks'||v==='notes';}
-function gotoList(){setView(lastArea||'tasks');}
+// The three list-style views: the two areas (tasks/notes) plus the standalone filter view ('list').
+function isListView(v){return v==='tasks'||v==='notes'||v==='list';}
+function isAreaView(v){return v==='tasks'||v==='notes';}
 function areaForType(t){return (t==='task'||t==='project')?'tasks':'notes';}
 
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,5);}
@@ -1770,66 +1783,56 @@ function toggleNav(){const open=document.querySelector('.app').classList.toggle(
 function closeNav(){document.querySelector('.app').classList.remove('nav-open');const h=document.getElementById('nav-ham');if(h)h.setAttribute('aria-expanded','false');}
 
 function setFilter(f, mode){
-  filter=f; filterMode=mode; if(!isListView(view))view=lastArea||'tasks';
-  // Refresh the area chrome — a filter can enter a list area straight from a non-list view (e.g.
-  // clicking a Life area while on the Today dashboard), where the top switcher/tint/button label
-  // were hidden and would otherwise never re-appear.
-  applyAreaTheme(view); applyViewChrome(view);
+  // A sidebar filter is a STANDALONE view: it shows all matching items (Tasks + Notes mixed), and it
+  // is not combined with the Tasks/Notes areas. Selecting one replaces whatever was selected.
+  filter=f; filterMode=mode; view='list';
+  applyAreaTheme('list'); applyViewChrome('list'); // neutral chrome, no area tint or switcher
   closeNav();
   document.querySelectorAll('.nav-item').forEach(e=>{e.classList.remove('active');e.classList.remove('cat-active');});
-  // Resolve the nav element id per mode so the active highlight lands on the right item
-  const navId=mode==='cat'?'nav-cat-'+f:mode==='prio'?'nav-prio-'+f:'nav-'+f;
+  const navId=mode==='cat'?'nav-cat-'+f:mode==='prio'?'nav-prio-'+f:mode==='wip'?'nav-wip':'nav-'+f;
   const el=document.getElementById(navId);
-  if(el){
-    if(mode==='cat'){el.classList.add('cat-active');}else{el.classList.add('active');}
-  }
-  syncWorkspaceNav(view);
+  if(el){ if(mode==='cat'){el.classList.add('cat-active');}else{el.classList.add('active');} }
+  syncWorkspaceNav('list'); // deselect Tasks/Notes/Today so exactly one sidebar item is active
   const cat=CATS[f];
   const dot=document.getElementById('page-title-dot');
-  // Append the active area so a filtered view is unambiguous, e.g. "Work · Notes", "High Priority · Tasks".
-  const areaSuffix=' · '+(view==='notes'?'Notes':'Tasks');
   if(mode==='cat'&&cat){
     dot.style.display='block';dot.style.background=cat.color;
-    document.getElementById('page-title').lastChild.textContent=' '+cat.label+areaSuffix;
+    document.getElementById('page-title').lastChild.textContent=' '+cat.label;
   } else if(mode==='prio'){
-    const prioColors={high:'var(--red)',in_progress:'var(--teal)',normal:'var(--text-2)',low:'var(--text-3)'};
-    const prioTitles={high:'High Priority',in_progress:'Work in Progress',normal:'Normal Priority',low:'Low Priority'};
+    const prioColors={high:'var(--red)',normal:'var(--text-2)',low:'var(--text-3)'};
+    const prioTitles={high:'High Priority',normal:'Normal Priority',low:'Low Priority'};
     dot.style.display='block';dot.style.background=prioColors[f]||'var(--text-3)';
-    document.getElementById('page-title').lastChild.textContent=' '+prioTitles[f]+areaSuffix;
+    document.getElementById('page-title').lastChild.textContent=' '+(prioTitles[f]||'Priority');
+  } else if(mode==='wip'){
+    dot.style.display='block';dot.style.background='var(--teal)';
+    document.getElementById('page-title').lastChild.textContent=' Work in progress';
   } else if(mode==='due'){
     const dueColors={overdue:'var(--red)',soon:'var(--accent)'};
     const dueTitles={overdue:'Overdue',soon:'Due Soon'};
     dot.style.display='block';dot.style.background=dueColors[f]||'var(--text-3)';
-    document.getElementById('page-title').lastChild.textContent=' '+(dueTitles[f]||'Due')+areaSuffix;
+    document.getElementById('page-title').lastChild.textContent=' '+(dueTitles[f]||'Due');
   } else {
-    // Persistent area cue: a small amber (Tasks) / blue (Notes) dot next to the base title.
-    dot.style.display='block';dot.style.background='var(--area)';
-    const areaName=view==='notes'?'Notes':'Tasks';
-    const titles={all:areaName,active:'Active '+areaName,archive:'Archived '+areaName,task:'Tasks',idea:'Ideas',note:'Notes',project:'Projects'};
-    document.getElementById('page-title').lastChild.textContent=titles[f]||areaName;
+    dot.style.display='none';
+    const titles={all:'All Items',active:'Active',archive:'Archive',task:'Tasks',idea:'Ideas',note:'Notes',project:'Projects'};
+    document.getElementById('page-title').lastChild.textContent=titles[f]||'All Items';
   }
-  // Sync the quick-add controls so new items default to the area you're viewing
-  const qCat=document.getElementById('quick-cat');
-  if(qCat)qCat.value=(mode==='cat'&&cat)?f:'general';
-  const qType=document.getElementById('quick-type');
-  if(qType)qType.value=(mode==='type')?f:'task';
   render();
 }
 
+// Priority is High/Normal/Low only. "Work in progress" is a SEPARATE status (item.wip) that coexists
+// with any priority, so something can be both High and in progress.
 const PRIORITIES=[
   {id:'high',label:'High',order:0,cls:'prio-high'},
-  {id:'in_progress',label:'Work in progress',order:1,cls:'prio-in-progress'},
-  {id:'normal',label:'Normal',order:2,cls:''},
-  {id:'low',label:'Low',order:3,cls:''}
+  {id:'normal',label:'Normal',order:1,cls:''},
+  {id:'low',label:'Low',order:2,cls:''}
 ];
 const PRIORITY_IDS=PRIORITIES.map(p=>p.id);
 const PRIO_ORDER=Object.fromEntries(PRIORITIES.map(p=>[p.id,p.order]));
 // Creation-time default priority by type: notes (reference/knowledge) default to low, tasks (action)
-// to normal. grocery/errands are always low (hard force); in_progress and an explicit high are kept.
+// to normal. grocery/errands are always low (hard force); an explicit high is respected.
 // `hint` = any explicit priority signal at that entry point; 'normal' counts as "no hint" (old default).
 function defaultPriorityForType(type, category, hint){
   if(category==='grocery'||category==='errands') return 'low';
-  if(hint==='in_progress') return 'in_progress';
   if(hint==='high') return 'high';
   return (type==='note'||type==='idea') ? 'low' : 'normal';
 }
@@ -1846,6 +1849,8 @@ function priorityBadgeHTML(priority){
   const p=priorityInfo(priority);
   return p.cls?`<span class="${p.cls}"><span class="prio-dot"></span>${p.label}</span>`:'';
 }
+// Work-in-progress is a separate status that can coexist with any priority — its own teal badge.
+function wipBadgeHTML(item){return item&&item.wip?'<span class="prio-in-progress"><span class="prio-dot"></span>In progress</span>':'';}
 function sortByPriority(arr){
   return arr.slice().sort((a,b)=>(PRIO_ORDER[a.priority]??2)-(PRIO_ORDER[b.priority]??2));
 }
@@ -1890,6 +1895,8 @@ function getFilteredBase(){
       mf=!isArchived&&item.type===filter;
     } else if(filterMode==='prio'){
       mf=!isArchived&&(item.priority||'normal')===filter;
+    } else if(filterMode==='wip'){
+      mf=!isArchived&&!!item.wip;
     } else if(filterMode==='due'){
       const today=dateKey(new Date());
       if(isArchived||!item.dueDate){mf=false;}
@@ -1903,13 +1910,11 @@ function getFilteredBase(){
   });
 }
 function getFiltered(){
-  // Scope to the active area (Tasks vs Notes). Applies to every filter incl. archive, so each area's
-  // archive is separate too. Skipped only when a specific type is already being filtered (e.g. a Graph
-  // type-node click), to avoid double-filtering.
+  // Type scope applies ONLY in the Tasks/Notes areas. A standalone filter view ('list') shows all
+  // matching items mixed, with no area scope.
   let arr=getFilteredBase();
-  if(isListView(view)&&filterMode!=='type'){
-    arr=arr.filter(view==='tasks'?isTaskType:(i=>!isTaskType(i)));
-  }
+  if(view==='tasks') arr=arr.filter(isTaskType);
+  else if(view==='notes') arr=arr.filter(i=>!isTaskType(i));
   return applySort(arr);
 }
 function isTaskType(i){return i.type==='task'||i.type==='project';}
@@ -1979,6 +1984,7 @@ function itemHTML(item, isArchiveView, idx){
   const typeBadge=`<span class="badge badge-${normType(item.type)}">${TYPE_LABEL[normType(item.type)]}</span>`;
   const catBadge=`<span class="badge-cat" style="background:${cat.dim};color:${cat.color}">${cat.label}</span>`;
   const prio=priorityBadgeHTML(item.priority);
+  const wip=wipBadgeHTML(item);
   const srcLabel=SRC_LABEL[item.source]||(item.source||'added manually');
   const srcIcon=item.source==='telegram'?'↗':item.source==='screenshot'?'📸':item.source==='braindump'?'🧠':'·';
   const src=`<span class="item-src">${srcIcon} ${esc(srcLabel)}</span>`;
@@ -2025,7 +2031,7 @@ function itemHTML(item, isArchiveView, idx){
         <div class="item-text" style="${isArchiveView?'text-decoration:line-through;color:var(--text-3)':''}"><span class="item-emoji">${esc(item.emoji||guessEmoji(item.text||'',item.category))}</span> ${esc(item.text||'Untitled')}</div>
         ${notes}
         ${progressHTML(item)}
-        <div class="item-meta">${catBadge}${typeBadge}${prio}${dueChip}${indicators}${isArchiveView?archivedDate:`<span class="item-date">${ageStr(item.createdAt)}</span>`}${src}</div>
+        <div class="item-meta">${catBadge}${typeBadge}${prio}${wip}${dueChip}${indicators}${isArchiveView?archivedDate:`<span class="item-date">${ageStr(item.createdAt)}</span>`}${src}</div>
       </div>
       <div class="item-actions">${actions}</div>
     </div>
@@ -2122,6 +2128,7 @@ function dismissA2HS(){localStorage.setItem('jbos_a2hs','1');var e=document.getE
 function render(){
   migrateNotePriorities(); // one-time (self-gated): runs the moment data is loaded; no-ops thereafter
   migrateGamingType();     // one-time (self-gated): existing gaming items → notes
+  migrateWipStatus();      // one-time (self-gated): old in_progress priority → separate WIP status
   updateTabBar();
   updateAreaCounts();
   if(!isListView(view)){renderView();return;}
@@ -2134,14 +2141,15 @@ function render(){
       `<div class="skeleton-row"><div class="sk-box sk-check"></div><div class="sk-lines"><div class="sk-box sk-line" style="width:54%"></div><div class="sk-box sk-line" style="width:30%"></div></div></div>`).join('');
     return;
   }
+  const sectionLabel=currentViewLabel();
   if(!all.length){
     const hint=isArchiveView
       ?'Items you check off will appear here for future reference.'
-      :'Quick-add above, or press ⌘N to add something.';
+      :'Press ⌘N (or New Item) to add something.';
     const icon=isArchiveView
       ?`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8h14v11a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1z"/><path d="M10 12h4"/></svg>`
       :`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 13l2.2-7.4A2 2 0 0 1 8.1 4h7.8a2 2 0 0 1 1.9 1.6L20 13v5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><path d="M4 13h4l1.5 2.5h5L16 13h4"/></svg>`;
-    const title=isArchiveView?'Archive is empty':(view==='notes'?'No notes here':'No tasks here');
+    const title=isArchiveView?'Archive is empty':(view==='tasks'?'No tasks here':view==='notes'?'No notes here':'Nothing matches this view');
     el.innerHTML=(isArchiveView?'':listControlsHTML())+`<div class="empty-state">
       <div class="empty-icon">${icon}</div>
       <div class="empty-title">${title}</div>
@@ -2149,18 +2157,28 @@ function render(){
     </div>`;
     return;
   }
-  const areaName=view==='notes'?'Notes':'Tasks';
   let html='';
   if(isArchiveView){
-    html+=`<div class="section-head"><span class="section-head-label">Archived ${areaName} · ${all.length}</span><div class="section-head-line"></div>${sortControlHTML()}</div>`;
+    html+=`<div class="section-head"><span class="section-head-label">Archived · ${all.length}</span><div class="section-head-line"></div>${sortControlHTML()}</div>`;
     html+=all.map((i,idx)=>itemHTML(i,true,idx)).join('');
   } else {
     html+=reminderBar();
     html+=listControlsHTML();
-    // Each area shows only its own type as a single list (the area itself is the Tasks/Notes division).
-    html+=groupHTML(areaName,all,0);
+    html+=groupHTML(sectionLabel,all,0);
   }
   el.innerHTML=html;
+}
+// Label for the current list view: the area name, or the standalone filter's title.
+function currentViewLabel(){
+  if(view==='tasks')return 'Tasks';
+  if(view==='notes')return 'Notes';
+  const cat=CATS[filter];
+  if(filterMode==='cat'&&cat)return cat.label;
+  if(filterMode==='prio')return ({high:'High priority',normal:'Normal priority',low:'Low priority'})[filter]||'Priority';
+  if(filterMode==='wip')return 'Work in progress';
+  if(filterMode==='due')return ({overdue:'Overdue',soon:'Due soon'})[filter]||'Due';
+  if(filterMode==='type')return ({task:'Tasks',project:'Projects',note:'Notes',idea:'Ideas'})[filter]||'Items';
+  return ({all:'All items',active:'Active',archive:'Archive'})[filter]||'All items';
 }
 
 function updateCounts(){
@@ -2186,6 +2204,7 @@ function updateCounts(){
     const e=document.getElementById('cnt-prio-'+p);
     if(e)e.textContent=active.filter(x=>(x.priority||'normal')===p).length;
   });
+  const ew=document.getElementById('cnt-wip'); if(ew)ew.textContent=active.filter(x=>!!x.wip).length;
   const todayK=dateKey(new Date());
   const eo=document.getElementById('cnt-due-overdue');
   if(eo)eo.textContent=active.filter(x=>x.dueDate&&x.dueDate<todayK).length;
@@ -2240,9 +2259,10 @@ function cmdCommands(){
   add('Action','🔔','Enable reminders','',function(){requestReminders();});
   add('Action','⤓','Export data','',function(){exportJSON();});
   add('Action','⤒','Import data','',function(){importJSON();});
-  [['overdue','Overdue'],['soon','Due soon']].forEach(function(d){add('Due','⏰',d[1],'',function(){gotoList();setFilter(d[0],'due');});});
-  PRIORITIES.forEach(function(p){add('Priority','◆',p.id==='in_progress'?p.label:p.label+' priority','',function(){gotoList();setFilter(p.id,'prio');});});
-  SELECTABLE_CATS.forEach(function(k){add('Life area',guessEmoji('',k),CATS[k].label,'',function(){gotoList();setFilter(k,'cat');});});
+  [['overdue','Overdue'],['soon','Due soon']].forEach(function(d){add('Due','⏰',d[1],'',function(){setFilter(d[0],'due');});});
+  PRIORITIES.forEach(function(p){add('Priority','◆',p.label+' priority','',function(){setFilter(p.id,'prio');});});
+  add('Status','⏳','Work in progress','',function(){setFilter('wip','wip');});
+  SELECTABLE_CATS.forEach(function(k){add('Life area',guessEmoji('',k),CATS[k].label,'',function(){setFilter(k,'cat');});});
   [['task','Tasks'],['idea','Ideas'],['note','Notes'],['project','Projects']].forEach(function(t){add('Type','🏷️',t[1],'',function(){setView(areaForType(t[0]));setFilter(t[0],'type');});});
   load().filter(function(x){return !x.archived;}).forEach(function(it){add('Items',(it.emoji||'•'),it.text||'Untitled',(CATS[it.category||'general']||CATS.general).label,function(){setView(areaForType(it.type));openDetail(it.id);});});
   return c;
@@ -2293,6 +2313,7 @@ function _fillDetail(it,isNew){
   document.getElementById('d-cat').value=it.category||'general';
   document.getElementById('d-type').value=normType(it.type||'task');
   document.getElementById('d-priority').value=it.priority||'normal';
+  setDwip(!!it.wip);
   document.getElementById('d-duedate').value=it.dueDate||'';
   document.getElementById('d-enddate').value=it.endDate||'';
   _dVideo=it.video||''; renderDetailVideo();
@@ -2347,6 +2368,7 @@ function openCreate(){
   const _cat=forced?filter:'personal';
   const it={id:uid(),text:'',type:_t,
     priority:defaultPriorityForType(_t,_cat,(filterMode==='prio'&&PRIORITY_IDS.includes(filter))?filter:null),
+    wip:filterMode==='wip', // creating from the Work-in-progress view starts it in progress
     category:_cat,
     source:'browser',description:'',steps:[],links:[],attachments:[]};
   _draftItem=it; detailId=it.id;
@@ -2363,10 +2385,15 @@ function renderDetailBadges(){
     `<span class="badge badge-${type}">${TYPE_LABEL[type]||type}</span>`];
   const prioBadge=priorityBadgeHTML(prio);
   if(prioBadge)parts.push(prioBadge);
+  const wipBtn=document.getElementById('d-wip');
+  if(wipBtn&&wipBtn.getAttribute('aria-pressed')==='true')parts.push(wipBadgeHTML({wip:true}));
   if(status==='done')parts.push(`<span class="badge" style="background:var(--green-dim);color:var(--green)">Done</span>`);
   document.getElementById('d-badges').innerHTML=parts.join('');
   document.getElementById('d-title').classList.toggle('done-title', status==='done');
 }
+// Work-in-progress toggle in the editor (a status separate from priority).
+function setDwip(on){var b=document.getElementById('d-wip');if(!b)return;b.setAttribute('aria-pressed',on?'true':'false');b.classList.toggle('on',!!on);b.textContent=on?'In progress':'Not in progress';}
+function toggleDwip(){var b=document.getElementById('d-wip');if(!b)return;setDwip(b.getAttribute('aria-pressed')!=='true');renderDetailBadges();}
 
 function linkRowHTML(label,url){
   return `<div class="link-row">
@@ -2507,6 +2534,7 @@ function saveDetail(){
   it.category=document.getElementById('d-cat').value;
   it.type=document.getElementById('d-type').value;
   it.priority=document.getElementById('d-priority').value;
+  if(document.getElementById('d-wip').getAttribute('aria-pressed')==='true')it.wip=true; else delete it.wip;
   it.dueDate=document.getElementById('d-duedate').value||'';
   const _end=document.getElementById('d-enddate').value||'';
   if(_end&&it.dueDate&&_end>=it.dueDate)it.endDate=_end; else delete it.endDate; // span only when end ≥ start
@@ -3123,7 +3151,7 @@ function applyViewChrome(v){
 }
 // The top-of-app Tasks|Notes switcher: visible only in a list area, the active side filled with --area.
 function syncAreaSwitch(v){
-  const as=document.getElementById('area-switch'); if(as)as.style.display=isListView(v)?'':'none';
+  const as=document.getElementById('area-switch'); if(as)as.style.display=isAreaView(v)?'':'none';
   const t=document.getElementById('area-tab-tasks'), n=document.getElementById('area-tab-notes');
   if(t){t.classList.toggle('on',v==='tasks');t.setAttribute('aria-pressed',v==='tasks');}
   if(n){n.classList.toggle('on',v==='notes');n.setAttribute('aria-pressed',v==='notes');}
@@ -3153,15 +3181,17 @@ function openRoutineNew(scope){
 }
 function setView(v){
   closeNav();
-  if(isListView(v)){view=v;lastArea=v;
-    // A `type` filter (from a Graph/command-palette type click) is area-like; switching areas clears it
-    // so the area itself governs — otherwise you'd land in Tasks but still see Notes.
-    if(filterMode==='type'){filter='all';filterMode='view';}
-    applyAreaTheme(v);applyViewChrome(v);setFilter(filter,filterMode);updateCounts();_animateView();return;}
+  // Clear any sidebar filter selection so exactly one thing is active at a time.
+  document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('active','cat-active'));
+  if(v==='tasks'||v==='notes'){
+    // A Tasks/Notes area is a standalone view of ALL items of that type — reset any active filter.
+    view=v; lastArea=v; filter='all'; filterMode='view';
+    applyAreaTheme(v); syncWorkspaceNav(v); applyViewChrome(v);
+    const dot=document.getElementById('page-title-dot'); if(dot){dot.style.display='block';dot.style.background='var(--area)';}
+    document.getElementById('page-title').lastChild.textContent=(v==='notes'?'Notes':'Tasks');
+    render(); updateCounts(); _animateView(); return;
+  }
   view=v; applyAreaTheme(v); syncWorkspaceNav(v); applyViewChrome(v);
-  ['nav-all','nav-active','nav-archive','nav-task','nav-idea','nav-note','nav-project','nav-overdue','nav-soon'].forEach(id=>{const e=document.getElementById(id);if(e)e.classList.remove('active');});
-  document.querySelectorAll('[id^="nav-prio-"]').forEach(e=>e.classList.remove('active'));
-  document.querySelectorAll('[id^="nav-cat-"]').forEach(e=>e.classList.remove('active','cat-active'));
   render(); updateCounts(); _animateView();
 }
 // Gentle one-shot fade/slide on every view switch — re-arms the CSS animation on #list.
@@ -3270,7 +3300,7 @@ function renderGraph(){
     var itemById={}; items.forEach(function(it){var c=it.category||'general';catUsed[c]=(catUsed[c]||0)+1;var t=it.type||'task';typeUsed[t]=(typeUsed[t]||0)+1;itemById[it.id]=it;});
     Object.keys(catUsed).forEach(function(c){var cc=CATS[c]||CATS.general;var cn=node('cat:'+c,cc.label,'cat','cat',cc.color,9,{cat:c});edge(hub,cn);catNode[c]=cn;});
     Object.keys(typeUsed).forEach(function(t){var tn=node('type:'+t,(TYPE_LABEL[t]||t)+'s','type','type',TYPEC[t]||'#8a8f98',8,{type:t});edge(hub,tn);typeNode[t]=tn;});
-    items.forEach(function(it){var c=it.category||'general',t=it.type||'task',cc=CATS[c]||CATS.general,pi=priorityInfo(it.priority);var n=node('it:'+it.id,it.text||'Untitled','item','item',cc.color,pi.id==='high'?6:(pi.id==='in_progress'?5.7:5),{id:it.id});n.od=!!(it.dueDate&&it.dueDate<todayK);n.hi=pi.id==='high';n.wip=pi.id==='in_progress';n.cl=catNode[c];n.catKey=c;n.typeKey=t;n.altColor=TYPEC[t]||'#8a8f98';n.recent=((it.updatedAt||it.createdAt||'').slice(0,10)===todayK);var stt=(typeof stepStats==='function')?stepStats(it):null;n.prog=(stt&&stt.total)?(stt.done/stt.total):null;edge(n,catNode[c]);if(typeNode[t])edge(n,typeNode[t]);});
+    items.forEach(function(it){var c=it.category||'general',t=it.type||'task',cc=CATS[c]||CATS.general,pi=priorityInfo(it.priority);var n=node('it:'+it.id,it.text||'Untitled','item','item',cc.color,pi.id==='high'?6:(it.wip?5.7:5),{id:it.id});n.od=!!(it.dueDate&&it.dueDate<todayK);n.hi=pi.id==='high';n.wip=!!it.wip;n.cl=catNode[c];n.catKey=c;n.typeKey=t;n.altColor=TYPEC[t]||'#8a8f98';n.recent=((it.updatedAt||it.createdAt||'').slice(0,10)===todayK);var stt=(typeof stepStats==='function')?stepStats(it):null;n.prog=(stt&&stt.total)?(stt.done/stt.total):null;edge(n,catNode[c]);if(typeNode[t])edge(n,typeNode[t]);});
     // Concept nodes: bridge items that share an entity (person/tool/effort), revealing cross-category threads.
     try{
       var cHits={};
@@ -3415,7 +3445,7 @@ function renderGraph(){
   }
   function up(){pinch=null;if(!moved){var n=drag||hit(last.x,last.y);if(n){selectNode(n);}else{selected=null;hideInfo();}}drag=null;panning=false;}
   function dbl(e){var p=pos(e);var n=hit(p.x,p.y);if(!n)return;if(n.kind==='hub'){focusNode=null;fitView(true);return;}focusNode=n;selectNode(n);var s={};var rel=[n];edges.forEach(function(ed){if(ed[0]===n)rel.push(ed[1]);if(ed[1]===n)rel.push(ed[0]);});frameTo(rel,120,2.2,true);}
-  function act(n){if(!n)return;if(n.kind==='item')openDetail(n.ref.id);else if(n.kind==='cat'){gotoList();setFilter(n.ref.cat,'cat');}else if(n.kind==='type'){setView(areaForType(n.ref.type));setFilter(n.ref.type,'type');}else if(n.kind==='journal')openJournal(n.ref.jid);else if(n.kind==='jhub')setView('journal');else if(n.kind==='habit'||n.kind==='hhub')setView('daily');else if(n.kind==='hub'){focusNode=null;fitView();}}
+  function act(n){if(!n)return;if(n.kind==='item')openDetail(n.ref.id);else if(n.kind==='cat'){setFilter(n.ref.cat,'cat');}else if(n.kind==='type'){setFilter(n.ref.type,'type');}else if(n.kind==='journal')openJournal(n.ref.jid);else if(n.kind==='jhub')setView('journal');else if(n.kind==='habit'||n.kind==='hhub')setView('daily');else if(n.kind==='hub'){focusNode=null;fitView();}}
   function selectNode(n){selected=n;showInfo(n);}
   function aiConnHTML(id){if(!Array.isArray(_graphAI)||!_graphAI.length)return '';var its=load();
     var rows=_graphAI.filter(function(c){return c.a===id||c.b===id;}).slice(0,6).map(function(c){var oid=c.a===id?c.b:c.a;var o=its.find(function(z){return z.id===oid;});if(!o)return '';
@@ -4447,6 +4477,23 @@ function migrateGamingType(){
   try{localStorage.setItem('jbos_migr_gamingnote_v1','1');}catch(e){}
   return changed;
 }
+// One-time: 'in_progress' used to be a priority value. Convert those items to the new separate WIP
+// status (wip:true) and give them a real priority by type, so WIP can now coexist with High/Normal/Low.
+function migrateWipStatus(){
+  if(localStorage.getItem('jbos_migr_wip_v1'))return 0;
+  var items=load();
+  if(!items.length)return 0;
+  var now=new Date().toISOString(), changed=0;
+  for(var i=0;i<items.length;i++){var it=items[i];
+    if(it&&it.priority==='in_progress'){
+      it.wip=true; it.priority=defaultPriorityForType(it.type,it.category,null);
+      it.updatedAt=now; changed++;
+    }
+  }
+  if(changed)save(items);
+  try{localStorage.setItem('jbos_migr_wip_v1','1');}catch(e){}
+  return changed;
+}
 // Extra layer for the daily/monthly checklists: drop stale completion logs so a new period always
 // starts clean (daily keeps ~70 days, monthly ~13 months — enough for streaks). The reset itself is
 // driven by the period key (today / this-month), so the current checklist is always empty on a new period.
@@ -4675,6 +4722,7 @@ purgeOldArchived(); // drop archived items older than ~1 month (tombstoned so sy
 migrateCategories(); // re-sort any retired lifestyle/general items into a real life area
 migrateNotePriorities(); // one-time: existing Normal notes → Low (type-default rule)
 migrateGamingType(); // one-time: existing gaming items → notes (overridable thereafter)
+migrateWipStatus(); // one-time: old in_progress priority → separate WIP status
 purgeOldRoutineLogs(); // clear stale daily/monthly completion logs so each period resets clean
 loadBrain(); // pull the curated Obsidian priorities/guardrails snapshot for the dashboard
 // Defer the first render one tick so every top-level const (incl. the Musubi MZ_* data

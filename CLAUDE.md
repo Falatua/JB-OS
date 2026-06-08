@@ -65,7 +65,8 @@ in** — so picking `type` correctly is now what files it in the right home:
   "emoji": "🛍️",                   // always set one explicitly
   "notes": "One-line summary shown under the title",
   "description": "Fuller context: what it means, why, and any open questions",
-  "priority": "normal",            // high | in_progress | normal | low
+  "priority": "normal",            // high | normal | low
+  "wip": false,                    // Work-in-progress status — a SEPARATE flag, coexists with any priority
   "category": "work",              // see §3
   "source": "chat",                // chat (default for me) | telegram | browser
   "done": false,
@@ -161,17 +162,23 @@ invisible render fallback — never assign it.)
 
 When a Musubi brand task also names a kid (e.g. *"Musubi: order Archie's shoot gear"*) it stays `musubi` — the brand is the subject. The keyword engine lives in `index.html`'s `guessCategory()`; the screenshot/brain-dump rules live in the `analyze-screenshot` Edge Function. Update **all three** together when these rules change.
 
-### `priority`
+### `priority` (high · normal · low)
 - **high** — money is at stake, there's a hard deadline, or it blocks something else.
-- **in_progress** — actively being worked, handed off, or waiting on a current next step.
 - **normal** — the default for **tasks** (`task`/`project`) — things to *do*.
 - **low** — someday, nice-to-have, de-emphasized — and the default for **notes** (`note`/`idea`), since
   notes are a reference/knowledge base, not action items.
 - **Type defaults (a creation-time default, "unless changed").** Notes/ideas default to **low**, tasks/
-  projects to **normal**; **`in_progress` always stays `in_progress`**; an explicit **high** is respected.
-  Implemented by `defaultPriorityForType()` in `index.html` and applied at every entry point (manual add,
-  brain dump, screenshots, sync). A user/Claude edit can still set any priority and it sticks. When filing
-  a note by hand, set `priority: low` unless it's genuinely high/in-progress.
+  projects to **normal**; an explicit **high** is respected. Implemented by `defaultPriorityForType()` in
+  `index.html` and applied at every entry point (manual add, brain dump, screenshots, sync). A user/Claude
+  edit can still set any priority and it sticks. When filing a note by hand, set `priority: low` unless
+  it's genuinely high.
+
+### `wip` (Work in progress) — a separate status, NOT a priority
+Work-in-progress is its own boolean flag that **coexists with any priority**, so an item can be **High
+*and* in progress** at once. Set `"wip": true` when JB is actively working/handing off/waiting on a next
+step. It shows its own teal "In progress" badge, has its own **Status** filter in the sidebar, and is
+independent of high/normal/low. (Previously `in_progress` was a priority value, which forced items to lose
+their real priority — that's fixed.)
 - **Grocery & errands are always `low`.** Any item in the `grocery` or `errands` category is set to
   `priority: low` automatically (it's a hard force that wins over the type default). Don't mark them higher.
 
