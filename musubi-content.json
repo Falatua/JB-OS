@@ -1,5 +1,29 @@
 [
   {
+    "id": "mc-auto-2026-06-09-3",
+    "text": "Story series: a day on the Westside, tagged Musubi",
+    "cat": "story",
+    "note": "Behind-the-life content keeps you top of feed."
+  },
+  {
+    "id": "mc-auto-2026-06-09-2",
+    "text": "\"Auntie's favorite tee\" — let a real auntie style it her way",
+    "cat": "models",
+    "note": "Real person, real fit. No model posing."
+  },
+  {
+    "id": "mc-auto-2026-06-09-1",
+    "text": "Models call: feature 3 community members + their why",
+    "cat": "models",
+    "note": "UGC-style. Real faces over flat-lays."
+  },
+  {
+    "id": "mc-auto-2026-06-09-0",
+    "text": "BTS: picking fabric / approving a sample on camera",
+    "cat": "bts",
+    "note": "Show the craft and the standards."
+  },
+  {
     "id": "mc-auto-2026-06-08-3",
     "text": "Throwback: childhood Westside spot revisited in current gear",
     "cat": "throwback",
@@ -154,18 +178,6 @@
     "text": "Carousel: 'made for the cousins' — the ohana line concept",
     "cat": "ohana",
     "note": "Family/community as the brand's core."
-  },
-  {
-    "id": "mc-auto-2026-06-02-1",
-    "text": "Throwback Thursday: the Kalohe Kai song that defined the summer",
-    "cat": "throwback",
-    "note": "Tie the era to a current drop. Island-reggae nostalgia."
-  },
-  {
-    "id": "mc-auto-2026-06-02-0",
-    "text": "Carousel: care guide — keep your Musubi tee fresh for years",
-    "cat": "carousel",
-    "note": "Useful = saveable. Subtle quality flex."
   },
   {
     "id": "mc-auntie-tee",
