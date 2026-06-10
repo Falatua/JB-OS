@@ -1,5 +1,29 @@
 [
   {
+    "id": "mc-auto-2026-06-10-3",
+    "text": "Reel: golden-hour shoot timed to tonight's exact golden hour",
+    "cat": "reel",
+    "note": "Use the JB OS conditions widget to nail the light."
+  },
+  {
+    "id": "mc-auto-2026-06-10-2",
+    "text": "Throwback Thursday: the Kalohe Kai song that defined the summer",
+    "cat": "throwback",
+    "note": "Tie the era to a current drop. Island-reggae nostalgia."
+  },
+  {
+    "id": "mc-auto-2026-06-10-1",
+    "text": "Product: restock alert with a 'last time it sold out in X' line",
+    "cat": "product",
+    "note": "Scarcity + social proof."
+  },
+  {
+    "id": "mc-auto-2026-06-10-0",
+    "text": "Story poll: which colorway drops next? Let followers pick",
+    "cat": "story",
+    "note": "High engagement, signals you listen to the community."
+  },
+  {
     "id": "mc-auto-2026-06-09-3",
     "text": "Story series: a day on the Westside, tagged Musubi",
     "cat": "story",
@@ -154,30 +178,6 @@
     "text": "Local spotlight: shout out a Westside small biz wearing Musubi",
     "cat": "local",
     "note": "Community-first. Builds real relationships."
-  },
-  {
-    "id": "mc-auto-2026-06-03-1",
-    "text": "Reel: spam musubi recipe with the tee on the counter",
-    "cat": "reel",
-    "note": "Food + brand crossover, very local."
-  },
-  {
-    "id": "mc-auto-2026-06-03-0",
-    "text": "Sunrise spam-musubi run — film the Westside drive + first light",
-    "cat": "local",
-    "note": "Lifestyle reel; pair with the conditions/golden-hour times in JB OS."
-  },
-  {
-    "id": "mc-auto-2026-06-02-3",
-    "text": "Reel: 'POV you pull up to a Westside potluck in Musubi'",
-    "cat": "reel",
-    "note": "Relatable local humor. Highly shareable."
-  },
-  {
-    "id": "mc-auto-2026-06-02-2",
-    "text": "Carousel: 'made for the cousins' — the ohana line concept",
-    "cat": "ohana",
-    "note": "Family/community as the brand's core."
   },
   {
     "id": "mc-auntie-tee",
