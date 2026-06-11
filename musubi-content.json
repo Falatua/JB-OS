@@ -1,5 +1,29 @@
 [
   {
+    "id": "mc-auto-2026-06-11-3",
+    "text": "Carousel: 'made for the cousins' — the ohana line concept",
+    "cat": "ohana",
+    "note": "Family/community as the brand's core."
+  },
+  {
+    "id": "mc-auto-2026-06-11-2",
+    "text": "Reel: spam musubi recipe with the tee on the counter",
+    "cat": "reel",
+    "note": "Food + brand crossover, very local."
+  },
+  {
+    "id": "mc-auto-2026-06-11-1",
+    "text": "Reel: 'POV you pull up to a Westside potluck in Musubi'",
+    "cat": "reel",
+    "note": "Relatable local humor. Highly shareable."
+  },
+  {
+    "id": "mc-auto-2026-06-11-0",
+    "text": "Carousel: 5 Westside spots to shoot your Musubi fit",
+    "cat": "local",
+    "note": "Useful + on-brand; invites UGC."
+  },
+  {
     "id": "mc-auto-2026-06-10-3",
     "text": "Reel: golden-hour shoot timed to tonight's exact golden hour",
     "cat": "reel",
@@ -154,30 +178,6 @@
     "text": "Story: tide + surf check of the morning (use the JB OS data)",
     "cat": "story",
     "note": "Daily ritual content followers return for."
-  },
-  {
-    "id": "mc-auto-2026-06-04-1",
-    "text": "Product: the banyan / heritage tee with its story line",
-    "cat": "product",
-    "note": "Lead with meaning, then the link."
-  },
-  {
-    "id": "mc-auto-2026-06-04-0",
-    "text": "Story Q&A: ask me anything about the brand / next drops",
-    "cat": "story",
-    "note": "Direct connection; surfaces what people want."
-  },
-  {
-    "id": "mc-auto-2026-06-03-3",
-    "text": "Models: feature a local athlete / waterman in the gear",
-    "cat": "models",
-    "note": "Aspirational but real to the community."
-  },
-  {
-    "id": "mc-auto-2026-06-03-2",
-    "text": "Local spotlight: shout out a Westside small biz wearing Musubi",
-    "cat": "local",
-    "note": "Community-first. Builds real relationships."
   },
   {
     "id": "mc-auntie-tee",
