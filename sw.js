@@ -1,10 +1,10 @@
 /* JB OS service worker — offline support via network-first with cache fallback.
    Network-first keeps the live GitHub Pages sync intact (fresh data when online),
    and falls back to the last cached copy when offline. */
-const CACHE = 'jbos-v5';
+const CACHE = 'jbos-v6';
 const SHELL = [
   './', './index.html', './manifest.json',
-  './todos.json', './daily.json', './monthly.json',
+  './todos.json', './daily.json', './weekly.json', './monthly.json',
   './journal-prompts.json', './calendar.ics',
   './icon-192.png', './icon-512.png', './apple-touch-icon.png'
 ];

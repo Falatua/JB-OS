@@ -387,7 +387,7 @@
     .cal-today-btn{min-height:38px}
   }
 
-  /* ===== Routines (Daily / Monthly) + Calendar ===== */
+  /* ===== Routines (Daily / Weekly / Monthly) + Calendar ===== */
   .routine-banner{display:flex;align-items:center;gap:16px;padding:16px 18px;border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--surface);margin:6px 0 16px}
   .routine-ring{position:relative;width:52px;height:52px;flex-shrink:0}
   .routine-ring svg{transform:rotate(-90deg)}
@@ -1175,6 +1175,10 @@
       <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="3"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3 3l1.4 1.4M11.6 11.6L13 13M13 3l-1.4 1.4M4.4 11.6L3 13"/></svg>
       Daily <span class="nav-count" id="cnt-daily">0</span>
     </div>
+    <div class="nav-item" id="nav-view-weekly" onclick="setView('weekly')" role="button" tabindex="0">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 6.5h12M5 2v2M11 2v2"/><rect x="4.5" y="9" width="7" height="2.2" rx=".6" fill="currentColor" stroke="none"/></svg>
+      Weekly <span class="nav-count" id="cnt-weekly">0</span>
+    </div>
     <div class="nav-item" id="nav-view-monthly" onclick="setView('monthly')" role="button" tabindex="0">
       <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 6h12M2 6v7a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V6M2 6V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v2M5 2v2M11 2v2"/><path d="M7 9.5l1.2 1.2L11 8"/></svg>
       Monthly <span class="nav-count" id="cnt-monthly">0</span>
@@ -1566,7 +1570,7 @@
   </div>
 </div>
 
-<!-- ===== Routine item editor (daily / monthly) ===== -->
+<!-- ===== Routine item editor (daily / weekly / monthly) ===== -->
 <div class="backdrop hidden" id="routine-modal" onclick="closeRoutineOutside(event)" role="dialog" aria-modal="true" aria-label="Edit checklist item">
   <div class="modal">
     <div class="modal-title" id="rt-modal-title">Edit item</div>
@@ -2228,6 +2232,7 @@ function updateCounts(){
   if(es)es.textContent=active.filter(x=>x.dueDate&&x.dueDate>=todayK&&((new Date(x.dueDate+'T00:00:00')-new Date(todayK+'T00:00:00'))/86400000)<=2).length;
   try{
     const de=document.getElementById('cnt-daily'); if(de)de.textContent=loadDaily().templates.length;
+    const we=document.getElementById('cnt-weekly'); if(we)we.textContent=loadWeekly().templates.length;
     const me=document.getElementById('cnt-monthly'); if(me)me.textContent=loadMonthly().templates.length;
     const je=document.getElementById('cnt-journal'); if(je)je.textContent=jEntries().length;
   }catch{}
@@ -2268,7 +2273,7 @@ var _cmdSel=0, _cmdList=[];
 function cmdCommands(){
   var c=[];
   function add(cat,ic,label,sub,run){c.push({cat:cat,ic:ic,label:label,sub:sub,run:run});}
-  [['dashboard','🏠','Today'],['tasks','🗒️','Tasks'],['notes','📝','Notes'],['daily','🔁','Daily'],['monthly','📆','Monthly'],['calendar','📅','Calendar'],['journal','📔','Journal'],['musubi','🌺','Musubi'],['graph','🕸️','Graph']].forEach(function(v){add('Go to',v[1],v[2],'',function(){setView(v[0]);});});
+  [['dashboard','🏠','Today'],['tasks','🗒️','Tasks'],['notes','📝','Notes'],['daily','🔁','Daily'],['weekly','🗓️','Weekly'],['monthly','📆','Monthly'],['calendar','📅','Calendar'],['journal','📔','Journal'],['musubi','🌺','Musubi'],['graph','🕸️','Graph']].forEach(function(v){add('Go to',v[1],v[2],'',function(){setView(v[0]);});});
   add('Action','➕','New item','',function(){openModal();});
   add('Action','📝','New journal entry','',function(){newJournalEntry();});
   add('Action','🔐','Sign in / account','',function(){openAuth();});
@@ -3006,9 +3011,9 @@ function toast(msg,actionLabel,actionFn){
     .catch(()=>{_booting=false;render();updateCounts();});
 })();
 
-/* Routine seeds: merge daily.json / monthly.json templates into localStorage (new ids only) */
+/* Routine seeds: merge daily.json / weekly.json / monthly.json templates into localStorage (new ids only) */
 (function fetchRoutineSeeds(){
-  [['daily','daily.json'],['monthly','monthly.json']].forEach(function(pair){
+  [['daily','daily.json'],['weekly','weekly.json'],['monthly','monthly.json']].forEach(function(pair){
     var scope=pair[0], file=pair[1];
     fetch(file+'?v='+Date.now()).then(function(r){return r.ok?r.json():Promise.reject();}).then(function(seeds){
       if(!Array.isArray(seeds)||!seeds.length)return;
@@ -3039,25 +3044,32 @@ function toast(msg,actionLabel,actionFn){
 function pad(n){return String(n).padStart(2,'0');}
 function dateKey(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());}
 function monthKey(d){return d.getFullYear()+'-'+pad(d.getMonth()+1);}
+// Weeks run Sun–Sat (same as the calendar grid); a week is keyed by its Sunday's date.
+function weekKey(d){const s=new Date(d.getFullYear(),d.getMonth(),d.getDate());s.setDate(s.getDate()-s.getDay());return dateKey(s);}
+function _daysLeftInWeek(){return 6-new Date().getDay();}
 function _daysLeftInMonth(){var n=new Date(),last=new Date(n.getFullYear(),n.getMonth()+1,0).getDate();return Math.max(0,last-n.getDate());}
 function fmtDue(s){const p=s.split('-').map(Number);return new Date(p[0],p[1]-1,p[2]).toLocaleDateString('en-US',{month:'short',day:'numeric'});}
 function dueClass(s){const today=dateKey(new Date());if(s<today)return 'overdue';const diff=(new Date(s+'T00:00:00')-new Date(today+'T00:00:00'))/86400000;return diff<=2?'soon':'';}
 
-/* ===== Routine (Daily / Monthly) data ===== */
-const DKEY='jbos_daily_v1', MKEY='jbos_monthly_v1';
+/* ===== Routine (Daily / Weekly / Monthly) data ===== */
+const DKEY='jbos_daily_v1', WKEY='jbos_weekly_v1', MKEY='jbos_monthly_v1';
 function loadDaily(){try{const o=JSON.parse(localStorage.getItem(DKEY));return o&&Array.isArray(o.templates)?o:{templates:[],log:{}};}catch{return{templates:[],log:{}};}}
 function saveDaily(o){localStorage.setItem(DKEY,JSON.stringify(o));if(typeof sbPushStore==='function'&&!_sbApplying)sbPushStore('daily');}
+function loadWeekly(){try{const o=JSON.parse(localStorage.getItem(WKEY));return o&&Array.isArray(o.templates)?o:{templates:[],log:{}};}catch{return{templates:[],log:{}};}}
+function saveWeekly(o){localStorage.setItem(WKEY,JSON.stringify(o));if(typeof sbPushStore==='function'&&!_sbApplying)sbPushStore('weekly');}
 function loadMonthly(){try{const o=JSON.parse(localStorage.getItem(MKEY));return o&&Array.isArray(o.templates)?o:{templates:[],log:{}};}catch{return{templates:[],log:{}};}}
 function saveMonthly(o){localStorage.setItem(MKEY,JSON.stringify(o));if(typeof sbPushStore==='function'&&!_sbApplying)sbPushStore('monthly');}
-function rStore(scope){return scope==='daily'?loadDaily():loadMonthly();}
-function rSave(scope,o){scope==='daily'?saveDaily(o):saveMonthly(o);}
-function rPeriodKey(scope){return scope==='daily'?dateKey(new Date()):monthKey(new Date());}
+function rStore(scope){return scope==='daily'?loadDaily():scope==='weekly'?loadWeekly():loadMonthly();}
+function rSave(scope,o){scope==='daily'?saveDaily(o):scope==='weekly'?saveWeekly(o):saveMonthly(o);}
+function rPeriodKey(scope){return scope==='daily'?dateKey(new Date()):scope==='weekly'?weekKey(new Date()):monthKey(new Date());}
 
 function routineStreak(scope,id){
-  const log=rStore(scope).log, daily=scope==='daily', key=daily?dateKey:monthKey, now=new Date();
-  // Normalize cursor: midnight for daily, 1st-of-month for monthly (avoids setMonth day-rollover on 29-31)
-  let cur=daily?new Date(now.getFullYear(),now.getMonth(),now.getDate()):new Date(now.getFullYear(),now.getMonth(),1);
-  const step=()=>{daily?cur.setDate(cur.getDate()-1):cur.setMonth(cur.getMonth()-1);};
+  const log=rStore(scope).log, key=scope==='daily'?dateKey:scope==='weekly'?weekKey:monthKey, now=new Date();
+  // Normalize cursor: midnight for daily, week-start Sunday for weekly, 1st-of-month for monthly
+  // (avoids setMonth day-rollover on 29-31)
+  let cur=scope==='monthly'?new Date(now.getFullYear(),now.getMonth(),1):new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  if(scope==='weekly')cur.setDate(cur.getDate()-cur.getDay());
+  const step=()=>{if(scope==='daily')cur.setDate(cur.getDate()-1);else if(scope==='weekly')cur.setDate(cur.getDate()-7);else cur.setMonth(cur.getMonth()-1);};
   let s=0;
   if(!(log[key(cur)]||[]).includes(id))step();
   while((log[key(cur)]||[]).includes(id)){s++;step();}
@@ -3083,8 +3095,8 @@ function openRoutineEdit(scope,id){
   const t=rStore(scope).templates.find(x=>x.id===id);if(!t)return;
   _rtEdit={scope,id};_lastFocus=document.activeElement;
   buildCatOptions('rt-cat');
-  document.getElementById('rt-modal-title').textContent=scope==='daily'?'Edit daily item':'Edit monthly item';
-  document.getElementById('rt-scope-word').textContent=scope==='daily'?'every day':'every month';
+  document.getElementById('rt-modal-title').textContent=scope==='daily'?'Edit daily item':scope==='weekly'?'Edit weekly item':'Edit monthly item';
+  document.getElementById('rt-scope-word').textContent=scope==='daily'?'every day':scope==='weekly'?'every week':'every month';
   document.getElementById('rt-text').value=t.text||'';
   document.getElementById('rt-notes').value=t.notes||'';
   document.getElementById('rt-cat').value=t.category||'personal';
@@ -3121,7 +3133,7 @@ function closeRoutine(){document.getElementById('routine-modal').classList.add('
 function closeRoutineOutside(e){if(e.target.id==='routine-modal')closeRoutine();}
 
 /* ===== View switching ===== */
-function syncWorkspaceNav(v){['dashboard','tasks','notes','daily','monthly','calendar','journal','musubi','graph'].forEach(k=>{const e=document.getElementById('nav-view-'+k);if(e)e.classList.toggle('active',k===v);});['musubi','graph'].forEach(k=>{const e=document.getElementById('hdr-'+k);if(e)e.classList.toggle('active',k===v);});}
+function syncWorkspaceNav(v){['dashboard','tasks','notes','daily','weekly','monthly','calendar','journal','musubi','graph'].forEach(k=>{const e=document.getElementById('nav-view-'+k);if(e)e.classList.toggle('active',k===v);});['musubi','graph'].forEach(k=>{const e=document.getElementById('hdr-'+k);if(e)e.classList.toggle('active',k===v);});}
 /* ===== Global item search: live typeahead dropdown; click or Enter opens the item ===== */
 var _searchSel=-1;
 function searchInput(){
@@ -3160,7 +3172,7 @@ function applyViewChrome(v){
   const la=document.querySelector('.header-list-actions');if(la)la.style.display=(v==='journal'||v==='musubi'||v==='graph')?'none':'';
   // The single add button adapts to the page it's on (and to the active type lens in the list).
   const nl=document.getElementById('newitem-label');
-  const nlText=(v==='daily')?'New habit':(v==='monthly')?'New monthly':(v==='list'&&typeFilter==='notes')?'New Note':(v==='list'&&typeFilter==='tasks')?'New Task':'New Item';
+  const nlText=(v==='daily')?'New habit':(v==='weekly')?'New weekly':(v==='monthly')?'New monthly':(v==='list'&&typeFilter==='notes')?'New Note':(v==='list'&&typeFilter==='tasks')?'New Task':'New Item';
   if(nl)nl.textContent=nlText;
   const nb=document.getElementById('newitem-btn');if(nb)nb.setAttribute('aria-label',nlText); // keep the accessible name in sync (label is hidden on mobile)
   syncAreaSwitch();
@@ -3172,18 +3184,19 @@ function syncAreaSwitch(){
 }
 // Subtle per-area identity: Notes lens → blue, Tasks lens → amber, All/other → neutral.
 function applyAreaTheme(){const app=document.querySelector('.app');if(!app)return;const onList=(view==='list');app.classList.toggle('area-notes',onList&&typeFilter==='notes');app.classList.toggle('area-tasks',onList&&typeFilter==='tasks');}
-// One context-aware add: a habit on Daily/Monthly, otherwise the full item modal (which already
-// pre-fills life-area/type/priority from the current filter).
+// One context-aware add: a habit on Daily/Weekly/Monthly, otherwise the full item modal (which
+// already pre-fills life-area/type/priority from the current filter).
 function primaryAdd(){
   if(view==='daily')return openRoutineNew('daily');
+  if(view==='weekly')return openRoutineNew('weekly');
   if(view==='monthly')return openRoutineNew('monthly');
   openModal();
 }
 function openRoutineNew(scope){
   _rtEdit={scope,id:null}; _lastFocus=document.activeElement;
   buildCatOptions('rt-cat');
-  document.getElementById('rt-modal-title').textContent=scope==='daily'?'New daily item':'New monthly item';
-  document.getElementById('rt-scope-word').textContent=scope==='daily'?'every day':'every month';
+  document.getElementById('rt-modal-title').textContent=scope==='daily'?'New daily item':scope==='weekly'?'New weekly item':'New monthly item';
+  document.getElementById('rt-scope-word').textContent=scope==='daily'?'every day':scope==='weekly'?'every week':'every month';
   document.getElementById('rt-text').value='';
   document.getElementById('rt-notes').value='';
   document.getElementById('rt-cat').value='personal';
@@ -3223,6 +3236,7 @@ function setTitle(text,count){
 function renderView(){
   applyViewChrome(view);
   if(view==='daily')renderRoutine('daily');
+  else if(view==='weekly')renderRoutine('weekly');
   else if(view==='monthly')renderRoutine('monthly');
   else if(view==='calendar')renderCalendar();
   else if(view==='journal')renderJournal();
@@ -3541,7 +3555,7 @@ function renderGraph(){
 function routineItemHTML(scope,t,isDone){
   const cat=CATS[t.category||'general']||CATS.general;
   const catBadge=`<span class="badge-cat" style="background:${cat.dim};color:${cat.color}">${cat.label}</span>`;
-  // Streaks are a DAILY-only gamification feature (not monthly)
+  // Streaks are a DAILY-only gamification feature (not weekly/monthly)
   const s=scope==='daily'?routineStreak(scope,t.id):0;
   const streakChip=(scope==='daily'&&s>0)?`<span class="streak-chip" title="${s} day streak"><svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1.3s.4 2.1 1.9 3.6C11.6 6.6 12.5 8 12.5 9.7a4.5 4.5 0 0 1-9 0c0-1 .4-1.9 1-2.6.2 1 .9 1.5 1.6 1.5C4.6 6 8 6 8 1.3z"/></svg>${s}d</span>`:'';
   const em=t.emoji||guessEmoji(t.text,t.category);
@@ -3552,7 +3566,7 @@ function routineItemHTML(scope,t,isDone){
       <div class="cb" onclick="toggleRoutine('${scope}','${t.id}')" role="checkbox" aria-checked="${isDone}" aria-label="Toggle: ${esc(t.text)}" tabindex="0" onkeydown="if(event.key===' '||event.key==='Enter'){toggleRoutine('${scope}','${t.id}');event.preventDefault()}">
         <svg class="cb-check" width="9" height="9" viewBox="0 0 10 10" fill="none" stroke="#111" stroke-width="2.2"><path d="M1.5 5l2.8 2.8 4.2-5"/></svg>
       </div>
-      <div class="item-body" role="button" tabindex="0" onclick="openRoutineEdit('${scope}','${t.id}')" onkeydown="if(event.key==='Enter'){openRoutineEdit('${scope}','${t.id}');event.preventDefault()}" aria-label="Edit: ${esc(t.text)}" title="Click to edit — applies to all future ${scope==='daily'?'days':'months'}">
+      <div class="item-body" role="button" tabindex="0" onclick="openRoutineEdit('${scope}','${t.id}')" onkeydown="if(event.key==='Enter'){openRoutineEdit('${scope}','${t.id}');event.preventDefault()}" aria-label="Edit: ${esc(t.text)}" title="Click to edit — applies to all future ${scope==='daily'?'days':scope==='weekly'?'weeks':'months'}">
         <div class="item-text"><span class="item-emoji">${esc(em)}</span> ${esc(t.text)}</div>
         ${notes}
         <div class="item-meta">${catBadge}${streakChip}</div>
@@ -3567,13 +3581,20 @@ function routineItemHTML(scope,t,isDone){
 }
 function renderRoutine(scope){
   const daily=scope==='daily', store=rStore(scope), pkey=rPeriodKey(scope), done=new Set(store.log[pkey]||[]);
-  setTitle(daily?'Daily Checklist':'Monthly Checklist', Math.max(0,store.templates.length-done.size));
+  const L=({
+    daily:{title:'Daily Checklist',period:'today',unit:'a daily habit',none:'No daily habits yet',reset:'every day at midnight'},
+    weekly:{title:'Weekly Checklist',period:'this week',unit:'a weekly item',none:'No weekly items yet',reset:'every Sunday (weeks run Sun–Sat)'},
+    monthly:{title:'Monthly Checklist',period:'this month',unit:'a monthly item',none:'No monthly items yet',reset:'at the end of every month (the last day)'}
+  })[scope];
+  setTitle(L.title, Math.max(0,store.templates.length-done.size));
   const el=document.getElementById('list');
   if(!store.templates.length){
     const remptyIcon=daily
       ?`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2.6M12 19.4V22M2 12h2.6M19.4 12H22M4.9 4.9l1.9 1.9M17.2 17.2l1.9 1.9M19.1 4.9l-1.9 1.9M6.8 17.2l-1.9 1.9"/></svg>`
+      :scope==='weekly'
+      ?`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4.5" width="18" height="16.5" rx="2"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/><rect x="6" y="13" width="12" height="3.2" rx="1" fill="currentColor" stroke="none"/></svg>`
       :`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4.5" width="18" height="16.5" rx="2"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4M12 12.5v3l2 1.3"/></svg>`;
-    el.innerHTML=`<div class="empty-state"><div class="empty-icon">${remptyIcon}</div><div class="empty-title">${daily?'No daily habits yet':'No monthly items yet'}</div><div class="empty-hint">Add ${daily?'a daily habit':'a monthly item'} above. It resets ${daily?'every day at midnight':'at the end of every month (the last day)'} and tracks your streak.</div></div>`;
+    el.innerHTML=`<div class="empty-state"><div class="empty-icon">${remptyIcon}</div><div class="empty-title">${L.none}</div><div class="empty-hint">Add ${L.unit} above. It resets ${L.reset}${daily?' and tracks your streak':''}.</div></div>`;
     return;
   }
   const tpl=store.templates.slice().sort((a,b)=>{
@@ -3584,15 +3605,15 @@ function renderRoutine(scope){
   const total=store.templates.length, n=done.size, pct=Math.round(n/total*100);
   const R=22, C=2*Math.PI*R, off=C*(1-n/total);
   let html=`<div class="routine-banner">
-    <div class="routine-ring" role="img" aria-label="${pct}% complete, ${n} of ${total} done ${daily?'today':'this month'}">
+    <div class="routine-ring" role="img" aria-label="${pct}% complete, ${n} of ${total} done ${L.period}">
       <svg width="52" height="52" aria-hidden="true"><circle cx="26" cy="26" r="${R}" fill="none" stroke="var(--border-2)" stroke-width="5"/><circle cx="26" cy="26" r="${R}" fill="none" stroke="var(--accent)" stroke-width="5" stroke-linecap="round" stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}"/></svg>
       <div class="ring-pct">${pct}%</div>
     </div>
     <div class="routine-banner-meta">
-      <div class="routine-banner-title">${n} of ${total} done ${daily?'today':'this month'}</div>
+      <div class="routine-banner-title">${n} of ${total} done ${L.period}</div>
       <div class="routine-banner-sub">${n===total?'All done — nice work.':'Check items off as you complete them.'}</div>
     </div>
-    <div class="routine-reset">${daily?'Resets daily · midnight':(()=>{const d=_daysLeftInMonth();return 'Resets at month-end · '+(d===0?'today':d+' day'+(d===1?'':'s')+' left');})()}</div>
+    <div class="routine-reset">${daily?'Resets daily · midnight':(()=>{const wk=scope==='weekly',d=wk?_daysLeftInWeek():_daysLeftInMonth();return 'Resets '+(wk?'Sunday':'at month-end')+' · '+(d===0?'today':d+' day'+(d===1?'':'s')+' left');})()}</div>
   </div><div class="task-list">${tpl.map(t=>routineItemHTML(scope,t,done.has(t.id))).join('')}</div>`;
   el.innerHTML=html;
 }
@@ -4511,13 +4532,15 @@ function migrateWipStatus(){
   try{localStorage.setItem('jbos_migr_wip_v1','1');}catch(e){}
   return changed;
 }
-// Extra layer for the daily/monthly checklists: drop stale completion logs so a new period always
-// starts clean (daily keeps ~70 days, monthly ~13 months — enough for streaks). The reset itself is
-// driven by the period key (today / this-month), so the current checklist is always empty on a new period.
+// Extra layer for the daily/weekly/monthly checklists: drop stale completion logs so a new period
+// always starts clean (daily keeps ~70 days, weekly ~27 weeks, monthly ~13 months — enough for
+// streaks). The reset itself is driven by the period key (today / this-week / this-month), so the
+// current checklist is always empty on a new period.
 function purgeOldRoutineLogs(){
   var dailyCut=dateKey(new Date(Date.now()-70*864e5));
+  var weekCut=weekKey(new Date(Date.now()-27*7*864e5));
   var mn=new Date(); var monCut=monthKey(new Date(mn.getFullYear(),mn.getMonth()-13,1));
-  [['daily',dailyCut],['monthly',monCut]].forEach(function(pair){
+  [['daily',dailyCut],['weekly',weekCut],['monthly',monCut]].forEach(function(pair){
     var scope=pair[0], cut=pair[1], s=rStore(scope), ch=false;
     ['log','logTs'].forEach(function(k){ if(s[k]) Object.keys(s[k]).forEach(function(pk){ if(pk<cut){ delete s[k][pk]; ch=true; } }); });
     if(ch)rSave(scope,s);
@@ -4531,7 +4554,7 @@ function applyTomb(t){localStorage.setItem(TKEY,JSON.stringify(t));pruneStores()
 function pruneStores(){
   var tomb=loadTomb(), keep=function(x){return !_tombed(x,tomb);};
   var td=load(), f=td.filter(keep); if(f.length!==td.length)save(f);
-  ['daily','monthly'].forEach(function(sc){var s=rStore(sc),ft=(s.templates||[]).filter(keep);if(ft.length!==(s.templates||[]).length){s.templates=ft;rSave(sc,s);}});
+  ['daily','weekly','monthly'].forEach(function(sc){var s=rStore(sc),ft=(s.templates||[]).filter(keep);if(ft.length!==(s.templates||[]).length){s.templates=ft;rSave(sc,s);}});
   var j=jLoad(),jp=(j.prompts||[]).filter(keep),je=(j.entries||[]).filter(keep);
   if(jp.length!==(j.prompts||[]).length||je.length!==(j.entries||[]).length){j.prompts=jp;j.entries=je;jSave(j);}
 }
@@ -4544,7 +4567,7 @@ function _mergeById(remote,local){
   var tomb=loadTomb();
   return order.map(function(id){return map[id];}).filter(function(x){return !_tombed(x,tomb);});
 }
-function _mergeRoutine(r,l){ // daily/monthly: {templates, log, logTs}
+function _mergeRoutine(r,l){ // daily/weekly/monthly: {templates, log, logTs}
   r=r||{};l=l||{};
   var rlog=r.log||{}, llog=l.log||{}, rt=r.logTs||{}, lt=l.logTs||{}, log={}, logTs={}, periods={};
   [rlog,llog,rt,lt].forEach(function(m){Object.keys(m).forEach(function(p){periods[p]=1;});});
@@ -4585,6 +4608,7 @@ function _mergeMusubi(r,l){
 function sbStores(){return {
   todos:{load:load,save:save,merge:_mergeById},
   daily:{load:loadDaily,save:saveDaily,merge:_mergeRoutine},
+  weekly:{load:loadWeekly,save:saveWeekly,merge:_mergeRoutine},
   monthly:{load:loadMonthly,save:saveMonthly,merge:_mergeRoutine},
   journal:{load:jLoad,save:jSave,merge:_mergeJournal},
   musubi:{load:mzLoad,save:mzSave,merge:_mergeMusubi},
@@ -4671,7 +4695,7 @@ function sbStopSync(){
 // Wipe locally-cached personal data from this device. The cloud copy is untouched and re-pulls
 // on next sign-in — this just stops stale copies lingering on untrusted / signed-out devices.
 function sbWipeLocal(){
-  try{[KEY,DKEY,MKEY,JKEY,MZKEY,MEMKEY,TKEY].forEach(function(k){localStorage.removeItem(k);});}catch(e){}
+  try{[KEY,DKEY,WKEY,MKEY,JKEY,MZKEY,MEMKEY,TKEY].forEach(function(k){localStorage.removeItem(k);});}catch(e){}
   try{render();updateCounts();}catch(e){}
 }
 // Re-pull all stores from the cloud (used on app open/refocus for automatic sync)
@@ -4740,7 +4764,7 @@ migrateCategories(); // re-sort any retired lifestyle/general items into a real 
 migrateNotePriorities(); // one-time: existing Normal notes → Low (type-default rule)
 migrateGamingType(); // one-time: existing gaming items → notes (overridable thereafter)
 migrateWipStatus(); // one-time: old in_progress priority → separate WIP status
-purgeOldRoutineLogs(); // clear stale daily/monthly completion logs so each period resets clean
+purgeOldRoutineLogs(); // clear stale daily/weekly/monthly completion logs so each period resets clean
 loadBrain(); // pull the curated Obsidian priorities/guardrails snapshot for the dashboard
 // Defer the first render one tick so every top-level const (incl. the Musubi MZ_* data
 // the dashboard now previews) is initialized before renderDashboard runs — avoids a TDZ crash.

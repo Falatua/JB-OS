@@ -1,0 +1,33 @@
+[
+  {
+    "id": "w-water-plants",
+    "text": "Water the plants",
+    "emoji": "🪴",
+    "category": "personal",
+    "priority": "normal",
+    "notes": "Sundays"
+  },
+  {
+    "id": "w-spray-plants",
+    "text": "Spray the plants",
+    "emoji": "🌿",
+    "category": "personal",
+    "priority": "normal",
+    "notes": "Thursdays"
+  },
+  {
+    "id": "w-grocery",
+    "text": "Grocery shopping",
+    "emoji": "🛒",
+    "category": "grocery",
+    "priority": "normal",
+    "notes": "Stock up for the week"
+  },
+  {
+    "id": "w-clean-apartment",
+    "text": "Clean up the apartment",
+    "emoji": "🧹",
+    "category": "personal",
+    "priority": "normal"
+  }
+]

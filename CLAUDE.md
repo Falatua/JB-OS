@@ -32,12 +32,15 @@ goes live and JB can reference and finish it later.
 |------|-------|----------|
 | `todos.json` | tasks / ideas / notes / projects | Tasks **or** Notes area (by `type`), Calendar, Dashboard |
 | `daily.json` | recurring **daily** routines (streak-tracked) | Daily tab |
+| `weekly.json` | recurring **weekly** chores (weeks run Sun–Sat; resets Sunday) | Weekly tab |
 | `monthly.json` | recurring **monthly** items | Monthly tab |
 | `journal-prompts.json` | journaling prompts | Journal tab |
 | `calendar.ics` | calendar events | Calendar tab |
 
 **Most things go in `todos.json`.** Only use the others when the item is genuinely a daily
-habit, a monthly recurring item, a journaling prompt, or a dated calendar event.
+habit, a weekly chore, a monthly recurring item, a journaling prompt, or a dated calendar event.
+Routine seed ids are prefixed by scope: `d-` daily, `w-` weekly, `m-` monthly. A day-anchored
+weekly chore ("water plants on Sundays") keeps the day in `notes` (e.g. "Sundays").
 
 ### Tasks vs Notes are two distinct areas
 
@@ -49,7 +52,7 @@ in** — so picking `type` correctly is now what files it in the right home:
 - Both areas keep the **same** machinery — priority, due dates, life areas, work-in-progress/steps,
   search, archive — just scoped to their own type.
 - **Cross-cutting views stay unified:** the **Calendar** shows tasks + notes together, and the **Today**
-  dashboard is a comprehensive launchpad across both. (Daily/Monthly/Journal are their own data files.)
+  dashboard is a comprehensive launchpad across both. (Daily/Weekly/Monthly/Journal are their own data files.)
 - Brain dump, screenshot capture, and manual entry all route by `type`, so a mis-typed item lands in the
   wrong area — be deliberate about task vs note (see §3).
 
