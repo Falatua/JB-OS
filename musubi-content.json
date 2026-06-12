@@ -1,5 +1,29 @@
 [
   {
+    "id": "mc-auto-2026-06-12-3",
+    "text": "Story Q&A: ask me anything about the brand / next drops",
+    "cat": "story",
+    "note": "Direct connection; surfaces what people want."
+  },
+  {
+    "id": "mc-auto-2026-06-12-2",
+    "text": "Carousel: care guide — keep your Musubi tee fresh for years",
+    "cat": "carousel",
+    "note": "Useful = saveable. Subtle quality flex."
+  },
+  {
+    "id": "mc-auto-2026-06-12-1",
+    "text": "Sunrise spam-musubi run — film the Westside drive + first light",
+    "cat": "local",
+    "note": "Lifestyle reel; pair with the conditions/golden-hour times in JB OS."
+  },
+  {
+    "id": "mc-auto-2026-06-12-0",
+    "text": "Local spotlight: shout out a Westside small biz wearing Musubi",
+    "cat": "local",
+    "note": "Community-first. Builds real relationships."
+  },
+  {
     "id": "mc-auto-2026-06-11-3",
     "text": "Carousel: 'made for the cousins' — the ohana line concept",
     "cat": "ohana",
@@ -154,30 +178,6 @@
     "text": "Archie ohana mini-shoot — kid-sized gear at the beach park",
     "cat": "ohana",
     "note": "Community/family angle. Genuine, not staged."
-  },
-  {
-    "id": "mc-auto-2026-06-05-1",
-    "text": "Carousel: 3 ways to wear one Musubi tee, Westside edition",
-    "cat": "carousel",
-    "note": "Beach → town → pau hana. Saveable styling content."
-  },
-  {
-    "id": "mc-auto-2026-06-05-0",
-    "text": "Carousel: the meaning behind the design — slide-by-slide",
-    "cat": "carousel",
-    "note": "Cultural context earns product posts their place."
-  },
-  {
-    "id": "mc-auto-2026-06-04-3",
-    "text": "Throwback Thursday: island-reggae playlist that fits the brand",
-    "cat": "throwback",
-    "note": "Pair with the JB OS Vibe player."
-  },
-  {
-    "id": "mc-auto-2026-06-04-2",
-    "text": "Story: tide + surf check of the morning (use the JB OS data)",
-    "cat": "story",
-    "note": "Daily ritual content followers return for."
   },
   {
     "id": "mc-auntie-tee",
