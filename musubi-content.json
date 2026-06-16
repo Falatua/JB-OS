@@ -1,5 +1,29 @@
 [
   {
+    "id": "mc-auto-2026-06-16-3",
+    "text": "Reel: how the tee is folded + packed (no voiceover, brand soundtrack)",
+    "cat": "bts",
+    "note": "Process content builds trust faster than product shots."
+  },
+  {
+    "id": "mc-auto-2026-06-16-2",
+    "text": "Carousel: 3 ways to wear one Musubi tee, Westside edition",
+    "cat": "carousel",
+    "note": "Beach → town → pau hana. Saveable styling content."
+  },
+  {
+    "id": "mc-auto-2026-06-16-1",
+    "text": "Product drop teaser — close-ups, no full reveal, countdown sticker",
+    "cat": "product",
+    "note": "Build anticipation before the drop."
+  },
+  {
+    "id": "mc-auto-2026-06-16-0",
+    "text": "Reel: 'getting ready' get-ready-with-me in a Musubi tee",
+    "cat": "reel",
+    "note": "GRWM format adapted to the brand."
+  },
+  {
     "id": "mc-auto-2026-06-15-3",
     "text": "Models: pau-hana crew shot, everyone in a different piece",
     "cat": "models",
@@ -154,30 +178,6 @@
     "text": "\"Auntie's favorite tee\" — let a real auntie style it her way",
     "cat": "models",
     "note": "Real person, real fit. No model posing."
-  },
-  {
-    "id": "mc-auto-2026-06-09-1",
-    "text": "Models call: feature 3 community members + their why",
-    "cat": "models",
-    "note": "UGC-style. Real faces over flat-lays."
-  },
-  {
-    "id": "mc-auto-2026-06-09-0",
-    "text": "BTS: picking fabric / approving a sample on camera",
-    "cat": "bts",
-    "note": "Show the craft and the standards."
-  },
-  {
-    "id": "mc-auto-2026-06-08-3",
-    "text": "Throwback: childhood Westside spot revisited in current gear",
-    "cat": "throwback",
-    "note": "Place-based nostalgia."
-  },
-  {
-    "id": "mc-auto-2026-06-08-2",
-    "text": "Throwback: old-school flyer aesthetic recreated with the new tee",
-    "cat": "throwback",
-    "note": "Nostalgia + product in one frame."
   },
   {
     "id": "mc-auntie-tee",
