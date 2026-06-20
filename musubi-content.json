@@ -1,5 +1,29 @@
 [
   {
+    "id": "mc-auto-2026-06-20-3",
+    "text": "Reel: spam musubi recipe with the tee on the counter",
+    "cat": "reel",
+    "note": "Food + brand crossover, very local."
+  },
+  {
+    "id": "mc-auto-2026-06-20-2",
+    "text": "Local spotlight: shout out a Westside small biz wearing Musubi",
+    "cat": "local",
+    "note": "Community-first. Builds real relationships."
+  },
+  {
+    "id": "mc-auto-2026-06-20-1",
+    "text": "Carousel: 'made for the cousins' — the ohana line concept",
+    "cat": "ohana",
+    "note": "Family/community as the brand's core."
+  },
+  {
+    "id": "mc-auto-2026-06-20-0",
+    "text": "Throwback Thursday: the Kalohe Kai song that defined the summer",
+    "cat": "throwback",
+    "note": "Tie the era to a current drop. Island-reggae nostalgia."
+  },
+  {
     "id": "mc-auto-2026-06-19-3",
     "text": "Carousel: 5 Westside spots to shoot your Musubi fit",
     "cat": "local",
@@ -154,30 +178,6 @@
     "text": "Carousel: the meaning behind the design — slide-by-slide",
     "cat": "carousel",
     "note": "Cultural context earns product posts their place."
-  },
-  {
-    "id": "mc-auto-2026-06-13-1",
-    "text": "Models: feature a local athlete / waterman in the gear",
-    "cat": "models",
-    "note": "Aspirational but real to the community."
-  },
-  {
-    "id": "mc-auto-2026-06-13-0",
-    "text": "Product: the banyan / heritage tee with its story line",
-    "cat": "product",
-    "note": "Lead with meaning, then the link."
-  },
-  {
-    "id": "mc-auto-2026-06-12-3",
-    "text": "Story Q&A: ask me anything about the brand / next drops",
-    "cat": "story",
-    "note": "Direct connection; surfaces what people want."
-  },
-  {
-    "id": "mc-auto-2026-06-12-2",
-    "text": "Carousel: care guide — keep your Musubi tee fresh for years",
-    "cat": "carousel",
-    "note": "Useful = saveable. Subtle quality flex."
   },
   {
     "id": "mc-auntie-tee",
