@@ -1,5 +1,29 @@
 [
   {
+    "id": "mc-auto-2026-06-27-3",
+    "text": "Product: restock alert with a 'last time it sold out in X' line",
+    "cat": "product",
+    "note": "Scarcity + social proof."
+  },
+  {
+    "id": "mc-auto-2026-06-27-2",
+    "text": "Reel: 'POV you pull up to a Westside potluck in Musubi'",
+    "cat": "reel",
+    "note": "Relatable local humor. Highly shareable."
+  },
+  {
+    "id": "mc-auto-2026-06-27-1",
+    "text": "Story poll: which colorway drops next? Let followers pick",
+    "cat": "story",
+    "note": "High engagement, signals you listen to the community."
+  },
+  {
+    "id": "mc-auto-2026-06-27-0",
+    "text": "Throwback: childhood Westside spot revisited in current gear",
+    "cat": "throwback",
+    "note": "Place-based nostalgia."
+  },
+  {
     "id": "mc-auto-2026-06-26-3",
     "text": "Throwback: old-school flyer aesthetic recreated with the new tee",
     "cat": "throwback",
@@ -154,30 +178,6 @@
     "text": "Local spotlight: shout out a Westside small biz wearing Musubi",
     "cat": "local",
     "note": "Community-first. Builds real relationships."
-  },
-  {
-    "id": "mc-auto-2026-06-20-1",
-    "text": "Carousel: 'made for the cousins' — the ohana line concept",
-    "cat": "ohana",
-    "note": "Family/community as the brand's core."
-  },
-  {
-    "id": "mc-auto-2026-06-20-0",
-    "text": "Throwback Thursday: the Kalohe Kai song that defined the summer",
-    "cat": "throwback",
-    "note": "Tie the era to a current drop. Island-reggae nostalgia."
-  },
-  {
-    "id": "mc-auto-2026-06-19-3",
-    "text": "Carousel: 5 Westside spots to shoot your Musubi fit",
-    "cat": "local",
-    "note": "Useful + on-brand; invites UGC."
-  },
-  {
-    "id": "mc-auto-2026-06-19-2",
-    "text": "Story series: a day on the Westside, tagged Musubi",
-    "cat": "story",
-    "note": "Behind-the-life content keeps you top of feed."
   },
   {
     "id": "mc-auntie-tee",
