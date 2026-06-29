@@ -1,5 +1,29 @@
 [
   {
+    "id": "mc-auto-2026-06-29-3",
+    "text": "Reel: spam musubi recipe with the tee on the counter",
+    "cat": "reel",
+    "note": "Food + brand crossover, very local."
+  },
+  {
+    "id": "mc-auto-2026-06-29-2",
+    "text": "Reel: golden-hour shoot timed to tonight's exact golden hour",
+    "cat": "reel",
+    "note": "Use the JB OS conditions widget to nail the light."
+  },
+  {
+    "id": "mc-auto-2026-06-29-1",
+    "text": "Story Q&A: ask me anything about the brand / next drops",
+    "cat": "story",
+    "note": "Direct connection; surfaces what people want."
+  },
+  {
+    "id": "mc-auto-2026-06-29-0",
+    "text": "Carousel: 5 Westside spots to shoot your Musubi fit",
+    "cat": "local",
+    "note": "Useful + on-brand; invites UGC."
+  },
+  {
     "id": "mc-auto-2026-06-28-3",
     "text": "Story series: a day on the Westside, tagged Musubi",
     "cat": "story",
@@ -154,30 +178,6 @@
     "text": "Story: tide + surf check of the morning (use the JB OS data)",
     "cat": "story",
     "note": "Daily ritual content followers return for."
-  },
-  {
-    "id": "mc-auto-2026-06-22-1",
-    "text": "Archie ohana mini-shoot — kid-sized gear at the beach park",
-    "cat": "ohana",
-    "note": "Community/family angle. Genuine, not staged."
-  },
-  {
-    "id": "mc-auto-2026-06-22-0",
-    "text": "Reel: 'things that hit different on the Westside' + tee cameo",
-    "cat": "reel",
-    "note": "Trend-style listicle, local flavor."
-  },
-  {
-    "id": "mc-auto-2026-06-21-3",
-    "text": "Carousel: care guide — keep your Musubi tee fresh for years",
-    "cat": "carousel",
-    "note": "Useful = saveable. Subtle quality flex."
-  },
-  {
-    "id": "mc-auto-2026-06-21-2",
-    "text": "Models: feature a local athlete / waterman in the gear",
-    "cat": "models",
-    "note": "Aspirational but real to the community."
   },
   {
     "id": "mc-auntie-tee",
