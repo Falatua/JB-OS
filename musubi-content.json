@@ -1,5 +1,29 @@
 [
   {
+    "id": "mc-auto-2026-07-07-3",
+    "text": "Story Q&A: ask me anything about the brand / next drops",
+    "cat": "story",
+    "note": "Direct connection; surfaces what people want."
+  },
+  {
+    "id": "mc-auto-2026-07-07-2",
+    "text": "BTS: the rejected designs — what didn't make the cut and why",
+    "cat": "bts",
+    "note": "Transparency builds taste and trust."
+  },
+  {
+    "id": "mc-auto-2026-07-07-1",
+    "text": "Story series: a day on the Westside, tagged Musubi",
+    "cat": "story",
+    "note": "Behind-the-life content keeps you top of feed."
+  },
+  {
+    "id": "mc-auto-2026-07-07-0",
+    "text": "Reel: 'POV you pull up to a Westside potluck in Musubi'",
+    "cat": "reel",
+    "note": "Relatable local humor. Highly shareable."
+  },
+  {
     "id": "mc-auto-2026-07-06-3",
     "text": "Carousel: 'made for the cousins' — the ohana line concept",
     "cat": "ohana",
@@ -154,30 +178,6 @@
     "text": "Reel: 'things that hit different on the Westside' + tee cameo",
     "cat": "reel",
     "note": "Trend-style listicle, local flavor."
-  },
-  {
-    "id": "mc-auto-2026-06-30-1",
-    "text": "Models call: feature 3 community members + their why",
-    "cat": "models",
-    "note": "UGC-style. Real faces over flat-lays."
-  },
-  {
-    "id": "mc-auto-2026-06-30-0",
-    "text": "Models: feature a local athlete / waterman in the gear",
-    "cat": "models",
-    "note": "Aspirational but real to the community."
-  },
-  {
-    "id": "mc-auto-2026-06-29-3",
-    "text": "Reel: spam musubi recipe with the tee on the counter",
-    "cat": "reel",
-    "note": "Food + brand crossover, very local."
-  },
-  {
-    "id": "mc-auto-2026-06-29-2",
-    "text": "Reel: golden-hour shoot timed to tonight's exact golden hour",
-    "cat": "reel",
-    "note": "Use the JB OS conditions widget to nail the light."
   },
   {
     "id": "mc-auntie-tee",
