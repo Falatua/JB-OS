@@ -1,5 +1,29 @@
 [
   {
+    "id": "mc-auto-2026-07-10-3",
+    "text": "Product drop teaser — close-ups, no full reveal, countdown sticker",
+    "cat": "product",
+    "note": "Build anticipation before the drop."
+  },
+  {
+    "id": "mc-auto-2026-07-10-2",
+    "text": "Reel: 'things that hit different on the Westside' + tee cameo",
+    "cat": "reel",
+    "note": "Trend-style listicle, local flavor."
+  },
+  {
+    "id": "mc-auto-2026-07-10-1",
+    "text": "Carousel: care guide — keep your Musubi tee fresh for years",
+    "cat": "carousel",
+    "note": "Useful = saveable. Subtle quality flex."
+  },
+  {
+    "id": "mc-auto-2026-07-10-0",
+    "text": "Reel: unboxing from a real customer (repost UGC)",
+    "cat": "ugc",
+    "note": "Social proof. Ask permission, credit them."
+  },
+  {
     "id": "mc-auto-2026-07-09-3",
     "text": "Models call: feature 3 community members + their why",
     "cat": "models",
@@ -154,30 +178,6 @@
     "text": "Throwback Thursday: first-ever Musubi photo vs now",
     "cat": "throwback",
     "note": "Growth story. People love an origin arc."
-  },
-  {
-    "id": "mc-auto-2026-07-03-1",
-    "text": "Reel: 'getting ready' get-ready-with-me in a Musubi tee",
-    "cat": "reel",
-    "note": "GRWM format adapted to the brand."
-  },
-  {
-    "id": "mc-auto-2026-07-03-0",
-    "text": "Carousel: 3 ways to wear one Musubi tee, Westside edition",
-    "cat": "carousel",
-    "note": "Beach → town → pau hana. Saveable styling content."
-  },
-  {
-    "id": "mc-auto-2026-07-02-3",
-    "text": "Sunrise spam-musubi run — film the Westside drive + first light",
-    "cat": "local",
-    "note": "Lifestyle reel; pair with the conditions/golden-hour times in JB OS."
-  },
-  {
-    "id": "mc-auto-2026-07-02-2",
-    "text": "Region-real mockup: tee on a Waiʻanae backdrop, not a studio",
-    "cat": "local",
-    "note": "Previews should read local and authentic."
   },
   {
     "id": "mc-auntie-tee",
