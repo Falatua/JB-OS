@@ -1,5 +1,29 @@
 [
   {
+    "id": "mc-auto-2026-07-20-3",
+    "text": "Reel: unboxing from a real customer (repost UGC)",
+    "cat": "ugc",
+    "note": "Social proof. Ask permission, credit them."
+  },
+  {
+    "id": "mc-auto-2026-07-20-2",
+    "text": "Reel: 'getting ready' get-ready-with-me in a Musubi tee",
+    "cat": "reel",
+    "note": "GRWM format adapted to the brand."
+  },
+  {
+    "id": "mc-auto-2026-07-20-1",
+    "text": "Story: tide + surf check of the morning (use the JB OS data)",
+    "cat": "story",
+    "note": "Daily ritual content followers return for."
+  },
+  {
+    "id": "mc-auto-2026-07-20-0",
+    "text": "Reel: 'things that hit different on the Westside' + tee cameo",
+    "cat": "reel",
+    "note": "Trend-style listicle, local flavor."
+  },
+  {
     "id": "mc-auto-2026-07-19-3",
     "text": "Carousel: 3 ways to wear one Musubi tee, Westside edition",
     "cat": "carousel",
@@ -154,30 +178,6 @@
     "text": "Throwback: childhood Westside spot revisited in current gear",
     "cat": "throwback",
     "note": "Place-based nostalgia."
-  },
-  {
-    "id": "mc-auto-2026-07-13-1",
-    "text": "Ohana: matching parent + keiki fits at the beach",
-    "cat": "ohana",
-    "note": "Heart-tug content; great for shares."
-  },
-  {
-    "id": "mc-auto-2026-07-13-0",
-    "text": "\"Auntie's favorite tee\" — let a real auntie style it her way",
-    "cat": "models",
-    "note": "Real person, real fit. No model posing."
-  },
-  {
-    "id": "mc-auto-2026-07-12-3",
-    "text": "Story: poll two caption options, use the winner on the next post",
-    "cat": "story",
-    "note": "Co-create with the audience."
-  },
-  {
-    "id": "mc-auto-2026-07-12-2",
-    "text": "Sunrise spam-musubi run — film the Westside drive + first light",
-    "cat": "local",
-    "note": "Lifestyle reel; pair with the conditions/golden-hour times in JB OS."
   },
   {
     "id": "mc-auntie-tee",
