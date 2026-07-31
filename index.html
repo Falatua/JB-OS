@@ -238,6 +238,11 @@
   /* The auth gate is opaque + non-dismissible while signed out, so locally-cached personal
      data is never visible until a valid session is confirmed (see sbAuthUI). */
   #auth-modal{background:var(--bg)}
+  .auth-help{background:none;border:none;color:var(--accent);cursor:pointer;font:inherit;font-size:12px;padding:6px 0;text-align:left}
+  .auth-help:hover{text-decoration:underline}
+  .auth-help:disabled,.btn:disabled{cursor:not-allowed;opacity:.58}
+  .auth-recovery-note{font-size:12px;color:var(--text-2);line-height:1.5;margin:-2px 0 14px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface)}
+  #au-recovery-panel[hidden],.detail-actions[hidden]{display:none!important}
   .modal{background:var(--surface-modal);border:1px solid var(--border-2);border-radius:14px;padding:24px;width:480px;max-width:100%;box-shadow:0 24px 60px rgba(0,0,0,.5)}
   .modal-title{font-size:16px;font-weight:700;letter-spacing:-.3px;margin-bottom:18px}
   .field{margin-bottom:14px}
@@ -1370,22 +1375,40 @@
 
 <div class="backdrop" id="auth-modal" onclick="if(event.target.id==='auth-modal'&&_sbAuthed)closeAuth()" role="dialog" aria-modal="true" aria-label="Sign in">
   <div class="modal">
-    <div class="modal-title">🔐 Sign in to JB OS</div>
-    <p style="font-size:12.5px;color:var(--text-2);line-height:1.5;margin-bottom:14px">Your data is private to your account. Sign in once on this device — it stays signed in afterward, just like any other app.</p>
-    <div class="field">
-      <label for="au-email">Email</label>
-      <input id="au-email" type="email" autocomplete="username" placeholder="you@email.com" spellcheck="false">
+    <div class="modal-title" id="au-title">🔐 Sign in to JB OS</div>
+    <p id="au-copy" style="font-size:12.5px;color:var(--text-2);line-height:1.5;margin-bottom:14px">Your data is private to your account. Sign in once on this device. It stays signed in afterward, just like any other app.</p>
+    <div id="au-signin-panel">
+      <div class="field">
+        <label for="au-email">Email</label>
+        <input id="au-email" type="email" autocomplete="username" placeholder="you@email.com" spellcheck="false">
+      </div>
+      <div class="field" style="margin-bottom:2px">
+        <label for="au-pass">Password</label>
+        <input id="au-pass" type="password" autocomplete="current-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')authSignIn()">
+      </div>
+      <button id="au-forgot" class="auth-help" type="button" onclick="authRequestRecovery()">Forgot your password?</button>
     </div>
-    <div class="field">
-      <label for="au-pass">Password</label>
-      <input id="au-pass" type="password" autocomplete="current-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')authSignIn()">
+    <div id="au-recovery-panel" hidden>
+      <div class="auth-recovery-note">Your old password cannot be displayed. Choose a new password for the same JB OS account.</div>
+      <div class="field">
+        <label for="au-new-pass">New password</label>
+        <input id="au-new-pass" type="password" autocomplete="new-password" placeholder="At least 8 characters">
+      </div>
+      <div class="field">
+        <label for="au-new-confirm">Confirm new password</label>
+        <input id="au-new-confirm" type="password" autocomplete="new-password" placeholder="Type it again" onkeydown="if(event.key==='Enter')authUpdatePassword()">
+      </div>
     </div>
     <div id="au-msg" style="font-size:12px;color:var(--text-3);margin:4px 0 12px">&nbsp;</div>
-    <div class="detail-actions">
+    <div class="detail-actions" id="au-signin-actions">
       <button id="au-signout" class="btn btn-ghost" style="display:none;color:var(--red)" onclick="authSignOut()">Sign out</button>
       <div style="flex:1"></div>
       <button id="au-close" class="btn btn-ghost" style="display:none" onclick="closeAuth()">Close</button>
-      <button class="btn btn-primary" onclick="authSignIn()">Sign in</button>
+      <button id="au-signin" class="btn btn-primary" onclick="authSignIn()">Sign in</button>
+    </div>
+    <div class="detail-actions" id="au-recovery-actions" hidden>
+      <div style="flex:1"></div>
+      <button id="au-update" class="btn btn-primary" onclick="authUpdatePassword()">Set new password</button>
     </div>
   </div>
 </div>
@@ -4648,7 +4671,9 @@ function sbInit(){
       if(u){ sbStartSync(); } else { if(!wasAuthed)sbWipeLocal(); sbSetStatus('Sign in to load your private data.'); }
     },function(){});
     SB.auth.onAuthStateChange(function(ev,s){
-      var u=s?s.user:null; var wasAuthed=!!localStorage.getItem('jbos_au'); sbAuthUI(u);
+      var u=s?s.user:null; var wasAuthed=!!localStorage.getItem('jbos_au');
+      if(ev==='PASSWORD_RECOVERY'&&u){ _authRecovering=true; sbAuthUI(u,true); authSetMode('recovery'); }
+      else { if(!u){_authRecovering=false;authSetMode('signin');} sbAuthUI(u); }
       if(u){ sbStartSync(); } else { sbStopSync(); if(ev==='SIGNED_OUT'||!wasAuthed)sbWipeLocal(); sbSetStatus('Signed out — this device is local-only.'); }
     });
   }catch(e){}
@@ -4728,12 +4753,27 @@ function sbEnablePush(){
   });
 }
 /* ---- Email + password auth: private, per-account sync ---- */
+var _authRecovering=false;
+var AUTH_RECOVERY_REDIRECT='https://falatua.github.io/JB-OS/';
+function authSetMode(mode){
+  var recovery=mode==='recovery'; _authRecovering=recovery;
+  var signPanel=document.getElementById('au-signin-panel'), recoveryPanel=document.getElementById('au-recovery-panel');
+  var signActions=document.getElementById('au-signin-actions'), recoveryActions=document.getElementById('au-recovery-actions');
+  if(signPanel)signPanel.hidden=recovery; if(recoveryPanel)recoveryPanel.hidden=!recovery;
+  if(signActions)signActions.hidden=recovery; if(recoveryActions)recoveryActions.hidden=!recovery;
+  var title=document.getElementById('au-title'), copy=document.getElementById('au-copy'), modal=document.getElementById('auth-modal');
+  if(title)title.textContent=recovery?'🔐 Choose a new password':'🔐 Sign in to JB OS';
+  if(copy)copy.textContent=recovery?'Your recovery link was verified. Set a new password to finish recovering your account.':'Your data is private to your account. Sign in once on this device. It stays signed in afterward, just like any other app.';
+  if(modal)modal.setAttribute('aria-label',recovery?'Choose a new password':'Sign in');
+  if(recovery)authMsg('');
+  setTimeout(function(){try{var target=document.getElementById(recovery?'au-new-pass':'au-email');if(target)target.focus();}catch(e){}},60);
+}
 function openAuth(){
   var m=document.getElementById('auth-modal'); if(!m)return;
   m.classList.remove('hidden');
-  var em=document.getElementById('au-email'); if(em&&!em.value)setTimeout(function(){try{em.focus();}catch(e){}},60);
+  var target=document.getElementById(_authRecovering?'au-new-pass':'au-email'); if(target)setTimeout(function(){try{target.focus();}catch(e){}},60);
 }
-function closeAuth(){ if(!_sbAuthed)return; var m=document.getElementById('auth-modal'); if(m)m.classList.add('hidden'); } // can't dismiss the gate while signed out
+function closeAuth(){ if(!_sbAuthed||_authRecovering)return; var m=document.getElementById('auth-modal'); if(m)m.classList.add('hidden'); } // can't dismiss the gate while signed out or mid-recovery
 function authMsg(t,ok){var e=document.getElementById('au-msg'); if(e){e.textContent=t||' '; e.style.color=ok?'var(--green)':'var(--text-3)';}}
 function authSignIn(){
   if(!window.supabase||!SB){authMsg('Connecting… give it a second, then try again.'); sbInit(); return;}
@@ -4747,14 +4787,49 @@ function authSignIn(){
     // onAuthStateChange fires → sbStartSync() loads your data.
   },function(){authMsg('Sign-in failed — check your connection.');});
 }
+function authRequestRecovery(){
+  if(!window.supabase||!SB){authMsg('Connecting… give it a second, then try again.'); sbInit(); return;}
+  var email=((document.getElementById('au-email')||{}).value||'').trim();
+  if(!email){authMsg('Enter your account email first.');var em=document.getElementById('au-email');if(em)em.focus();return;}
+  var btn=document.getElementById('au-forgot'); if(btn){btn.disabled=true;btn.textContent='Sending recovery email…';}
+  authMsg('Sending a secure recovery link…');
+  SB.auth.resetPasswordForEmail(email,{redirectTo:AUTH_RECOVERY_REDIRECT}).then(function(res){
+    if(btn){btn.disabled=false;btn.textContent='Forgot your password?';}
+    if(res&&res.error){var msg=String(res.error.message||'');authMsg(/failed to fetch|network|offline/i.test(msg)?'Could not reach the recovery service. Check your connection and try again.':msg);return;}
+    authMsg('Check your email. Open the recovery link on this device, then choose a new password here.',true);
+  },function(){
+    if(btn){btn.disabled=false;btn.textContent='Forgot your password?';}
+    authMsg('Could not send the recovery email. Check your connection and try again.');
+  });
+}
+function authUpdatePassword(){
+  if(!SB||!_authRecovering){authMsg('Open the newest recovery link from your email first.');return;}
+  var pw=(document.getElementById('au-new-pass')||{}).value||'';
+  var confirm=(document.getElementById('au-new-confirm')||{}).value||'';
+  if(pw.length<8){authMsg('Use at least 8 characters for your new password.');return;}
+  if(pw!==confirm){authMsg('The two passwords do not match.');return;}
+  var btn=document.getElementById('au-update'); if(btn){btn.disabled=true;btn.textContent='Updating…';}
+  authMsg('Updating your password…');
+  SB.auth.updateUser({password:pw}).then(function(res){
+    if(btn){btn.disabled=false;btn.textContent='Set new password';}
+    if(res&&res.error){authMsg(res.error.message);return;}
+    var p=document.getElementById('au-new-pass'), c=document.getElementById('au-new-confirm'); if(p)p.value=''; if(c)c.value='';
+    var user=res&&res.data?res.data.user:null;
+    _authRecovering=false; authSetMode('signin'); if(user)sbAuthUI(user); else {var m=document.getElementById('auth-modal');if(m)m.classList.add('hidden');} authMsg('');
+    sbSetStatus('Password updated and signed in ✓',true); toast('Password updated. You are signed in.');
+  },function(){
+    if(btn){btn.disabled=false;btn.textContent='Set new password';}
+    authMsg('Password update failed. Open a fresh recovery link and try again.');
+  });
+}
 function authSignOut(){ if(SB&&SB.auth){SB.auth.signOut().then(function(){sbAuthUI(null);},function(){});} }
-function sbAuthUI(user){
+function sbAuthUI(user,keepOpen){
   var lbl=document.getElementById('auth-btn-label'); if(lbl)lbl.textContent=user?('Signed in'+(user.email?' · '+user.email.split('@')[0]:'')):'Sign in to sync';
   var b=document.getElementById('auth-btn'); if(b)b.classList.toggle('ok',!!user);
   var so=document.getElementById('au-signout'); if(so)so.style.display=user?'':'none';
   var cl=document.getElementById('au-close'); if(cl)cl.style.display=user?'':'none';
   var m=document.getElementById('auth-modal');
-  if(user){ try{localStorage.setItem('jbos_au','1');}catch(e){} if(m)m.classList.add('hidden'); }            // signed in -> lift the gate
+  if(user){ try{localStorage.setItem('jbos_au','1');}catch(e){} if(m&&!keepOpen)m.classList.add('hidden'); } // signed in -> lift the gate unless completing recovery
   else { try{localStorage.removeItem('jbos_au');}catch(e){} if(m)m.classList.remove('hidden'); openAuth(); }  // signed out -> lock the gate
 }
 
