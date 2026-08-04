@@ -1,5 +1,29 @@
 [
   {
+    "id": "mc-auto-2026-08-04-3",
+    "text": "Local spotlight: shout out a Westside small biz wearing Musubi",
+    "cat": "local",
+    "note": "Community-first. Builds real relationships."
+  },
+  {
+    "id": "mc-auto-2026-08-04-2",
+    "text": "Throwback Thursday: the Kalohe Kai song that defined the summer",
+    "cat": "throwback",
+    "note": "Tie the era to a current drop. Island-reggae nostalgia."
+  },
+  {
+    "id": "mc-auto-2026-08-04-1",
+    "text": "Story Q&A: ask me anything about the brand / next drops",
+    "cat": "story",
+    "note": "Direct connection; surfaces what people want."
+  },
+  {
+    "id": "mc-auto-2026-08-04-0",
+    "text": "Carousel: 5 Westside spots to shoot your Musubi fit",
+    "cat": "local",
+    "note": "Useful + on-brand; invites UGC."
+  },
+  {
     "id": "mc-auto-2026-08-03-3",
     "text": "Reel: 'POV you pull up to a Westside potluck in Musubi'",
     "cat": "reel",
@@ -154,30 +178,6 @@
     "text": "Product drop teaser — close-ups, no full reveal, countdown sticker",
     "cat": "product",
     "note": "Build anticipation before the drop."
-  },
-  {
-    "id": "mc-auto-2026-07-28-1",
-    "text": "Carousel: 3 ways to wear one Musubi tee, Westside edition",
-    "cat": "carousel",
-    "note": "Beach → town → pau hana. Saveable styling content."
-  },
-  {
-    "id": "mc-auto-2026-07-28-0",
-    "text": "Reel: golden-hour shoot timed to tonight's exact golden hour",
-    "cat": "reel",
-    "note": "Use the JB OS conditions widget to nail the light."
-  },
-  {
-    "id": "mc-auto-2026-07-27-3",
-    "text": "Reel: spam musubi recipe with the tee on the counter",
-    "cat": "reel",
-    "note": "Food + brand crossover, very local."
-  },
-  {
-    "id": "mc-auto-2026-07-27-2",
-    "text": "Models call: feature 3 community members + their why",
-    "cat": "models",
-    "note": "UGC-style. Real faces over flat-lays."
   },
   {
     "id": "mc-auntie-tee",
