@@ -1,5 +1,29 @@
 [
   {
+    "id": "mc-auto-2026-08-07-3",
+    "text": "Product drop teaser — close-ups, no full reveal, countdown sticker",
+    "cat": "product",
+    "note": "Build anticipation before the drop."
+  },
+  {
+    "id": "mc-auto-2026-08-07-2",
+    "text": "Region-real mockup: tee on a Waiʻanae backdrop, not a studio",
+    "cat": "local",
+    "note": "Previews should read local and authentic."
+  },
+  {
+    "id": "mc-auto-2026-08-07-1",
+    "text": "\"Auntie's favorite tee\" — let a real auntie style it her way",
+    "cat": "models",
+    "note": "Real person, real fit. No model posing."
+  },
+  {
+    "id": "mc-auto-2026-08-07-0",
+    "text": "Reel: golden-hour shoot timed to tonight's exact golden hour",
+    "cat": "reel",
+    "note": "Use the JB OS conditions widget to nail the light."
+  },
+  {
     "id": "mc-auto-2026-08-05-3",
     "text": "Archie ohana mini-shoot — kid-sized gear at the beach park",
     "cat": "ohana",
@@ -154,30 +178,6 @@
     "text": "Reel: 'getting ready' get-ready-with-me in a Musubi tee",
     "cat": "reel",
     "note": "GRWM format adapted to the brand."
-  },
-  {
-    "id": "mc-auto-2026-07-30-1",
-    "text": "Story poll: which colorway drops next? Let followers pick",
-    "cat": "story",
-    "note": "High engagement, signals you listen to the community."
-  },
-  {
-    "id": "mc-auto-2026-07-30-0",
-    "text": "Story: tide + surf check of the morning (use the JB OS data)",
-    "cat": "story",
-    "note": "Daily ritual content followers return for."
-  },
-  {
-    "id": "mc-auto-2026-07-29-3",
-    "text": "Reel: 'things that hit different on the Westside' + tee cameo",
-    "cat": "reel",
-    "note": "Trend-style listicle, local flavor."
-  },
-  {
-    "id": "mc-auto-2026-07-29-2",
-    "text": "Sunrise spam-musubi run — film the Westside drive + first light",
-    "cat": "local",
-    "note": "Lifestyle reel; pair with the conditions/golden-hour times in JB OS."
   },
   {
     "id": "mc-auntie-tee",
