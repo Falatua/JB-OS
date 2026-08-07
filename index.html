@@ -4452,7 +4452,14 @@ var SB=null, SB_CFG=null, SB_CLIENT=Math.random().toString(36).slice(2), _sbAppl
 // anon/publishable key cannot read jbos_sync (verified 2026-06-06, returns 401). Sign in to sync.
 var SB_EMBED={url:'https://jdkfafvfczzgtzhtynjr.supabase.co',key:'sb_publishable_QFHs4u69thMisxqLi35Zjw_0AX4BkTT',space:'main'};
 function sbGetCfg(){return SB_EMBED;}
-var _pillT=null;
+var _pillT=null, _cloudConfirmedOnline=false;
+function setOfflineWarning(show){
+  var p=document.getElementById('offline-pill');
+  if(p)p.classList.toggle('show',!!show);
+}
+// navigator.onLine is only a browser hint and can incorrectly stay false even while
+// authenticated Supabase requests succeed. A real cloud response is authoritative.
+function markCloudOnline(){_cloudConfirmedOnline=true;setOfflineWarning(false);}
 function sbSetStatus(msg,ok){
   try{console.log('[sync]',msg);}catch(_){}
   var p=document.getElementById('sb-pill'); if(!p)return;
@@ -4649,7 +4656,7 @@ function sbPushStore(name){
   _sbT[name]=setTimeout(function(){
     var st=sbStores()[name]; if(!st)return;
     try{ SB.from('jbos_sync').upsert({id:sbSpace()+':'+name,payload:st.load(),updated_at:new Date().toISOString(),client:SB_CLIENT})
-      .then(function(res){if(res&&res.error){sbErr(res.error.message);}else{sbSetStatus('Saved to cloud ✓',true);}},
+      .then(function(res){if(res&&res.error){sbErr(res.error.message);}else{markCloudOnline();sbSetStatus('Saved to cloud ✓',true);}},
             function(e){sbSetStatus('Offline — will sync when you reconnect.');try{console.log('[sync] push rejected',e);}catch(_){}}); }catch(e){}
   }, 1000);
 }
@@ -4693,6 +4700,7 @@ function sbStartSync(){
       else { sbApplyStore(row.id.slice(space.length+1), row.payload); }
     });
     render(); updateCounts();
+    markCloudOnline();
     sbSetStatus('Synced — private to your account ✓',true);
     setTimeout(function(){try{memMaybeRefresh();}catch(e){}},3000); // after auth + cloud pull settle, quietly refresh the "About JB" profile if data changed
     if(firstStart){ Object.keys(sbStores()).forEach(function(n){sbPushStore(n);}); } // push local-only data up once
@@ -4730,7 +4738,7 @@ function sbPull(){
   SB.from('jbos_sync').select('id,payload').or('id.eq.'+space+',id.like.'+space+':%').then(function(res){
     if(res&&res.error)return;
     (res&&res.data||[]).forEach(function(row){ if(row.id===space)sbApplyStore('todos',row.payload); else sbApplyStore(row.id.slice(space.length+1),row.payload); });
-    render(); updateCounts();
+    render(); updateCounts(); markCloudOnline();
   },function(){});
 }
 /* ---- Web push (native reminders when the app is closed; sent by the GitHub Action) ---- */
@@ -4849,8 +4857,13 @@ sbInit();
 /* Mark installed-app (standalone) mode for iOS/macOS-specific styling */
 if((window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone){document.documentElement.classList.add('standalone');}
 /* Offline indicator */
-function updOnline(){var e=document.getElementById('offline-pill');if(e)e.classList.toggle('show',navigator.onLine===false);}
-window.addEventListener('online',updOnline);window.addEventListener('offline',updOnline);updOnline();
+function updOnline(){
+  if(navigator.onLine===false){if(!_cloudConfirmedOnline)setOfflineWarning(true);}
+  else setOfflineWarning(false);
+}
+window.addEventListener('online',function(){setOfflineWarning(false);sbPull();});
+window.addEventListener('offline',function(){_cloudConfirmedOnline=false;setOfflineWarning(true);});
+updOnline();
 
 /* Swipe gestures on list items (touch): swipe right = complete, swipe left = delete (both undoable) */
 (function swipeInit(){
@@ -4946,7 +4959,7 @@ function installApp(){
     return true;
   }
   function check(){
-    if(_busy||baseTag===null||document.hidden||navigator.onLine===false)return;
+    if(_busy||baseTag===null||document.hidden||(navigator.onLine===false&&!_cloudConfirmedOnline))return;
     _busy=true;
     ver().then(function(t){ if(t&&t!==baseTag&&safeToReload())location.reload(); })
          .catch(function(){}).finally(function(){_busy=false;});
