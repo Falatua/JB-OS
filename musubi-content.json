@@ -1,5 +1,29 @@
 [
   {
+    "id": "mc-auto-2026-08-08-3",
+    "text": "Story: tide + surf check of the morning (use the JB OS data)",
+    "cat": "story",
+    "note": "Daily ritual content followers return for."
+  },
+  {
+    "id": "mc-auto-2026-08-08-2",
+    "text": "Reel: unboxing from a real customer (repost UGC)",
+    "cat": "ugc",
+    "note": "Social proof. Ask permission, credit them."
+  },
+  {
+    "id": "mc-auto-2026-08-08-1",
+    "text": "Sunrise spam-musubi run — film the Westside drive + first light",
+    "cat": "local",
+    "note": "Lifestyle reel; pair with the conditions/golden-hour times in JB OS."
+  },
+  {
+    "id": "mc-auto-2026-08-08-0",
+    "text": "Reel: 'things that hit different on the Westside' + tee cameo",
+    "cat": "reel",
+    "note": "Trend-style listicle, local flavor."
+  },
+  {
     "id": "mc-auto-2026-08-07-3",
     "text": "Product drop teaser — close-ups, no full reveal, countdown sticker",
     "cat": "product",
@@ -154,30 +178,6 @@
     "text": "Carousel: the meaning behind the design — slide-by-slide",
     "cat": "carousel",
     "note": "Cultural context earns product posts their place."
-  },
-  {
-    "id": "mc-auto-2026-07-31-1",
-    "text": "Ohana: matching parent + keiki fits at the beach",
-    "cat": "ohana",
-    "note": "Heart-tug content; great for shares."
-  },
-  {
-    "id": "mc-auto-2026-07-31-0",
-    "text": "Throwback Thursday: first-ever Musubi photo vs now",
-    "cat": "throwback",
-    "note": "Growth story. People love an origin arc."
-  },
-  {
-    "id": "mc-auto-2026-07-30-3",
-    "text": "Throwback Thursday: island-reggae playlist that fits the brand",
-    "cat": "throwback",
-    "note": "Pair with the JB OS Vibe player."
-  },
-  {
-    "id": "mc-auto-2026-07-30-2",
-    "text": "Reel: 'getting ready' get-ready-with-me in a Musubi tee",
-    "cat": "reel",
-    "note": "GRWM format adapted to the brand."
   },
   {
     "id": "mc-auntie-tee",
