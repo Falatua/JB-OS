@@ -1,5 +1,29 @@
 [
   {
+    "id": "mc-auto-2026-08-10-3",
+    "text": "Story poll: which colorway drops next? Let followers pick",
+    "cat": "story",
+    "note": "High engagement, signals you listen to the community."
+  },
+  {
+    "id": "mc-auto-2026-08-10-2",
+    "text": "Product: restock alert with a 'last time it sold out in X' line",
+    "cat": "product",
+    "note": "Scarcity + social proof."
+  },
+  {
+    "id": "mc-auto-2026-08-10-1",
+    "text": "Carousel: the meaning behind the design — slide-by-slide",
+    "cat": "carousel",
+    "note": "Cultural context earns product posts their place."
+  },
+  {
+    "id": "mc-auto-2026-08-10-0",
+    "text": "Reel: how the tee is folded + packed (no voiceover, brand soundtrack)",
+    "cat": "bts",
+    "note": "Process content builds trust faster than product shots."
+  },
+  {
     "id": "mc-auto-2026-08-09-3",
     "text": "Throwback Thursday: island-reggae playlist that fits the brand",
     "cat": "throwback",
@@ -154,30 +178,6 @@
     "text": "Models: pau-hana crew shot, everyone in a different piece",
     "cat": "models",
     "note": "Group energy; shows range without flat-lays."
-  },
-  {
-    "id": "mc-auto-2026-08-02-1",
-    "text": "Throwback: old-school flyer aesthetic recreated with the new tee",
-    "cat": "throwback",
-    "note": "Nostalgia + product in one frame."
-  },
-  {
-    "id": "mc-auto-2026-08-02-0",
-    "text": "Carousel: 'made for the cousins' — the ohana line concept",
-    "cat": "ohana",
-    "note": "Family/community as the brand's core."
-  },
-  {
-    "id": "mc-auto-2026-08-01-3",
-    "text": "Story series: a day on the Westside, tagged Musubi",
-    "cat": "story",
-    "note": "Behind-the-life content keeps you top of feed."
-  },
-  {
-    "id": "mc-auto-2026-08-01-2",
-    "text": "Story: poll two caption options, use the winner on the next post",
-    "cat": "story",
-    "note": "Co-create with the audience."
   },
   {
     "id": "mc-auntie-tee",
