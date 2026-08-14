@@ -1,5 +1,29 @@
 [
   {
+    "id": "mc-auto-2026-08-14-3",
+    "text": "Carousel: care guide — keep your Musubi tee fresh for years",
+    "cat": "carousel",
+    "note": "Useful = saveable. Subtle quality flex."
+  },
+  {
+    "id": "mc-auto-2026-08-14-2",
+    "text": "Reel: spam musubi recipe with the tee on the counter",
+    "cat": "reel",
+    "note": "Food + brand crossover, very local."
+  },
+  {
+    "id": "mc-auto-2026-08-14-1",
+    "text": "Local spotlight: shout out a Westside small biz wearing Musubi",
+    "cat": "local",
+    "note": "Community-first. Builds real relationships."
+  },
+  {
+    "id": "mc-auto-2026-08-14-0",
+    "text": "Story Q&A: ask me anything about the brand / next drops",
+    "cat": "story",
+    "note": "Direct connection; surfaces what people want."
+  },
+  {
     "id": "mc-auto-2026-08-13-3",
     "text": "BTS: the rejected designs — what didn't make the cut and why",
     "cat": "bts",
@@ -154,30 +178,6 @@
     "text": "Region-real mockup: tee on a Waiʻanae backdrop, not a studio",
     "cat": "local",
     "note": "Previews should read local and authentic."
-  },
-  {
-    "id": "mc-auto-2026-08-07-1",
-    "text": "\"Auntie's favorite tee\" — let a real auntie style it her way",
-    "cat": "models",
-    "note": "Real person, real fit. No model posing."
-  },
-  {
-    "id": "mc-auto-2026-08-07-0",
-    "text": "Reel: golden-hour shoot timed to tonight's exact golden hour",
-    "cat": "reel",
-    "note": "Use the JB OS conditions widget to nail the light."
-  },
-  {
-    "id": "mc-auto-2026-08-05-3",
-    "text": "Archie ohana mini-shoot — kid-sized gear at the beach park",
-    "cat": "ohana",
-    "note": "Community/family angle. Genuine, not staged."
-  },
-  {
-    "id": "mc-auto-2026-08-05-2",
-    "text": "Models call: feature 3 community members + their why",
-    "cat": "models",
-    "note": "UGC-style. Real faces over flat-lays."
   },
   {
     "id": "mc-auntie-tee",
