@@ -1,5 +1,29 @@
 [
   {
+    "id": "mc-auto-2026-08-18-3",
+    "text": "Reel: golden-hour shoot timed to tonight's exact golden hour",
+    "cat": "reel",
+    "note": "Use the JB OS conditions widget to nail the light."
+  },
+  {
+    "id": "mc-auto-2026-08-18-2",
+    "text": "Carousel: the meaning behind the design — slide-by-slide",
+    "cat": "carousel",
+    "note": "Cultural context earns product posts their place."
+  },
+  {
+    "id": "mc-auto-2026-08-18-1",
+    "text": "Throwback Thursday: island-reggae playlist that fits the brand",
+    "cat": "throwback",
+    "note": "Pair with the JB OS Vibe player."
+  },
+  {
+    "id": "mc-auto-2026-08-18-0",
+    "text": "Reel: how the tee is folded + packed (no voiceover, brand soundtrack)",
+    "cat": "bts",
+    "note": "Process content builds trust faster than product shots."
+  },
+  {
     "id": "mc-auto-2026-08-17-3",
     "text": "Carousel: 5 Westside spots to shoot your Musubi fit",
     "cat": "local",
@@ -154,30 +178,6 @@
     "text": "Throwback Thursday: first-ever Musubi photo vs now",
     "cat": "throwback",
     "note": "Growth story. People love an origin arc."
-  },
-  {
-    "id": "mc-auto-2026-08-11-1",
-    "text": "Story series: a day on the Westside, tagged Musubi",
-    "cat": "story",
-    "note": "Behind-the-life content keeps you top of feed."
-  },
-  {
-    "id": "mc-auto-2026-08-11-0",
-    "text": "Story: poll two caption options, use the winner on the next post",
-    "cat": "story",
-    "note": "Co-create with the audience."
-  },
-  {
-    "id": "mc-auto-2026-08-10-3",
-    "text": "Story poll: which colorway drops next? Let followers pick",
-    "cat": "story",
-    "note": "High engagement, signals you listen to the community."
-  },
-  {
-    "id": "mc-auto-2026-08-10-2",
-    "text": "Product: restock alert with a 'last time it sold out in X' line",
-    "cat": "product",
-    "note": "Scarcity + social proof."
   },
   {
     "id": "mc-auntie-tee",
