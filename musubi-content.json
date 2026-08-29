@@ -1,5 +1,29 @@
 [
   {
+    "id": "mc-auto-2026-08-29-3",
+    "text": "Story: poll two caption options, use the winner on the next post",
+    "cat": "story",
+    "note": "Co-create with the audience."
+  },
+  {
+    "id": "mc-auto-2026-08-29-2",
+    "text": "Throwback: childhood Westside spot revisited in current gear",
+    "cat": "throwback",
+    "note": "Place-based nostalgia."
+  },
+  {
+    "id": "mc-auto-2026-08-29-1",
+    "text": "Ohana: matching parent + keiki fits at the beach",
+    "cat": "ohana",
+    "note": "Heart-tug content; great for shares."
+  },
+  {
+    "id": "mc-auto-2026-08-29-0",
+    "text": "Product: the banyan / heritage tee with its story line",
+    "cat": "product",
+    "note": "Lead with meaning, then the link."
+  },
+  {
     "id": "mc-auto-2026-08-28-3",
     "text": "Carousel: the meaning behind the design — slide-by-slide",
     "cat": "carousel",
@@ -154,30 +178,6 @@
     "text": "Reel: 'POV you pull up to a Westside potluck in Musubi'",
     "cat": "reel",
     "note": "Relatable local humor. Highly shareable."
-  },
-  {
-    "id": "mc-auto-2026-08-21-1",
-    "text": "Story series: a day on the Westside, tagged Musubi",
-    "cat": "story",
-    "note": "Behind-the-life content keeps you top of feed."
-  },
-  {
-    "id": "mc-auto-2026-08-21-0",
-    "text": "Throwback: old-school flyer aesthetic recreated with the new tee",
-    "cat": "throwback",
-    "note": "Nostalgia + product in one frame."
-  },
-  {
-    "id": "mc-auto-2026-08-20-3",
-    "text": "Throwback Thursday: first-ever Musubi photo vs now",
-    "cat": "throwback",
-    "note": "Growth story. People love an origin arc."
-  },
-  {
-    "id": "mc-auto-2026-08-20-2",
-    "text": "Carousel: 'made for the cousins' — the ohana line concept",
-    "cat": "ohana",
-    "note": "Family/community as the brand's core."
   },
   {
     "id": "mc-auntie-tee",
