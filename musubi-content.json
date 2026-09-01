@@ -1,5 +1,29 @@
 [
   {
+    "id": "mc-auto-2026-09-01-3",
+    "text": "Carousel: 'made for the cousins' — the ohana line concept",
+    "cat": "ohana",
+    "note": "Family/community as the brand's core."
+  },
+  {
+    "id": "mc-auto-2026-09-01-2",
+    "text": "BTS: the rejected designs — what didn't make the cut and why",
+    "cat": "bts",
+    "note": "Transparency builds taste and trust."
+  },
+  {
+    "id": "mc-auto-2026-09-01-1",
+    "text": "\"Auntie's favorite tee\" — let a real auntie style it her way",
+    "cat": "models",
+    "note": "Real person, real fit. No model posing."
+  },
+  {
+    "id": "mc-auto-2026-09-01-0",
+    "text": "Reel: 'things that hit different on the Westside' + tee cameo",
+    "cat": "reel",
+    "note": "Trend-style listicle, local flavor."
+  },
+  {
     "id": "mc-auto-2026-08-31-3",
     "text": "Reel: spam musubi recipe with the tee on the counter",
     "cat": "reel",
@@ -154,30 +178,6 @@
     "text": "Product drop teaser — close-ups, no full reveal, countdown sticker",
     "cat": "product",
     "note": "Build anticipation before the drop."
-  },
-  {
-    "id": "mc-auto-2026-08-25-1",
-    "text": "Archie ohana mini-shoot — kid-sized gear at the beach park",
-    "cat": "ohana",
-    "note": "Community/family angle. Genuine, not staged."
-  },
-  {
-    "id": "mc-auto-2026-08-25-0",
-    "text": "Region-real mockup: tee on a Waiʻanae backdrop, not a studio",
-    "cat": "local",
-    "note": "Previews should read local and authentic."
-  },
-  {
-    "id": "mc-auto-2026-08-24-3",
-    "text": "BTS: picking fabric / approving a sample on camera",
-    "cat": "bts",
-    "note": "Show the craft and the standards."
-  },
-  {
-    "id": "mc-auto-2026-08-24-2",
-    "text": "Sunrise spam-musubi run — film the Westside drive + first light",
-    "cat": "local",
-    "note": "Lifestyle reel; pair with the conditions/golden-hour times in JB OS."
   },
   {
     "id": "mc-auntie-tee",
