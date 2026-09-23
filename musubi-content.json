@@ -1,5 +1,29 @@
 [
   {
+    "id": "mc-auto-2026-09-23-3",
+    "text": "Product: the banyan / heritage tee with its story line",
+    "cat": "product",
+    "note": "Lead with meaning, then the link."
+  },
+  {
+    "id": "mc-auto-2026-09-23-2",
+    "text": "Carousel: 3 ways to wear one Musubi tee, Westside edition",
+    "cat": "carousel",
+    "note": "Beach → town → pau hana. Saveable styling content."
+  },
+  {
+    "id": "mc-auto-2026-09-23-1",
+    "text": "Story Q&A: ask me anything about the brand / next drops",
+    "cat": "story",
+    "note": "Direct connection; surfaces what people want."
+  },
+  {
+    "id": "mc-auto-2026-09-23-0",
+    "text": "Carousel: the meaning behind the design — slide-by-slide",
+    "cat": "carousel",
+    "note": "Cultural context earns product posts their place."
+  },
+  {
     "id": "mc-auto-2026-09-22-3",
     "text": "Carousel: 5 Westside spots to shoot your Musubi fit",
     "cat": "local",
@@ -154,30 +178,6 @@
     "text": "Reel: unboxing from a real customer (repost UGC)",
     "cat": "ugc",
     "note": "Social proof. Ask permission, credit them."
-  },
-  {
-    "id": "mc-auto-2026-09-16-1",
-    "text": "Story: poll two caption options, use the winner on the next post",
-    "cat": "story",
-    "note": "Co-create with the audience."
-  },
-  {
-    "id": "mc-auto-2026-09-16-0",
-    "text": "Story series: a day on the Westside, tagged Musubi",
-    "cat": "story",
-    "note": "Behind-the-life content keeps you top of feed."
-  },
-  {
-    "id": "mc-auto-2026-09-15-3",
-    "text": "Reel: 'POV you pull up to a Westside potluck in Musubi'",
-    "cat": "reel",
-    "note": "Relatable local humor. Highly shareable."
-  },
-  {
-    "id": "mc-auto-2026-09-15-2",
-    "text": "Reel: golden-hour shoot timed to tonight's exact golden hour",
-    "cat": "reel",
-    "note": "Use the JB OS conditions widget to nail the light."
   },
   {
     "id": "mc-auntie-tee",
