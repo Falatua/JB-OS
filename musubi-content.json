@@ -1,5 +1,29 @@
 [
   {
+    "id": "mc-auto-2026-11-08-3",
+    "text": "Reel: 'things that hit different on the Westside' + tee cameo",
+    "cat": "reel",
+    "note": "Trend-style listicle, local flavor."
+  },
+  {
+    "id": "mc-auto-2026-11-08-2",
+    "text": "Models: pau-hana crew shot, everyone in a different piece",
+    "cat": "models",
+    "note": "Group energy; shows range without flat-lays."
+  },
+  {
+    "id": "mc-auto-2026-11-08-1",
+    "text": "Story series: a day on the Westside, tagged Musubi",
+    "cat": "story",
+    "note": "Behind-the-life content keeps you top of feed."
+  },
+  {
+    "id": "mc-auto-2026-11-08-0",
+    "text": "Local spotlight: shout out a Westside small biz wearing Musubi",
+    "cat": "local",
+    "note": "Community-first. Builds real relationships."
+  },
+  {
     "id": "mc-auto-2026-11-07-3",
     "text": "\"Auntie's favorite tee\" — let a real auntie style it her way",
     "cat": "models",
@@ -154,30 +178,6 @@
     "text": "Throwback: old-school flyer aesthetic recreated with the new tee",
     "cat": "throwback",
     "note": "Nostalgia + product in one frame."
-  },
-  {
-    "id": "mc-auto-2026-11-01-1",
-    "text": "Sunrise spam-musubi run — film the Westside drive + first light",
-    "cat": "local",
-    "note": "Lifestyle reel; pair with the conditions/golden-hour times in JB OS."
-  },
-  {
-    "id": "mc-auto-2026-11-01-0",
-    "text": "Carousel: 'made for the cousins' — the ohana line concept",
-    "cat": "ohana",
-    "note": "Family/community as the brand's core."
-  },
-  {
-    "id": "mc-auto-2026-10-31-3",
-    "text": "Throwback: childhood Westside spot revisited in current gear",
-    "cat": "throwback",
-    "note": "Place-based nostalgia."
-  },
-  {
-    "id": "mc-auto-2026-10-31-2",
-    "text": "Ohana: matching parent + keiki fits at the beach",
-    "cat": "ohana",
-    "note": "Heart-tug content; great for shares."
   },
   {
     "id": "mc-auntie-tee",
