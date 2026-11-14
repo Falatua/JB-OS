@@ -1,5 +1,29 @@
 [
   {
+    "id": "mc-auto-2026-11-14-3",
+    "text": "Product: the banyan / heritage tee with its story line",
+    "cat": "product",
+    "note": "Lead with meaning, then the link."
+  },
+  {
+    "id": "mc-auto-2026-11-14-2",
+    "text": "Reel: unboxing from a real customer (repost UGC)",
+    "cat": "ugc",
+    "note": "Social proof. Ask permission, credit them."
+  },
+  {
+    "id": "mc-auto-2026-11-14-1",
+    "text": "Reel: 'getting ready' get-ready-with-me in a Musubi tee",
+    "cat": "reel",
+    "note": "GRWM format adapted to the brand."
+  },
+  {
+    "id": "mc-auto-2026-11-14-0",
+    "text": "BTS: picking fabric / approving a sample on camera",
+    "cat": "bts",
+    "note": "Show the craft and the standards."
+  },
+  {
     "id": "mc-auto-2026-11-13-3",
     "text": "Models call: feature 3 community members + their why",
     "cat": "models",
@@ -154,30 +178,6 @@
     "text": "Story: poll two caption options, use the winner on the next post",
     "cat": "story",
     "note": "Co-create with the audience."
-  },
-  {
-    "id": "mc-auto-2026-11-07-1",
-    "text": "Throwback Thursday: island-reggae playlist that fits the brand",
-    "cat": "throwback",
-    "note": "Pair with the JB OS Vibe player."
-  },
-  {
-    "id": "mc-auto-2026-11-07-0",
-    "text": "Reel: golden-hour shoot timed to tonight's exact golden hour",
-    "cat": "reel",
-    "note": "Use the JB OS conditions widget to nail the light."
-  },
-  {
-    "id": "mc-auto-2026-11-06-3",
-    "text": "Region-real mockup: tee on a Waiʻanae backdrop, not a studio",
-    "cat": "local",
-    "note": "Previews should read local and authentic."
-  },
-  {
-    "id": "mc-auto-2026-11-06-2",
-    "text": "Reel: how the tee is folded + packed (no voiceover, brand soundtrack)",
-    "cat": "bts",
-    "note": "Process content builds trust faster than product shots."
   },
   {
     "id": "mc-auntie-tee",
